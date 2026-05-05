@@ -1,0 +1,41 @@
+# Unreal Engine generated directories
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Compiled source files
+*.o
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.sln
+*.suo
+*.user
+*.VC.opendb
+*.VC.db
+
+# Unreal project files (auto-generated)
+*.uproject.bak
+
+# Shader debug info
+ShaderDebugInfo/
+
+# Crash reports
+Crashes/
+
+# Plugins (if installed, not custom)
+# Uncomment if you don't want to commit third-party plugins:
+# Plugins/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini

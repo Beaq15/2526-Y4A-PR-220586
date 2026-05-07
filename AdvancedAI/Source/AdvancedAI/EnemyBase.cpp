@@ -2,6 +2,8 @@
 
 
 #include "EnemyBase.h"
+#include "Animation/AnimMontage.h"
+//#include "Engine/ActorSpawnParameters.h"
 
 // Sets default values
 AEnemyBase::AEnemyBase()
@@ -30,5 +32,41 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void AEnemyBase::Attack()
+{
+	if (AttackMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(AttackMontage, 1.0f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyBase::OnAttackMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
+		}
+	}
+}
+
+void AEnemyBase::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+		OnAttackEnd.Broadcast();
+}
+
+void AEnemyBase::WieldSword()
+{
+	if (!SwordClass) return;
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Instigator = this;
+
+	SpawnedSword = GetWorld()->SpawnActor<AActor>(SwordClass, GetActorTransform(), SpawnParams);
+	if (!SpawnedSword) return;
+
+	SpawnedSword->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("ik_hand_r_sword_socket"));
+
+	bIsWieldingSword = true;
 }
 

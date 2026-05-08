@@ -4,23 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BTT_WeildSword.generated.h"
+#include "BTT_DropSword.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ADVANCEDAI_API UBTT_WieldSword : public UBTTaskNode
+class ADVANCEDAI_API UBTT_DropSword : public UBTTaskNode
 {
 	GENERATED_BODY()
 
 public:
-	UBTT_WieldSword();
-
+	UBTT_DropSword();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 	UFUNCTION()
-	void OnWieldSwordEnd();
+	void OnSwordDropEnd();
 
 	UBehaviorTreeComponent* CachedOwnerComp = nullptr;
 	

@@ -19,6 +19,8 @@ enum class EAIState : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAttackEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquipSwordEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropSwordEnd);
 
 UCLASS()
 class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface
@@ -28,6 +30,10 @@ class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Animation")
 	FOnAttackEnd OnAttackEnd;
+	UPROPERTY(BlueprintAssignable, Category = "Animation")
+	FOnEquipSwordEnd OnEquipSwordEnd;
+	UPROPERTY(BlueprintAssignable, Category = "Animation")
+	FOnDropSwordEnd OnDropSwordEnd;
 
 	// Sets default values for this character's properties
 	AEnemyBase();
@@ -44,6 +50,9 @@ public:
 	UFUNCTION()
 	void WieldSword();
 
+	UFUNCTION()
+	void DropSword();
+
 	UPROPERTY(VisibleAnywhere, Category = "Combat")
 	bool bIsWieldingSword = false;
 
@@ -58,6 +67,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AttackMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> EquipSwordMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> DropSwordMontage;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TSubclassOf<AActor> SwordClass;
 	UPROPERTY()
@@ -69,6 +84,15 @@ private:
 
 	UFUNCTION()
 	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
 
 	virtual APatrolRoute* GetPatrolRoute_Implementation() override;
 	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;

@@ -12,6 +12,7 @@ UBTT_MoveAlongPatrolRoute::UBTT_MoveAlongPatrolRoute()
 	NodeName = "Move Along Patrol Route";
 
 	bNotifyTick = true;
+	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTT_MoveAlongPatrolRoute::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -51,4 +52,12 @@ void UBTT_MoveAlongPatrolRoute::TickTask(UBehaviorTreeComponent& OwnerComp, uint
 		}
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 	}
+}
+
+EBTNodeResult::Type UBTT_MoveAlongPatrolRoute::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+	AAIController* AIController = OwnerComp.GetAIOwner();
+	AIController->StopMovement();
+
+	return EBTNodeResult::Aborted;
 }

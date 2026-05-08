@@ -13,6 +13,11 @@ UCLASS()
 class ADVANCEDAI_API AAIC_Enemy_Base : public AAIController
 {
 	GENERATED_BODY()
+public:
+	UFUNCTION()
+	void SetStateAsPassive();
+	UFUNCTION()
+	void SetStateAsAttacking(AActor* AttackTarget);
 
 protected:
 
@@ -25,7 +30,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	FName AttackTargetKeyName = "AttackTarget";
 
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FName StateKeyName = "State";
+
 	UFUNCTION()
 	void StartBehaviorTree();
+
+	
 	
 };

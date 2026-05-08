@@ -8,6 +8,16 @@
 #include "EnemyInterface.h"
 #include "EnemyBase.generated.h"
 
+UENUM(BlueprintType)
+enum class EAIState : uint8
+{
+	Passive, //0
+	Attacking, //1
+	Frozen, //2
+	Investigating, //3 
+	Dead //4
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAttackEnd);
 
 UCLASS()
@@ -36,6 +46,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Combat")
 	bool bIsWieldingSword = false;
+
+	UPROPERTY()
+	EAIState State = EAIState::Passive;
 
 protected:
 	// Called when the game starts or when spawned

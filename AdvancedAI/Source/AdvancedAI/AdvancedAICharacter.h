@@ -44,10 +44,13 @@ class AAdvancedAICharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ChangeStateAction;
+
 public:
 	AAdvancedAICharacter();
 	
-
+	bool Pressed = false;
 protected:
 
 	/** Called for movement input */
@@ -55,6 +58,8 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	void ChangeState(const FInputActionValue& Value);
 			
 
 protected:

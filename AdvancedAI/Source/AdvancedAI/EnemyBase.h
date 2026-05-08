@@ -4,12 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "PatrolRoute.h"
+#include "EnemyInterface.h"
 #include "EnemyBase.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAttackEnd);
 
 UCLASS()
-class ADVANCEDAI_API AEnemyBase : public ACharacter
+class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface
 {
 	GENERATED_BODY()
 
@@ -48,7 +50,14 @@ private:
 	UPROPERTY()
 	TObjectPtr<AActor> SpawnedSword;
 
+	UPROPERTY(EditAnywhere, Category = "AI")
+	APatrolRoute* PatrolRoute;
+
 
 	UFUNCTION()
 	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	virtual APatrolRoute* GetPatrolRoute_Implementation() override;
+	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
+
 };

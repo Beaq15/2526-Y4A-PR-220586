@@ -3,7 +3,7 @@
 
 #include "EnemyBase.h"
 #include "Animation/AnimMontage.h"
-//#include "Engine/ActorSpawnParameters.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 AEnemyBase::AEnemyBase()
@@ -53,6 +53,35 @@ void AEnemyBase::Attack()
 void AEnemyBase::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 		OnAttackEnd.Broadcast();
+}
+
+APatrolRoute* AEnemyBase::GetPatrolRoute_Implementation()
+{
+	return PatrolRoute;
+}
+
+float AEnemyBase::SetMovementSpeed_Implementation(EMovementSpeed Speed)
+{
+	UCharacterMovementComponent* Movement = GetCharacterMovement();
+	if (!Movement) return 0.f;
+
+	switch (Speed)
+	{
+	case EMovementSpeed::Idle:
+		Movement->MaxWalkSpeed = 0.f;
+		break;
+	case EMovementSpeed::Walking:
+		Movement->MaxWalkSpeed = 100.f;
+		break;
+	case EMovementSpeed::Jogging:
+		Movement->MaxWalkSpeed = 300.f;
+		break;
+	case EMovementSpeed::Sprinting:
+		Movement->MaxWalkSpeed = 500.f;
+		break;
+	}
+
+	return Movement->MaxWalkSpeed;
 }
 
 void AEnemyBase::WieldSword()

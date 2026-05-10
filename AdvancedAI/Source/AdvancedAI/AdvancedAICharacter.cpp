@@ -13,6 +13,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "EnemyBase.h"
 #include "AIC_Enemy_Base.h"
+#include "DrawDebugHelpers.h"
+#include "Components/PawnNoiseEmitterComponent.h"
+
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -55,6 +58,8 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("NoiseEmitter"));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -90,6 +95,8 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::Look);
 
 		EnhancedInputComponent->BindAction(ChangeStateAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::ChangeState);
+		EnhancedInputComponent->BindAction(MakeNoiseAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::MakeSomeNoise);
+		EnhancedInputComponent->BindAction(DoDamageAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::DoDamage);
 	}
 	else
 	{
@@ -150,4 +157,19 @@ void AAdvancedAICharacter::ChangeState(const FInputActionValue& Value)
 					AIController->SetStateAsPassive();
 		}
 	}
+}
+
+void AAdvancedAICharacter::MakeSomeNoise(const FInputActionValue& Value)
+{
+	MakeNoise(1.f, this, GetActorLocation());
+	DrawDebugSphere(GetWorld(), GetActorLocation(), 50.f, 12, FColor::Red, false, 1.f);
+}
+
+void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
+{
+	AActor* Actor = UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyBase::StaticClass());
+
+	if (!IsValid(Actor)) return;
+
+	UAISense_Damage::ReportDamageEvent(GetWorld(), Actor, this, 10.f, GetActorLocation(), GetActorLocation());
 }

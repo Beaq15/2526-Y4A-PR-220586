@@ -4,6 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISenseConfig_Hearing.h"
+#include "Perception/AISenseConfig_Damage.h"
 #include "AIC_Enemy_Base.generated.h"
 
 /**
@@ -14,6 +18,8 @@ class ADVANCEDAI_API AAIC_Enemy_Base : public AAIController
 {
 	GENERATED_BODY()
 public:
+	AAIC_Enemy_Base();
+
 	UFUNCTION()
 	void SetStateAsPassive();
 	UFUNCTION()
@@ -22,6 +28,18 @@ public:
 protected:
 
 	virtual void OnPossess(APawn* InPawn) override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	UAIPerceptionComponent* AIPerception;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	UAISenseConfig_Sight* SightConfig;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	UAISenseConfig_Hearing* HearingConfig;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	UAISenseConfig_Damage* DamageConfig;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
@@ -32,6 +50,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	FName StateKeyName = "State";
+
 
 	UFUNCTION()
 	void StartBehaviorTree();

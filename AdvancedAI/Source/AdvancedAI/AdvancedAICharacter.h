@@ -47,6 +47,12 @@ class AAdvancedAICharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ChangeStateAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* MakeNoiseAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* DoDamageAction;
+
 public:
 	AAdvancedAICharacter();
 	
@@ -60,8 +66,10 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	void ChangeState(const FInputActionValue& Value);
-			
 
+	void MakeSomeNoise(const FInputActionValue& Value);
+			
+	void DoDamage(const FInputActionValue& Value);
 protected:
 
 	virtual void NotifyControllerChanged() override;

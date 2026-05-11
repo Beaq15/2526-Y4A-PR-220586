@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "PatrolRoute.h"
 #include "EnemyInterface.h"
+#include "GenericTeamAgentInterface.h"
 #include "EnemyBase.generated.h"
 
 UENUM(BlueprintType)
@@ -23,7 +24,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquipSwordEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropSwordEnd);
 
 UCLASS()
-class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface
+class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -63,6 +64,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(1); }
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AttackMontage;

@@ -8,6 +8,7 @@
 #include "Perception/AISenseConfig_Sight.h"
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Damage.h"
+#include "EnemyBase.h"
 #include "AIC_Enemy_Base.generated.h"
 
 /**
@@ -34,9 +35,14 @@ public:
 	UFUNCTION()
 	void SetStateAsAttacking(AActor* AttackTarget);
 
+	UFUNCTION()
+	void SetStateAsInvestigating(FVector Location);
+
 protected:
 
 	virtual void OnPossess(APawn* InPawn) override;
+
+	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(1); }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	UAIPerceptionComponent* AIPerception;
@@ -60,14 +66,35 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	FName StateKeyName = "State";
 
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FName PointOfInterestKeyName = "PointOfInterest";
+
 
 	UFUNCTION()
 	void StartBehaviorTree();
 
 	UFUNCTION()
-	bool CanSenseACtor(AActor* Actor, EAISense Sense);
+	bool CanSenseActor(AActor* Actor, EAISense Sense, FAIStimulus& OutStimulus);
+
+	bool CanSenseActor(AActor* Actor, EAISense Sense)
+	{
+		FAIStimulus Dummy;
+		return CanSenseActor(Actor, Sense, Dummy);
+	}
 
 	UFUNCTION()
 	void OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors);
+
+	UFUNCTION()
+	void HandleSensedSight(AActor* Actor);
+
+	UFUNCTION()
+	void HandleSensedSound(FVector Location);
+
+	UFUNCTION()
+	void HandleSensedDamage(AActor* Actor);
+
+	UFUNCTION()
+	uint8 GetCurrentState();
 	
 };

@@ -20,16 +20,16 @@ AAIC_Enemy_Base::AAIC_Enemy_Base()
     SightConfig->SetMaxAge(5.f);
 
     SightConfig->DetectionByAffiliation.bDetectEnemies = true;
-    SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
-    SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
+    SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
+    SightConfig->DetectionByAffiliation.bDetectNeutrals = false;
 
     HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
     HearingConfig->HearingRange = 500.f;
     HearingConfig->SetMaxAge(3.f);
 
     HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
-    HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
-    HearingConfig->DetectionByAffiliation.bDetectNeutrals = true;
+    HearingConfig->DetectionByAffiliation.bDetectFriendlies = false;
+    HearingConfig->DetectionByAffiliation.bDetectNeutrals = false;
 
     DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
     DamageConfig->SetMaxAge(5.f);
@@ -64,7 +64,7 @@ void AAIC_Enemy_Base::StartBehaviorTree()
 
 }
 
-bool AAIC_Enemy_Base::CanSenseACtor(AActor* Actor, EAISense Sense) // + outsense
+bool AAIC_Enemy_Base::CanSenseActor(AActor* Actor, EAISense Sense, FAIStimulus& OutStimulus) // + outsense
 {
     if (!AIPerception || !Actor) return false;
 
@@ -91,7 +91,10 @@ bool AAIC_Enemy_Base::CanSenseACtor(AActor* Actor, EAISense Sense) // + outsense
     for (const FAIStimulus& Stimulus : PerceptionInfo.LastSensedStimuli)
     {
         if (Stimulus.Type == SenseID && Stimulus.WasSuccessfullySensed())
+        {
+            OutStimulus = Stimulus;
             return true;
+        }
 
     }
     return false;
@@ -101,21 +104,63 @@ void AAIC_Enemy_Base::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
 {
     for (AActor* Actor : UpdatedActors)
     {
-        if (CanSenseACtor(Actor, EAISense::Sight))
+        if (CanSenseActor(Actor, EAISense::Sight))
         {
             GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Sensed Sight"));
+            HandleSensedSight(Actor);
         }
-        if (CanSenseACtor(Actor, EAISense::Hearing))
+        FAIStimulus OutStimulus;
+        if (CanSenseActor(Actor, EAISense::Hearing, OutStimulus))
         {
             GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Sensed Sound"));
+            HandleSensedSound(OutStimulus.StimulusLocation);
         }
-        if (CanSenseACtor(Actor, EAISense::Damage))
+        if (CanSenseActor(Actor, EAISense::Damage))
         {
             GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Sensed Damage"));
+            HandleSensedDamage(Actor);
         }
     }
 }
 
+void AAIC_Enemy_Base::HandleSensedSight(AActor* Actor)
+{
+    switch (GetCurrentState())
+    {
+    case int32(EAIState::Passive):
+        SetStateAsAttacking(Actor);
+        break;
+    case int32(EAIState::Investigating):
+        SetStateAsAttacking(Actor);
+        break;
+    }
+}
+
+void AAIC_Enemy_Base::HandleSensedSound(FVector Location)
+{
+    switch (GetCurrentState())
+    {
+    case int32(EAIState::Passive):
+        SetStateAsInvestigating(Location);
+        break;
+    case int32(EAIState::Investigating):
+        SetStateAsInvestigating(Location);
+        break;
+    }
+}
+
+void AAIC_Enemy_Base::HandleSensedDamage(AActor* Actor)
+{
+    switch (GetCurrentState())
+    {
+        case int32(EAIState::Passive):
+            SetStateAsAttacking(Actor);
+            break;
+        case int32(EAIState::Investigating):
+            SetStateAsAttacking(Actor);
+            break;
+    }
+}
 
 void AAIC_Enemy_Base::SetStateAsPassive()
 {
@@ -130,4 +175,22 @@ void AAIC_Enemy_Base::SetStateAsAttacking(AActor* AttackTarget)
         BB->SetValueAsInt(StateKeyName, (int32)EAIState::Attacking);
         BB->SetValueAsObject(AttackTargetKeyName, AttackTarget);
     }
+}
+
+void AAIC_Enemy_Base::SetStateAsInvestigating(FVector Location)
+{
+    if (UBlackboardComponent* BB = GetBlackboardComponent())
+    {
+        BB->SetValueAsInt(StateKeyName, (int32)EAIState::Investigating);
+        BB->SetValueAsVector(PointOfInterestKeyName, Location);
+    }
+}
+
+uint8 AAIC_Enemy_Base::GetCurrentState()
+{
+    if (UBlackboardComponent* BB = GetBlackboardComponent())
+    {
+        return uint8(BB->GetValueAsInt(StateKeyName));
+    }
+    return -1;
 }

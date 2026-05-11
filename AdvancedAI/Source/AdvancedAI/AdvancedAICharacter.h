@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "GenericTeamAgentInterface.h"
 #include "AdvancedAICharacter.generated.h"
 
 class USpringArmComponent;
@@ -16,7 +17,7 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
-class AAdvancedAICharacter : public ACharacter
+class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -57,6 +58,8 @@ public:
 	AAdvancedAICharacter();
 	
 	bool Pressed = false;
+
+	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(0); }
 protected:
 
 	/** Called for movement input */
@@ -70,6 +73,8 @@ protected:
 	void MakeSomeNoise(const FInputActionValue& Value);
 			
 	void DoDamage(const FInputActionValue& Value);
+
+	
 protected:
 
 	virtual void NotifyControllerChanged() override;

@@ -38,6 +38,8 @@ public:
 	UFUNCTION()
 	void SetStateAsInvestigating(FVector Location);
 
+	AActor* AttackTargetActor;
+
 protected:
 
 	virtual void OnPossess(APawn* InPawn) override;

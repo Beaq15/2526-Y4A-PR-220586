@@ -175,6 +175,8 @@ void AAIC_Enemy_Base::SetStateAsAttacking(AActor* AttackTarget)
         BB->SetValueAsInt(StateKeyName, (int32)EAIState::Attacking);
         BB->SetValueAsObject(AttackTargetKeyName, AttackTarget);
     }
+
+    AttackTargetActor = AttackTarget;
 }
 
 void AAIC_Enemy_Base::SetStateAsInvestigating(FVector Location)

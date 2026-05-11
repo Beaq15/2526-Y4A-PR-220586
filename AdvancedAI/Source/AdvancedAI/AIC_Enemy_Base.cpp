@@ -38,6 +38,8 @@ AAIC_Enemy_Base::AAIC_Enemy_Base()
     AIPerception->ConfigureSense(*HearingConfig);
     AIPerception->ConfigureSense(*DamageConfig);
     AIPerception->SetDominantSense(SightConfig->GetSenseImplementation());
+
+    AIPerception->OnPerceptionUpdated.AddDynamic(this, &AAIC_Enemy_Base::OnPerceptionUpdated);
 }
 void AAIC_Enemy_Base::OnPossess(APawn* InPawn)
 {
@@ -60,6 +62,58 @@ void AAIC_Enemy_Base::StartBehaviorTree()
         BB->SetValueAsObject(AttackTargetKeyName, Player);
     }
 
+}
+
+bool AAIC_Enemy_Base::CanSenseACtor(AActor* Actor, EAISense Sense) // + outsense
+{
+    if (!AIPerception || !Actor) return false;
+
+    FAISenseID SenseID;
+
+    switch (Sense)
+    {
+    case EAISense::None: 
+        return false;
+    case EAISense::Sight:
+        SenseID = UAISense::GetSenseID<UAISense_Sight>();
+        break;
+    case EAISense::Hearing:
+        SenseID = UAISense::GetSenseID<UAISense_Hearing>();
+        break;
+    case EAISense::Damage:
+        SenseID = UAISense::GetSenseID<UAISense_Damage>();
+        break;
+    }
+
+    FActorPerceptionBlueprintInfo PerceptionInfo;
+    AIPerception->GetActorsPerception(Actor, PerceptionInfo);
+
+    for (const FAIStimulus& Stimulus : PerceptionInfo.LastSensedStimuli)
+    {
+        if (Stimulus.Type == SenseID && Stimulus.WasSuccessfullySensed())
+            return true;
+
+    }
+    return false;
+}
+
+void AAIC_Enemy_Base::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
+{
+    for (AActor* Actor : UpdatedActors)
+    {
+        if (CanSenseACtor(Actor, EAISense::Sight))
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Sensed Sight"));
+        }
+        if (CanSenseACtor(Actor, EAISense::Hearing))
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Sensed Sound"));
+        }
+        if (CanSenseACtor(Actor, EAISense::Damage))
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Sensed Damage"));
+        }
+    }
 }
 
 

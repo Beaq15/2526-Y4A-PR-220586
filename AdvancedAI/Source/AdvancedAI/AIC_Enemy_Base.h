@@ -13,6 +13,15 @@
 /**
  * 
  */
+UENUM(BlueprintType)
+enum class EAISense : uint8
+{
+	None,
+	Sight,
+	Hearing,
+	Damage
+};
+
 UCLASS()
 class ADVANCEDAI_API AAIC_Enemy_Base : public AAIController
 {
@@ -55,6 +64,10 @@ private:
 	UFUNCTION()
 	void StartBehaviorTree();
 
-	
+	UFUNCTION()
+	bool CanSenseACtor(AActor* Actor, EAISense Sense);
+
+	UFUNCTION()
+	void OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors);
 	
 };

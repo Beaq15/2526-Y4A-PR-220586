@@ -57,6 +57,9 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Combat")
 	bool bIsWieldingSword = false;
 
+	UPROPERTY(VisibleANywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsStrafing = false;
+
 	UPROPERTY()
 	EAIState State = EAIState::Passive;
 
@@ -98,5 +101,7 @@ private:
 
 	virtual APatrolRoute* GetPatrolRoute_Implementation() override;
 	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
+
+	virtual void GetIdealRange_Implementation(float AttackRadius, float DefendRadius) override;
 
 };

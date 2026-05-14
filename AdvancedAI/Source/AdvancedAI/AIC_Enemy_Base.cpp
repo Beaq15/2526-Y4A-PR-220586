@@ -48,6 +48,16 @@ void AAIC_Enemy_Base::OnPossess(APawn* InPawn)
     FTimerHandle BTStartTimerHandle;
     GetWorld()->GetTimerManager().SetTimer(BTStartTimerHandle, this, &AAIC_Enemy_Base::StartBehaviorTree, 0.2f, false);
     SetStateAsPassive();
+
+    if (UBlackboardComponent* BB = GetBlackboardComponent())
+    {
+        AEnemyBase* Enemy = Cast<AEnemyBase>(InPawn);
+        float AttackRadius = 0.f, DefendRadius = 0.f;
+        Enemy->GetIdealRange(AttackRadius, DefendRadius);
+        BB->SetValueAsFloat(AttackRadiusKeyName, AttackRadius);
+        BB->SetValueAsFloat(DefendRadiusKeyName, DefendRadius);
+
+    }
 }
 
 void AAIC_Enemy_Base::StartBehaviorTree()

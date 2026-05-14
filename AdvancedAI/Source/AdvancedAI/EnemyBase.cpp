@@ -122,6 +122,12 @@ float AEnemyBase::SetMovementSpeed_Implementation(EMovementSpeed Speed)
 	return Movement->MaxWalkSpeed;
 }
 
+void AEnemyBase::GetIdealRange_Implementation(float AttackRadius, float DefendRadius)
+{
+	AttackRadius = 100.f;
+	DefendRadius = 350.f;
+}
+
 void AEnemyBase::WieldSword()
 {
 	if (EquipSwordMontage)

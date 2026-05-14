@@ -40,17 +40,25 @@ void UBTT_MoveAlongPatrolRoute::TickTask(UBehaviorTreeComponent& OwnerComp, uint
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	APawn* Pawn = AIController->GetPawn();
 
-	float Distance = FVector::Dist(Pawn->GetActorLocation(), CurrentTargetLocation);
-
 	if (AIController->GetMoveStatus() == EPathFollowingStatus::Idle)
 	{
-		if (Pawn->Implements<UEnemyInterface>())
+		float Distance = FVector::Dist(Pawn->GetActorLocation(), CurrentTargetLocation);
+		bool bReachedTarget = Distance <= AcceptanceRadius;
+		if (bReachedTarget)
 		{
-			APatrolRoute* Route = IEnemyInterface::Execute_GetPatrolRoute(Pawn);
-			if (IsValid(Route))
-				Route->IncrementPatrolRoute();
+			if (Pawn->Implements<UEnemyInterface>())
+			{
+				APatrolRoute* Route = IEnemyInterface::Execute_GetPatrolRoute(Pawn);
+				if (IsValid(Route))
+					Route->IncrementPatrolRoute();
+			}
+			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 		}
-		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+		else
+		{
+			FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+		}
+		
 	}
 }
 

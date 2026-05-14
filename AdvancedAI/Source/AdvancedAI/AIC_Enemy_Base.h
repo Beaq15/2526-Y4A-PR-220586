@@ -71,6 +71,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	FName PointOfInterestKeyName = "PointOfInterest";
 
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FName AttackRadiusKeyName = "AttackRadius";
+		
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FName DefendRadiusKeyName = "DefendRadius";
+
 
 	UFUNCTION()
 	void StartBehaviorTree();

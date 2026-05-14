@@ -28,4 +28,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	float SetMovementSpeed(EMovementSpeed Speed);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void GetIdealRange(float AttackRadius, float DefendRadius);
 };

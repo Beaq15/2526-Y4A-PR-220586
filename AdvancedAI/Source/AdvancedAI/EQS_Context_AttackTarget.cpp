@@ -19,7 +19,7 @@ void UEQS_Context_AttackTarget::ProvideContext(FEnvQueryInstance& QueryInstance,
 	if (!AIC) return;
 
 	UEnvQueryItemType_Actor::SetContextHelper(ContextData, AIC->AttackTargetActor);
-
+	
 	/*GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("TESTING PURPOSES ONLY"));
 	AActor* PlayerStart = UGameplayStatics::GetActorOfClass(QueryInstance.World, APlayerStart::StaticClass());
 

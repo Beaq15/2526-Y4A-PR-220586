@@ -8,6 +8,7 @@
 UBTD_IsWithingIdealRange::UBTD_IsWithingIdealRange()
 {
 	NodeName = "IsWithinIdealRange";
+	bNotifyTick = true;
 }
 
 bool UBTD_IsWithingIdealRange::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
@@ -20,4 +21,14 @@ bool UBTD_IsWithingIdealRange::CalculateRawConditionValue(UBehaviorTreeComponent
 	float range = OwnerComp.GetBlackboardComponent()->GetValueAsFloat(IdealRangeKey.SelectedKeyName);
 
 	return (Distance - ErrorMargin) <= range;
+}
+
+void UBTD_IsWithingIdealRange::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+{
+	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
+
+	const bool bCurrentValue = CalculateRawConditionValue(OwnerComp, NodeMemory);
+	
+	if (!bCurrentValue)
+		OwnerComp.RequestExecution(this);
 }

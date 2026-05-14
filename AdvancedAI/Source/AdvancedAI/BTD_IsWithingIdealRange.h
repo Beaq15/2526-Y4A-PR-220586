@@ -17,6 +17,7 @@ class ADVANCEDAI_API UBTD_IsWithingIdealRange : public UBTDecorator
 public:
 	UBTD_IsWithingIdealRange();
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
+	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Keys")

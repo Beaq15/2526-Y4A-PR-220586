@@ -45,30 +45,35 @@ void AAIC_Enemy_Base::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
 
+    AEnemyBase* Enemy = Cast<AEnemyBase>(InPawn);
+    if (!Enemy)
+        return;
+
     FTimerHandle BTStartTimerHandle;
-    GetWorld()->GetTimerManager().SetTimer(BTStartTimerHandle, this, &AAIC_Enemy_Base::StartBehaviorTree, 0.2f, false);
+    GetWorld()->GetTimerManager().SetTimer(BTStartTimerHandle, [this, Enemy]() {StartBehaviorTree(Enemy); }, 0.2f, false);
+    
+}
+
+void AAIC_Enemy_Base::StartBehaviorTree(AEnemyBase* Enemy)
+{
+    if (!Enemy->BehaviorTree)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("No Valid Behavior Tree in Enemy Actor"));
+        return;
+    }
+
+    RunBehaviorTree(Enemy->BehaviorTree);
+
     SetStateAsPassive();
 
     if (UBlackboardComponent* BB = GetBlackboardComponent())
     {
-        AEnemyBase* Enemy = Cast<AEnemyBase>(InPawn);
         float AttackRadius = 0.f, DefendRadius = 0.f;
-        Enemy->GetIdealRange(AttackRadius, DefendRadius);
+        IEnemyInterface::Execute_GetIdealRange(Enemy, AttackRadius, DefendRadius);
         BB->SetValueAsFloat(AttackRadiusKeyName, AttackRadius);
         BB->SetValueAsFloat(DefendRadiusKeyName, DefendRadius);
 
-    }
-}
-
-void AAIC_Enemy_Base::StartBehaviorTree()
-{
-    if (!BehaviorTreeAsset) return;
-
-    RunBehaviorTree(BehaviorTreeAsset);
-    AAdvancedAICharacter* Player = Cast<AAdvancedAICharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-
-    if (UBlackboardComponent* BB = GetBlackboardComponent())
-    {
+        AAdvancedAICharacter* Player = Cast<AAdvancedAICharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
         BB->SetValueAsObject(AttackTargetKeyName, Player);
     }
 

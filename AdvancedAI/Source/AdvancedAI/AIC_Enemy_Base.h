@@ -79,7 +79,7 @@ private:
 
 
 	UFUNCTION()
-	void StartBehaviorTree();
+	void StartBehaviorTree(AEnemyBase* Enemy);
 
 	UFUNCTION()
 	bool CanSenseActor(AActor* Actor, EAISense Sense, FAIStimulus& OutStimulus);

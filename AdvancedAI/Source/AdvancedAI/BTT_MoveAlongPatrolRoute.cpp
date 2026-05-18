@@ -26,7 +26,9 @@ EBTNodeResult::Type UBTT_MoveAlongPatrolRoute::ExecuteTask(UBehaviorTreeComponen
 		if (IsValid(Route))
 		{
 			CurrentTargetLocation = Route->GetSplinePointAsWorldPosition();
+
 			AIController->MoveToLocation(CurrentTargetLocation, AcceptanceRadius);
+
 			return EBTNodeResult::InProgress;
 		}
 	}
@@ -42,10 +44,6 @@ void UBTT_MoveAlongPatrolRoute::TickTask(UBehaviorTreeComponent& OwnerComp, uint
 
 	if (AIController->GetMoveStatus() == EPathFollowingStatus::Idle)
 	{
-		float Distance = FVector::Dist(Pawn->GetActorLocation(), CurrentTargetLocation);
-		bool bReachedTarget = Distance <= AcceptanceRadius;
-		if (bReachedTarget)
-		{
 			if (Pawn->Implements<UEnemyInterface>())
 			{
 				APatrolRoute* Route = IEnemyInterface::Execute_GetPatrolRoute(Pawn);
@@ -53,12 +51,6 @@ void UBTT_MoveAlongPatrolRoute::TickTask(UBehaviorTreeComponent& OwnerComp, uint
 					Route->IncrementPatrolRoute();
 			}
 			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-		}
-		else
-		{
-			FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
-		}
-		
 	}
 }
 

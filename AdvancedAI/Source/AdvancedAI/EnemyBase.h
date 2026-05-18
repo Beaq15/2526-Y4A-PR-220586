@@ -7,6 +7,7 @@
 #include "PatrolRoute.h"
 #include "EnemyInterface.h"
 #include "GenericTeamAgentInterface.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "EnemyBase.generated.h"
 
 UENUM(BlueprintType)
@@ -20,8 +21,8 @@ enum class EAIState : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAttackEnd);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquipSwordEnd);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDropSwordEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponEquippedEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponUnequipedEnd);
 
 UCLASS()
 class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface, public IGenericTeamAgentInterface
@@ -31,10 +32,12 @@ class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface, pub
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Animation")
 	FOnAttackEnd OnAttackEnd;
+
 	UPROPERTY(BlueprintAssignable, Category = "Animation")
-	FOnEquipSwordEnd OnEquipSwordEnd;
+	FOnWeaponEquippedEnd OnEquipSwordEnd;
+
 	UPROPERTY(BlueprintAssignable, Category = "Animation")
-	FOnDropSwordEnd OnDropSwordEnd;
+	FOnWeaponUnequipedEnd OnDropSwordEnd;
 
 	// Sets default values for this character's properties
 	AEnemyBase();
@@ -45,17 +48,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UFUNCTION()
-	void Attack();
-
-	UFUNCTION()
-	void WieldSword();
-
-	UFUNCTION()
-	void DropSword();
-
 	UPROPERTY(VisibleAnywhere, Category = "Combat")
-	bool bIsWieldingSword = false;
+	bool bIsWieldingWeapon = false;
 
 	UPROPERTY(VisibleANywhere, BlueprintReadOnly, Category = "Combat")
 	bool bIsStrafing = false;
@@ -63,45 +57,33 @@ public:
 	UPROPERTY()
 	EAIState State = EAIState::Passive;
 
+	virtual void Attack();
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	TObjectPtr<UBehaviorTree> BehaviorTree;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(1); }
-private:
-	UPROPERTY(EditDefaultsOnly, Category = "Animation")
-	TObjectPtr<UAnimMontage> AttackMontage;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Animation")
-	TObjectPtr<UAnimMontage> EquipSwordMontage;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Animation")
-	TObjectPtr<UAnimMontage> DropSwordMontage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	TSubclassOf<AActor> SwordClass;
+	TSubclassOf<AActor>WeaponClass;
 	UPROPERTY()
-	TObjectPtr<AActor> SpawnedSword;
+	TObjectPtr<AActor> WeaponActor;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	APatrolRoute* PatrolRoute;
 
+private:
 
-	UFUNCTION()
-	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
-
-	UFUNCTION()
-	void OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
-
-	UFUNCTION()
-	void OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
-
-	UFUNCTION()
-	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
 
 	virtual APatrolRoute* GetPatrolRoute_Implementation() override;
 	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
 
-	virtual void GetIdealRange_Implementation(float AttackRadius, float DefendRadius) override;
+	virtual void GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
+
+	virtual void EquipWeapon_Implementation() override;
+	virtual void UnequipWeapon_Implementation() override;
 
 };

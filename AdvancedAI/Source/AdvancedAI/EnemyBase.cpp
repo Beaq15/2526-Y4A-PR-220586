@@ -34,65 +34,6 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 }
 
-void AEnemyBase::Attack()
-{
-	if (AttackMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(AttackMontage, 1.0f);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyBase::OnAttackMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
-		}
-	}
-}
-
-void AEnemyBase::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
-{
-		OnAttackEnd.Broadcast();
-}
-
-void AEnemyBase::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
-{
-	OnEquipSwordEnd.Broadcast();
-}
-
-void AEnemyBase::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
-{
-	OnDropSwordEnd.Broadcast();
-}
-
-void AEnemyBase::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
-{
-	if (NotifyName == FName("HoldSword"))
-	{
-		if (!SwordClass) return;
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Instigator = this;
-
-		SpawnedSword = GetWorld()->SpawnActor<AActor>(SwordClass, GetActorTransform(), SpawnParams);
-		if (!SpawnedSword) return;
-
-		SpawnedSword->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("ik_hand_r_sword_socket"));
-		
-		bIsWieldingSword = true;
-		
-		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AEnemyBase::OnMontageNotifyBegin);
-	}
-
-	if (NotifyName == FName("DropSword"))
-	{
-		SpawnedSword->Destroy();
-		bIsWieldingSword = false;
-
-		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AEnemyBase::OnMontageNotifyBegin);
-	}
-}
-
 APatrolRoute* AEnemyBase::GetPatrolRoute_Implementation()
 {
 	return PatrolRoute;
@@ -122,44 +63,21 @@ float AEnemyBase::SetMovementSpeed_Implementation(EMovementSpeed Speed)
 	return Movement->MaxWalkSpeed;
 }
 
-void AEnemyBase::GetIdealRange_Implementation(float AttackRadius, float DefendRadius)
+void AEnemyBase::GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius)
 {
 	AttackRadius = 100.f;
 	DefendRadius = 350.f;
 }
 
-void AEnemyBase::WieldSword()
+void AEnemyBase::EquipWeapon_Implementation()
 {
-	if (EquipSwordMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(EquipSwordMontage, 1.0f);
-			AnimInstance->OnPlayMontageNotifyBegin.AddDynamic(this, &AEnemyBase::OnMontageNotifyBegin);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyBase::OnEquipSwordMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, EquipSwordMontage);
-		}
-	}
 }
 
-void AEnemyBase::DropSword()
+void AEnemyBase::UnequipWeapon_Implementation()
 {
-	if (DropSwordMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(DropSwordMontage, 1.0f);
+}
+void AEnemyBase::Attack()
+{
 
-			AnimInstance->OnPlayMontageNotifyBegin.AddDynamic(this, &AEnemyBase::OnMontageNotifyBegin);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyBase::OnDropSwordMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, DropSwordMontage);
-		}
-	}
 }
 

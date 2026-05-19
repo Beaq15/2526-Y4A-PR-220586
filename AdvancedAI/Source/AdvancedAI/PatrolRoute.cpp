@@ -24,9 +24,6 @@ void APatrolRoute::IncrementPatrolRoute()
 {
 	PatrolIndex += Direction;
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green,
-		FString::Printf(TEXT("Patrol Index: %d"), PatrolIndex));
-
 	if (PatrolIndex == (PatrolSpline->GetNumberOfSplinePoints() - 1))
 		Direction = -1;
 	else if (PatrolIndex == 0)

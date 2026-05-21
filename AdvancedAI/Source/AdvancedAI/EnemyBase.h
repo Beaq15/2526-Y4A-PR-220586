@@ -80,6 +80,16 @@ protected:
 
 	virtual void GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
 
-	//virtual void EquipWeapon_Implementation() override;
-	//virtual void UnequipWeapon_Implementation() override;
+	float GetCurrentHealth_Implementation() { return Health; }
+
+	float GetMaxHealth_Implementation() { return MaxHealth; }
+
+	void Heal_Implementation(float HealPercentage);
+
+	UFUNCTION()
+	void OnTakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+
+	float Health = 100.f;
+	float MaxHealth = 100.f;
+	bool isDead = false;
 };

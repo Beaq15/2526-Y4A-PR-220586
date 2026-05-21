@@ -37,4 +37,13 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void UnequipWeapon();
+
+	UFUNCTION(BlueprintNativeEvent)
+	float GetCurrentHealth();
+
+	UFUNCTION(BlueprintNativeEvent)
+	float GetMaxHealth();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void Heal(float HealPercentage);
 };

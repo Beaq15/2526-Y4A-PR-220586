@@ -4,6 +4,7 @@
 #include "EnemyBase.h"
 #include "Animation/AnimMontage.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Math/UnrealMathUtility.h"
 
 // Sets default values
 AEnemyBase::AEnemyBase()
@@ -18,6 +19,7 @@ void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	OnTakeAnyDamage.AddDynamic(this, &AEnemyBase::OnTakeDamage);
 }
 
 // Called every frame
@@ -69,13 +71,19 @@ void AEnemyBase::GetIdealRange_Implementation(float& AttackRadius, float& Defend
 	DefendRadius = 350.f;
 }
 
-//void AEnemyBase::EquipWeapon_Implementation()
-//{
-//}
-//
-//void AEnemyBase::UnequipWeapon_Implementation()
-//{
-//}
+void AEnemyBase::Heal_Implementation(float HealPercentage)
+{
+	Health = FMath::Clamp(Health + (HealPercentage * MaxHealth), 0.f, MaxHealth);
+}
+
+void AEnemyBase::OnTakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+
+	if (Health <= 0)
+		isDead = true;
+}
+
 void AEnemyBase::Attack()
 {
 

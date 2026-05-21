@@ -172,4 +172,6 @@ void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 	if (!IsValid(Actor)) return;
 
 	UAISense_Damage::ReportDamageEvent(GetWorld(), Actor, this, 10.f, GetActorLocation(), GetActorLocation());
+
+	UGameplayStatics::ApplyDamage(Actor, 20.f, GetController(), this, UDamageType::StaticClass());
 }

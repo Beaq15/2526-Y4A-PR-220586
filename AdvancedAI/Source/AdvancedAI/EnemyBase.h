@@ -34,10 +34,10 @@ public:
 	FOnAttackEnd OnAttackEnd;
 
 	UPROPERTY(BlueprintAssignable, Category = "Animation")
-	FOnWeaponEquippedEnd OnEquipSwordEnd;
+	FOnWeaponEquippedEnd OnEquipWeaponEnd;
 
 	UPROPERTY(BlueprintAssignable, Category = "Animation")
-	FOnWeaponUnequipedEnd OnDropSwordEnd;
+	FOnWeaponUnequipedEnd OnDropWeaponEnd;
 
 	// Sets default values for this character's properties
 	AEnemyBase();
@@ -75,15 +75,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "AI")
 	APatrolRoute* PatrolRoute;
 
-private:
-
-
-	virtual APatrolRoute* GetPatrolRoute_Implementation() override;
 	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
+	virtual APatrolRoute* GetPatrolRoute_Implementation() override;
 
 	virtual void GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
 
-	virtual void EquipWeapon_Implementation() override;
-	virtual void UnequipWeapon_Implementation() override;
-
+	//virtual void EquipWeapon_Implementation() override;
+	//virtual void UnequipWeapon_Implementation() override;
 };

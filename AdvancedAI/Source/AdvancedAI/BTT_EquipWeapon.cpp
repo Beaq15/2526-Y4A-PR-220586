@@ -18,7 +18,7 @@ EBTNodeResult::Type UBTT_EquipWeapon::ExecuteTask(UBehaviorTreeComponent& OwnerC
     AEnemyBase* Enemy = Cast<AEnemyBase>(OwnerComp.GetAIOwner()->GetPawn());
     if (!Enemy) return EBTNodeResult::Failed;
 
-    Enemy->OnEquipSwordEnd.AddDynamic(this, &UBTT_EquipWeapon::OnEquipWeaponEnd);
+    Enemy->OnEquipWeaponEnd.AddDynamic(this, &UBTT_EquipWeapon::OnEquipWeaponEnd);
     IEnemyInterface::Execute_EquipWeapon(Enemy);
     return EBTNodeResult::InProgress;
 }
@@ -29,7 +29,7 @@ void UBTT_EquipWeapon::OnEquipWeaponEnd()
     {
         AEnemyBase* Enemy = Cast<AEnemyBase>(CachedOwnerComp->GetAIOwner()->GetPawn());
         if (Enemy)
-            Enemy->OnEquipSwordEnd.RemoveDynamic(this, &UBTT_EquipWeapon::OnEquipWeaponEnd);
+            Enemy->OnEquipWeaponEnd.RemoveDynamic(this, &UBTT_EquipWeapon::OnEquipWeaponEnd);
 
         FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
     }

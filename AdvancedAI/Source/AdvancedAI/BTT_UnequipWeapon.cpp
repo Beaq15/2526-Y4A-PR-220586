@@ -18,7 +18,7 @@ EBTNodeResult::Type UBTT_UnequipWeapon::ExecuteTask(UBehaviorTreeComponent& Owne
 	AEnemyBase* Enemy = Cast<AEnemyBase>(OwnerComp.GetAIOwner()->GetPawn());
 	if (!Enemy)  return EBTNodeResult::Failed;
 
-	Enemy->OnDropSwordEnd.AddDynamic(this, &UBTT_UnequipWeapon::OnUnequipWeaponEnd);
+	Enemy->OnDropWeaponEnd.AddDynamic(this, &UBTT_UnequipWeapon::OnUnequipWeaponEnd);
 	IEnemyInterface::Execute_UnequipWeapon(Enemy);
 	return EBTNodeResult::InProgress;
 }
@@ -29,7 +29,7 @@ void UBTT_UnequipWeapon::OnUnequipWeaponEnd()
 	{
 		AEnemyBase* Enemy = Cast<AEnemyBase>(CachedOwnerComp->GetAIOwner()->GetPawn());
 		if (Enemy)
-			Enemy->OnDropSwordEnd.RemoveDynamic(this, &UBTT_UnequipWeapon::OnUnequipWeaponEnd);
+			Enemy->OnDropWeaponEnd.RemoveDynamic(this, &UBTT_UnequipWeapon::OnUnequipWeaponEnd);
 
 		FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
 	}

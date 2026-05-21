@@ -11,12 +11,12 @@ void AEnemyMelee::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 
 void AEnemyMelee::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
-	OnEquipSwordEnd.Broadcast();
+	OnEquipWeaponEnd.Broadcast();
 }
 
 void AEnemyMelee::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
-	OnDropSwordEnd.Broadcast();
+	OnDropWeaponEnd.Broadcast();
 }
 
 void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)

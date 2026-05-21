@@ -69,13 +69,13 @@ void AEnemyBase::GetIdealRange_Implementation(float& AttackRadius, float& Defend
 	DefendRadius = 350.f;
 }
 
-void AEnemyBase::EquipWeapon_Implementation()
-{
-}
-
-void AEnemyBase::UnequipWeapon_Implementation()
-{
-}
+//void AEnemyBase::EquipWeapon_Implementation()
+//{
+//}
+//
+//void AEnemyBase::UnequipWeapon_Implementation()
+//{
+//}
 void AEnemyBase::Attack()
 {
 

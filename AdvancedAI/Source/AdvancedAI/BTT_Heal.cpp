@@ -3,7 +3,7 @@
 
 #include "BTT_Heal.h"
 #include "AIController.h"
-#include "EnemyInterface.h"
+#include "DamageableInterface.h"
 
 UBTT_Heal::UBTT_Heal()
 {
@@ -14,9 +14,11 @@ EBTNodeResult::Type UBTT_Heal::ExecuteTask(UBehaviorTreeComponent& OwnerComp, ui
 {
 	APawn* Pawn = OwnerComp.GetAIOwner()->GetPawn();
 
-	if (Pawn->Implements<UEnemyInterface>())
+
+	if (Pawn->Implements<UDamageableInterface>())
 	{
-		IEnemyInterface::Execute_Heal(Pawn, HealPercentage);
+		float MaxHealth = IDamageableInterface::Execute_GetMaxHealth(Pawn);
+		IDamageableInterface::Execute_Heal(Pawn, MaxHealth * HealPercentage);
 	}
 	return EBTNodeResult::Succeeded;
 }

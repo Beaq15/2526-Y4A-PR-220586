@@ -60,6 +60,8 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 	CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("NoiseEmitter"));
+
+	DamageSystem = CreateDefaultSubobject<UDamageSystem>(TEXT("DamageSystem"));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -173,5 +175,21 @@ void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 
 	UAISense_Damage::ReportDamageEvent(GetWorld(), Actor, this, 10.f, GetActorLocation(), GetActorLocation());
 
-	UGameplayStatics::ApplyDamage(Actor, 20.f, GetController(), this, UDamageType::StaticClass());
+	if (Actor->Implements<UDamageableInterface>())
+	{
+		FDamageInfo DamageInfo;
+		DamageInfo.Amount = 15.f;
+		DamageInfo.DamageType = EDamageType::Explosion;
+		IDamageableInterface::Execute_TakeDamage(Actor, DamageInfo, this);
+	}
+}
+
+float AAdvancedAICharacter::Heal_Implementation(float Amount)
+{
+	return DamageSystem->Heal(Amount);
+}
+
+bool AAdvancedAICharacter::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
+{
+	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
 }

@@ -12,14 +12,14 @@ AEnemyBase::AEnemyBase()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	DamageSystem = CreateDefaultSubobject<UDamageSystem>(TEXT("DamageSystem"));
 }
 
 // Called when the game starts or when spawned
 void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	OnTakeAnyDamage.AddDynamic(this, &AEnemyBase::OnTakeDamage);
+
 }
 
 // Called every frame
@@ -71,17 +71,14 @@ void AEnemyBase::GetIdealRange_Implementation(float& AttackRadius, float& Defend
 	DefendRadius = 350.f;
 }
 
-void AEnemyBase::Heal_Implementation(float HealPercentage)
+float AEnemyBase::Heal_Implementation(float Amount)
 {
-	Health = FMath::Clamp(Health + (HealPercentage * MaxHealth), 0.f, MaxHealth);
+	return DamageSystem->Heal(Amount);
 }
 
-void AEnemyBase::OnTakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
-	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
-
-	if (Health <= 0)
-		isDead = true;
+	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
 }
 
 void AEnemyBase::Attack()

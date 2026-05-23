@@ -18,7 +18,7 @@ EBTNodeResult::Type UBTT_EquipWeapon::ExecuteTask(UBehaviorTreeComponent& OwnerC
     AEnemyBase* Enemy = Cast<AEnemyBase>(OwnerComp.GetAIOwner()->GetPawn());
     if (!Enemy) return EBTNodeResult::Failed;
 
-    Enemy->OnEquipWeaponEnd.AddDynamic(this, &UBTT_EquipWeapon::OnEquipWeaponEnd);
+    Enemy->OnEquipWeaponEnd.AddUniqueDynamic(this, &UBTT_EquipWeapon::OnEquipWeaponEnd);
     IEnemyInterface::Execute_EquipWeapon(Enemy);
     return EBTNodeResult::InProgress;
 }

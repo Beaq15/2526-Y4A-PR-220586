@@ -18,7 +18,7 @@ EBTNodeResult::Type UBTT_UnequipWeapon::ExecuteTask(UBehaviorTreeComponent& Owne
 	AEnemyBase* Enemy = Cast<AEnemyBase>(OwnerComp.GetAIOwner()->GetPawn());
 	if (!Enemy)  return EBTNodeResult::Failed;
 
-	Enemy->OnDropWeaponEnd.AddDynamic(this, &UBTT_UnequipWeapon::OnUnequipWeaponEnd);
+	Enemy->OnDropWeaponEnd.AddUniqueDynamic(this, &UBTT_UnequipWeapon::OnUnequipWeaponEnd);
 	IEnemyInterface::Execute_UnequipWeapon(Enemy);
 	return EBTNodeResult::InProgress;
 }

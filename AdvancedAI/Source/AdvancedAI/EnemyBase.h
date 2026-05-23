@@ -6,8 +6,9 @@
 #include "GameFramework/Character.h"
 #include "PatrolRoute.h"
 #include "EnemyInterface.h"
-#include "GenericTeamAgentInterface.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "DamageableInterface.h"
+#include "DamageSystem.h"
 #include "EnemyBase.generated.h"
 
 UENUM(BlueprintType)
@@ -25,7 +26,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponEquippedEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponUnequipedEnd);
 
 UCLASS()
-class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface, public IGenericTeamAgentInterface
+class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface, public IDamageableInterface
 {
 	GENERATED_BODY()
 
@@ -62,10 +63,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	TObjectPtr<UBehaviorTree> BehaviorTree;
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(1); }
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	TSubclassOf<AActor>WeaponClass;
@@ -75,21 +73,21 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "AI")
 	APatrolRoute* PatrolRoute;
 
+	UPROPERTY(VisibleAnywhere)
+	UDamageSystem* DamageSystem;
+
 	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
 	virtual APatrolRoute* GetPatrolRoute_Implementation() override;
 
 	virtual void GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
 
-	float GetCurrentHealth_Implementation() { return Health; }
+	float GetCurrentHealth_Implementation() { return DamageSystem->Health; }
 
-	float GetMaxHealth_Implementation() { return MaxHealth; }
+	float GetMaxHealth_Implementation() { return DamageSystem->MaxHealth; }
 
-	void Heal_Implementation(float HealPercentage);
+	float Heal_Implementation(float Amount);
 
-	UFUNCTION()
-	void OnTakeDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+	bool TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser);
 
-	float Health = 100.f;
-	float MaxHealth = 100.f;
-	bool isDead = false;
+	bool IsDead_Implementation() { return DamageSystem->isDead; }
 };

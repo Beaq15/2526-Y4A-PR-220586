@@ -38,6 +38,5 @@ public:
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
 
 	virtual void EquipWeapon_Implementation() override;
-	virtual void UnequipWeapon_Implementation() override;
-	
+	virtual void UnequipWeapon_Implementation() override;	
 };

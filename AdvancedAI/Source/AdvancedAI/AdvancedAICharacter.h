@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "GenericTeamAgentInterface.h"
+#include "DamageableInterface.h"
+#include "DamageSystem.h"
 #include "AdvancedAICharacter.generated.h"
 
 class USpringArmComponent;
@@ -17,7 +19,7 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
-class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterface
+class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterface, public IDamageableInterface
 {
 	GENERATED_BODY()
 
@@ -74,12 +76,26 @@ protected:
 			
 	void DoDamage(const FInputActionValue& Value);
 
+	UPROPERTY(VisibleAnywhere)
+	UDamageSystem* DamageSystem;
 	
 protected:
 
 	virtual void NotifyControllerChanged() override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+
+
+	float GetCurrentHealth_Implementation() { return DamageSystem->Health; }
+
+	float GetMaxHealth_Implementation() { return DamageSystem->MaxHealth; }
+
+	float Heal_Implementation(float Amount);
+
+	bool TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser);
+
+	bool IsDead_Implementation() { return DamageSystem->isDead; }
 
 public:
 	/** Returns CameraBoom subobject **/

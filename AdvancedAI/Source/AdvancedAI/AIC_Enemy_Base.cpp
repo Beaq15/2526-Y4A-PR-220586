@@ -39,7 +39,7 @@ AAIC_Enemy_Base::AAIC_Enemy_Base()
     AIPerception->ConfigureSense(*DamageConfig);
     AIPerception->SetDominantSense(SightConfig->GetSenseImplementation());
 
-    AIPerception->OnPerceptionUpdated.AddDynamic(this, &AAIC_Enemy_Base::OnPerceptionUpdated);
+    AIPerception->OnPerceptionUpdated.AddUniqueDynamic(this, &AAIC_Enemy_Base::OnPerceptionUpdated);
 }
 void AAIC_Enemy_Base::OnPossess(APawn* InPawn)
 {
@@ -50,7 +50,14 @@ void AAIC_Enemy_Base::OnPossess(APawn* InPawn)
         return;
 
     FTimerHandle BTStartTimerHandle;
-    GetWorld()->GetTimerManager().SetTimer(BTStartTimerHandle, [this, Enemy]() {StartBehaviorTree(Enemy); }, 0.2f, false);
+    GetWorld()->GetTimerManager().SetTimer(BTStartTimerHandle, [this, Enemy]() 
+        {
+            StartBehaviorTree(Enemy); 
+            if (UAIPerceptionComponent* Perception = GetAIPerceptionComponent())
+            {
+                Perception->RequestStimuliListenerUpdate();
+            }
+        }, 0.2f, false);
     
 }
 
@@ -73,8 +80,15 @@ void AAIC_Enemy_Base::StartBehaviorTree(AEnemyBase* Enemy)
         BB->SetValueAsFloat(AttackRadiusKeyName, AttackRadius);
         BB->SetValueAsFloat(DefendRadiusKeyName, DefendRadius);
 
-        AAdvancedAICharacter* Player = Cast<AAdvancedAICharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-        BB->SetValueAsObject(AttackTargetKeyName, Player);
+        //AAdvancedAICharacter* Player = Cast<AAdvancedAICharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+        //BB->SetValueAsObject(AttackTargetKeyName, Player);
+
+        TArray<AActor*> PerceivedActors;
+        AIPerception->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), PerceivedActors);
+        for (AActor* Actor : PerceivedActors)
+        {
+            HandleSensedSight(Actor);
+        }
     }
 
 }
@@ -117,6 +131,7 @@ bool AAIC_Enemy_Base::CanSenseActor(AActor* Actor, EAISense Sense, FAIStimulus& 
 
 void AAIC_Enemy_Base::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
 {
+    UE_LOG(LogTemp, Warning, TEXT("OnPerceptionUpdated called on %s"), *GetPawn()->GetName());
     for (AActor* Actor : UpdatedActors)
     {
         if (CanSenseActor(Actor, EAISense::Sight))

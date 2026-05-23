@@ -19,7 +19,7 @@ EBTNodeResult::Type UBTT_DefaultAttack::ExecuteTask(UBehaviorTreeComponent& Owne
 	CachedOwnerComp = &OwnerComp;
 
 	Enemy->OnAttackEnd.RemoveDynamic(this, &UBTT_DefaultAttack::OnAttackEnd);
-	Enemy->OnAttackEnd.AddDynamic(this, &UBTT_DefaultAttack::OnAttackEnd);
+	Enemy->OnAttackEnd.AddUniqueDynamic(this, &UBTT_DefaultAttack::OnAttackEnd);
 
 	Enemy->Attack();
 	return EBTNodeResult::InProgress;

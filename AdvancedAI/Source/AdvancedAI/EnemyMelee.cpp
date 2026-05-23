@@ -55,7 +55,7 @@ void AEnemyMelee::EquipWeapon_Implementation()
 		if (AnimInstance)
 		{
 			AnimInstance->Montage_Play(EquipSwordMontage, 1.0f);
-			AnimInstance->OnPlayMontageNotifyBegin.AddDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
 
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AEnemyMelee::OnEquipSwordMontageEnd);
@@ -73,7 +73,7 @@ void AEnemyMelee::UnequipWeapon_Implementation()
 		{
 			AnimInstance->Montage_Play(DropSwordMontage, 1.0f);
 
-			AnimInstance->OnPlayMontageNotifyBegin.AddDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
 
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AEnemyMelee::OnDropSwordMontageEnd);

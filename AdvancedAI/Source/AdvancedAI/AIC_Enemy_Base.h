@@ -9,6 +9,7 @@
 #include "Perception/AISenseConfig_Hearing.h"
 #include "Perception/AISenseConfig_Damage.h"
 #include "EnemyBase.h"
+#include "GenericTeamAgentInterface.h"
 #include "AIC_Enemy_Base.generated.h"
 
 /**

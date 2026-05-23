@@ -3,7 +3,7 @@
 
 #include "BTD_IsHealthBelowTreshold.h"
 #include "AIController.h"
-#include "EnemyInterface.h"
+#include "DamageableInterface.h"
 
 UBTD_IsHealthBelowTreshold::UBTD_IsHealthBelowTreshold()
 {
@@ -15,10 +15,10 @@ bool UBTD_IsHealthBelowTreshold::CalculateRawConditionValue(UBehaviorTreeCompone
 {
 	APawn* Pawn = OwnerComp.GetAIOwner()->GetPawn();
 
-	if (Pawn->Implements<UEnemyInterface>())
+	if (Pawn->Implements<UDamageableInterface>())
 	{
-		float MaxHealth = IEnemyInterface::Execute_GetMaxHealth(Pawn);
-		float CurrentHealth = IEnemyInterface::Execute_GetCurrentHealth(Pawn);
+		float MaxHealth = IDamageableInterface::Execute_GetMaxHealth(Pawn);
+		float CurrentHealth = IDamageableInterface::Execute_GetCurrentHealth(Pawn);
 
 		if (CurrentHealth / MaxHealth <= HealthTreshold)
 			return true;

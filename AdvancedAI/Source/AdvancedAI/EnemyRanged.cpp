@@ -96,7 +96,7 @@ void AEnemyRanged::Attack()
 		if (AnimInstance)
 		{
 			AnimInstance->Montage_Play(FireRifleMontage, 1.0f);
-			AnimInstance->OnPlayMontageNotifyBegin.AddDynamic(this, &AEnemyRanged::OnMontageNotifyBegin);
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyRanged::OnMontageNotifyBegin);
 
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AEnemyRanged::OnAttackMontageEnd);

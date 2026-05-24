@@ -13,6 +13,10 @@ AEnemyBase::AEnemyBase()
 	PrimaryActorTick.bCanEverTick = true;
 
 	DamageSystem = CreateDefaultSubobject<UDamageSystem>(TEXT("DamageSystem"));
+	HealthBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
+	HealthBarComponent->SetupAttachment(GetMesh());
+	HealthBarComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	HealthBarComponent->SetDrawSize(FVector2D(200.f, 20.f));
 }
 
 // Called when the game starts or when spawned
@@ -20,6 +24,12 @@ void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UWidgetHealthBar* HealthBarWidget = CreateWidget<UWidgetHealthBar>(GetWorld(), HealthBarWidgetClass);
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->DamageableActor = TScriptInterface<IDamageableInterface>(this);
+		HealthBarComponent->SetWidget(HealthBarWidget);
+	}
 }
 
 // Called every frame

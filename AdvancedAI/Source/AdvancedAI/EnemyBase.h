@@ -9,6 +9,8 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "DamageableInterface.h"
 #include "DamageSystem.h"
+#include "Components/WidgetComponent.h"
+#include "WidgetHealthBar.h"
 #include "EnemyBase.generated.h"
 
 UENUM(BlueprintType)
@@ -75,6 +77,12 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	UDamageSystem* DamageSystem;
+
+	UPROPERTY(VisibleAnywhere, Category = "UI")
+	UWidgetComponent* HealthBarComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UWidgetHealthBar>HealthBarWidgetClass;
 
 	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
 	virtual APatrolRoute* GetPatrolRoute_Implementation() override;

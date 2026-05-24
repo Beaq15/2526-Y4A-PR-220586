@@ -8,6 +8,7 @@
 void AEnemyMelee::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 	OnAttackEnd.Broadcast();
+	DamageSystem->isInterruptible = true;
 }
 
 void AEnemyMelee::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
@@ -69,6 +70,7 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 			FDamageInfo DamageInfo;
 			DamageInfo.Amount = 25.f;
 			DamageInfo.DamageType = EDamageType::Melee;
+			DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 			Execute_TakeDamage(HitActor, DamageInfo, this);
 		}
 	}
@@ -111,6 +113,7 @@ void AEnemyMelee::UnequipWeapon_Implementation()
 
 void AEnemyMelee::Attack()
 {
+	DamageSystem->isInterruptible = false;
 	if (AttackMontage)
 	{
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();

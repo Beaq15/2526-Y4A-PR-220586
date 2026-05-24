@@ -37,7 +37,7 @@ public:
 	bool isDead = false;
 	bool isInvincible = false;
 	bool isBlocking = false;
-	bool isInterruptible = false;
+	bool isInterruptible = true;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

@@ -20,6 +20,12 @@ AEnemyBase::AEnemyBase()
 	HealthBarComponent->SetDrawSize(FVector2D(200.f, 20.f));
 }
 
+void AEnemyBase::OnHitReactionMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (!DamageSystem->isDead)
+		AICEnemyBase->SetStateAsAttacking(CachedDamageCauser, true);
+}
+
 // Called when the game starts or when spawned
 void AEnemyBase::BeginPlay()
 {
@@ -35,6 +41,7 @@ void AEnemyBase::BeginPlay()
 	}
 
 	DamageSystem->OnDeath.AddUniqueDynamic(this, &AEnemyBase::OnDeath_Event);
+	DamageSystem->OnDamageResponse.AddUniqueDynamic(this, &AEnemyBase::OnHitResponse_Event);
 }
 
 // Called every frame
@@ -61,7 +68,32 @@ void AEnemyBase::OnDeath_Event()
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
+	AICEnemyBase->SetStateAsDead();
+
 	AICEnemyBase->BrainComponent->StopLogic("Dead");
+}
+
+void AEnemyBase::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser)
+{
+	GetCharacterMovement()->StopMovementImmediately();
+
+	AICEnemyBase->SetStateAsFrozen();
+
+	CachedDamageCauser = DamageCauser;
+
+	if (HitReactionMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(HitReactionMontage, 1.0f);
+				
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyBase::OnHitReactionMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, HitReactionMontage);
+
+		}
+	}
 }
 
 float AEnemyBase::SetMovementSpeed_Implementation(EMovementSpeed Speed)

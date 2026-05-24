@@ -172,7 +172,7 @@ void AAdvancedAICharacter::ChangeState(const FInputActionValue& Value)
 			AAIC_Enemy_Base* AIController = Cast<AAIC_Enemy_Base>(Enemy->GetController());
 			if (AIController)
 				if (Pressed)
-					AIController->SetStateAsAttacking(this);
+					AIController->SetStateAsAttacking(this, true);
 				else
 					AIController->SetStateAsPassive();
 		}
@@ -198,6 +198,7 @@ void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 		FDamageInfo DamageInfo;
 		DamageInfo.Amount = 15.f;
 		DamageInfo.DamageType = EDamageType::Explosion;
+		DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 		IDamageableInterface::Execute_TakeDamage(Actor, DamageInfo, this);
 	}
 }

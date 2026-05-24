@@ -158,10 +158,10 @@ void AAIC_Enemy_Base::HandleSensedSight(AActor* Actor)
     switch (GetCurrentState())
     {
     case int32(EAIState::Passive):
-        SetStateAsAttacking(Actor);
+        SetStateAsAttacking(Actor, true);
         break;
     case int32(EAIState::Investigating):
-        SetStateAsAttacking(Actor);
+        SetStateAsAttacking(Actor, true);
         break;
     }
 }
@@ -184,10 +184,10 @@ void AAIC_Enemy_Base::HandleSensedDamage(AActor* Actor)
     switch (GetCurrentState())
     {
         case int32(EAIState::Passive):
-            SetStateAsAttacking(Actor);
+            SetStateAsAttacking(Actor, false);
             break;
         case int32(EAIState::Investigating):
-            SetStateAsAttacking(Actor);
+            SetStateAsAttacking(Actor, false);
             break;
     }
 }
@@ -198,15 +198,32 @@ void AAIC_Enemy_Base::SetStateAsPassive()
         BB->SetValueAsInt(StateKeyName, (int32)EAIState::Passive);
 }
 
-void AAIC_Enemy_Base::SetStateAsAttacking(AActor* AttackTarget)
+void AAIC_Enemy_Base::SetStateAsDead()
 {
+    if (UBlackboardComponent* BB = GetBlackboardComponent())
+        BB->SetValueAsInt(StateKeyName, (int32)EAIState::Dead);
+}
+
+void AAIC_Enemy_Base::SetStateAsFrozen()
+{
+    if (UBlackboardComponent* BB = GetBlackboardComponent())
+        BB->SetValueAsInt(StateKeyName, (int32)EAIState::Frozen);
+}
+
+void AAIC_Enemy_Base::SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnownAttackTarget)
+{
+    AActor* NewAttackTarget = (UseLastKnownAttackTarget && IsValid(AttackTarget)) ? AttackTarget : AttackTargetActor;
+
+    if (!IsValid(NewAttackTarget))
+        SetStateAsPassive();
+
     if (UBlackboardComponent* BB = GetBlackboardComponent())
     {
         BB->SetValueAsInt(StateKeyName, (int32)EAIState::Attacking);
-        BB->SetValueAsObject(AttackTargetKeyName, AttackTarget);
+        BB->SetValueAsObject(AttackTargetKeyName, NewAttackTarget);
     }
 
-    AttackTargetActor = AttackTarget;
+    AttackTargetActor = NewAttackTarget;
 }
 
 void AAIC_Enemy_Base::SetStateAsInvestigating(FVector Location)

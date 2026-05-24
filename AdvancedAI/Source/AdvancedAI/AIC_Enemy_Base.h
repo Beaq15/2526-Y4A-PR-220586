@@ -33,8 +33,15 @@ public:
 
 	UFUNCTION()
 	void SetStateAsPassive();
+
 	UFUNCTION()
-	void SetStateAsAttacking(AActor* AttackTarget);
+	void SetStateAsDead();
+
+	UFUNCTION()
+	void SetStateAsFrozen();
+
+	UFUNCTION()
+	void SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnownAttackTarget);
 
 	UFUNCTION()
 	void SetStateAsInvestigating(FVector Location);

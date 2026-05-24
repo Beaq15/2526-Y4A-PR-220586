@@ -84,7 +84,7 @@ void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointN
 				FDamageInfo DamageInfo;
 				DamageInfo.Amount = 20.f;
 				DamageInfo.DamageType = EDamageType::Projectile;
-
+				DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 				Execute_TakeDamage(HitActor, DamageInfo, this);
 			}
 		}

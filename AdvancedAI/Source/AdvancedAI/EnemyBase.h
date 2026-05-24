@@ -66,6 +66,11 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	TObjectPtr<UBehaviorTree> BehaviorTree;
+
+	UFUNCTION()
+	void OnHitReactionMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	AActor* CachedDamageCauser;
 protected:
 	virtual void BeginPlay() override;
 
@@ -89,8 +94,14 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	AAIC_Enemy_Base* AICEnemyBase;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> HitReactionMontage;
+
 	UFUNCTION()
 	void OnDeath_Event();
+
+	UFUNCTION()
+	void OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser);
 
 	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
 	virtual APatrolRoute* GetPatrolRoute_Implementation() override;

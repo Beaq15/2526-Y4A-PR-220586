@@ -34,15 +34,18 @@ bool UDamageSystem::TakeDamage(const FDamageInfo& DamageInfo, AActor* DamageCaus
 		return false;
 		break;
 	case EDamageResult::DoDamage:
-		Health = Health - DamageInfo.Amount;
+		Health -=  DamageInfo.Amount;
 		if (Health <= 0)
 		{
 			isDead = true;
 			OnDeath.Broadcast();
 		}
 		else if (isInterruptible || DamageInfo.bShouldForceInterrupt)
+			OnDamageResponse.Broadcast(DamageInfo.DamageResponse, DamageCauser);
+		return true;
 			break;
 	case EDamageResult::NoDamage:
+		return false;
 		break;
 	}
 	return false;

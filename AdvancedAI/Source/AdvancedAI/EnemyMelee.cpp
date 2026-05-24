@@ -2,6 +2,7 @@
 
 
 #include "EnemyMelee.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 void AEnemyMelee::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
@@ -44,6 +45,32 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 		bIsWieldingWeapon = false;
 
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
+	}
+
+	if (NotifyName == FName("Slash"))
+	{
+		FVector Start = GetActorLocation();
+		FVector End = GetActorForwardVector() * 200.f + GetActorLocation();
+
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+
+		TArray<AActor*> ActorsToIgnore;
+		ActorsToIgnore.Add(this);
+
+		FHitResult HitResult;
+
+		bool bHit = UKismetSystemLibrary::SphereTraceSingleForObjects(GetWorld(), Start, End, 20.f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, HitResult, true);
+
+		if (bHit)
+		{
+			AActor* HitActor = HitResult.GetActor();
+
+			FDamageInfo DamageInfo;
+			DamageInfo.Amount = 25.f;
+			DamageInfo.DamageType = EDamageType::Melee;
+			Execute_TakeDamage(HitActor, DamageInfo, this);
+		}
 	}
 }
 

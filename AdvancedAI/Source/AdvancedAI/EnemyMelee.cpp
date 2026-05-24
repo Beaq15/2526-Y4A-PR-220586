@@ -118,6 +118,8 @@ void AEnemyMelee::Attack()
 		{
 			AnimInstance->Montage_Play(AttackMontage, 1.0f);
 
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
+
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);

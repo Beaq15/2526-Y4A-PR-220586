@@ -5,6 +5,7 @@
 #include "Animation/AnimMontage.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Math/UnrealMathUtility.h"
+#include "AIC_Enemy_Base.h"
 
 // Sets default values
 AEnemyBase::AEnemyBase()
@@ -24,12 +25,16 @@ void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	AICEnemyBase = Cast<AAIC_Enemy_Base>(GetController());
+
 	UWidgetHealthBar* HealthBarWidget = CreateWidget<UWidgetHealthBar>(GetWorld(), HealthBarWidgetClass);
 	if (HealthBarWidget)
 	{
 		HealthBarWidget->DamageableActor = TScriptInterface<IDamageableInterface>(this);
 		HealthBarComponent->SetWidget(HealthBarWidget);
 	}
+
+	DamageSystem->OnDeath.AddUniqueDynamic(this, &AEnemyBase::OnDeath_Event);
 }
 
 // Called every frame
@@ -49,6 +54,14 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 APatrolRoute* AEnemyBase::GetPatrolRoute_Implementation()
 {
 	return PatrolRoute;
+}
+
+void AEnemyBase::OnDeath_Event()
+{
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	AICEnemyBase->BrainComponent->StopLogic("Dead");
 }
 
 float AEnemyBase::SetMovementSpeed_Implementation(EMovementSpeed Speed)

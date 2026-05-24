@@ -5,7 +5,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
 #include "AIC_Enemy_Base.h"
-#include "AdvancedAICharacter.h"
 #include "Kismet/GameplayStatics.h"
 
 void AEnemyRanged::BeginPlay()
@@ -78,11 +77,16 @@ void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointN
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green,
 				FString::Printf(TEXT("Hit: %s"), *HitResult.GetActor()->GetName()));
 
-			FDamageInfo DamageInfo;
-			DamageInfo.Amount = 20.f;
-			DamageInfo.DamageType = EDamageType::Projectile;
-			AAdvancedAICharacter* Player = Cast<AAdvancedAICharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-			Execute_TakeDamage(Player, DamageInfo, this);
+			AActor* HitActor = HitResult.GetActor();
+
+			if (HitActor && HitActor->Implements<UDamageableInterface>())
+			{
+				FDamageInfo DamageInfo;
+				DamageInfo.Amount = 20.f;
+				DamageInfo.DamageType = EDamageType::Projectile;
+
+				Execute_TakeDamage(HitActor, DamageInfo, this);
+			}
 		}
 		else
 		{

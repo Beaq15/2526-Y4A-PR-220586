@@ -8,6 +8,8 @@
 #include "GenericTeamAgentInterface.h"
 #include "DamageableInterface.h"
 #include "DamageSystem.h"
+#include "Components/WidgetComponent.h"
+#include "WidgetHealthBar.h"
 #include "AdvancedAICharacter.generated.h"
 
 class USpringArmComponent;
@@ -58,6 +60,8 @@ class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterfac
 
 public:
 	AAdvancedAICharacter();
+
+	virtual void BeginPlay() override;
 	
 	bool Pressed = false;
 
@@ -78,13 +82,21 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	UDamageSystem* DamageSystem;
+
+	UPROPERTY(VisibleAnywhere, Category = "UI")
+	UWidgetComponent* HealthBarComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UWidgetHealthBar>HealthBarWidgetClass;
+
+	UFUNCTION()
+	void OnDeath_Event();
 	
 protected:
 
 	virtual void NotifyControllerChanged() override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 
 
 	float GetCurrentHealth_Implementation() { return DamageSystem->Health; }

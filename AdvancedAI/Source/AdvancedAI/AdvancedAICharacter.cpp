@@ -62,6 +62,24 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 	CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("NoiseEmitter"));
 
 	DamageSystem = CreateDefaultSubobject<UDamageSystem>(TEXT("DamageSystem"));
+	HealthBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
+	HealthBarComponent->SetupAttachment(GetMesh());
+	HealthBarComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	HealthBarComponent->SetDrawSize(FVector2D(200.f, 20.f));
+}
+
+void AAdvancedAICharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	UWidgetHealthBar* HealthBarWidget = CreateWidget<UWidgetHealthBar>(GetWorld(), HealthBarWidgetClass);
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->DamageableActor = TScriptInterface<IDamageableInterface>(this);
+		HealthBarComponent->SetWidget(HealthBarWidget);
+	}
+
+	DamageSystem->OnDeath.AddUniqueDynamic(this, &AAdvancedAICharacter::OnDeath_Event);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -192,4 +210,13 @@ float AAdvancedAICharacter::Heal_Implementation(float Amount)
 bool AAdvancedAICharacter::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
 	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+}
+
+void AAdvancedAICharacter::OnDeath_Event()
+{
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	DisableInput(PC);
 }

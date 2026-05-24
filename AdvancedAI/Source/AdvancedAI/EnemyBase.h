@@ -13,6 +13,8 @@
 #include "WidgetHealthBar.h"
 #include "EnemyBase.generated.h"
 
+class AAIC_Enemy_Base;
+
 UENUM(BlueprintType)
 enum class EAIState : uint8
 {
@@ -83,6 +85,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UWidgetHealthBar>HealthBarWidgetClass;
+
+	UPROPERTY(VisibleAnywhere)
+	AAIC_Enemy_Base* AICEnemyBase;
+
+	UFUNCTION()
+	void OnDeath_Event();
 
 	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
 	virtual APatrolRoute* GetPatrolRoute_Implementation() override;

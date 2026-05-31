@@ -21,6 +21,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "AITeamComms",
+			"Enabled": true
+		},
+		{
 			"Name": "VisualStudioTools",
 			"Enabled": false,
 			"SupportedTargetPlatforms": [

@@ -11,6 +11,8 @@
 #include "DamageSystem.h"
 #include "Components/WidgetComponent.h"
 #include "WidgetHealthBar.h"
+#include "AITeamComms/Public/AIKnowledgeComponent.h"
+#include "AITeamComms/Public/AIPerceptionToFactComponent.h"
 #include "EnemyBase.generated.h"
 
 class AAIC_Enemy_Base;
@@ -96,6 +98,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> HitReactionMontage;
+
+	UPROPERTY(VisibleAnywhere)
+	UAIKnowledgeComponent* KnowledgeComponent;
+
+	UPROPERTY()
+	UAIPerceptionToFactComponent* PerceptionToFactComponent;
+
+	UFUNCTION()
+	void OnFactReceived(FSharedFact Fact);
 
 	UFUNCTION()
 	void OnDeath_Event();

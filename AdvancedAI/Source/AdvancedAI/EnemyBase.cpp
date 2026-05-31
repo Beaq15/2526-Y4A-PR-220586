@@ -14,14 +14,20 @@ AEnemyBase::AEnemyBase()
 	PrimaryActorTick.bCanEverTick = true;
 
 	DamageSystem = CreateDefaultSubobject<UDamageSystem>(TEXT("DamageSystem"));
+
 	HealthBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
 	HealthBarComponent->SetupAttachment(GetMesh());
 	HealthBarComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	HealthBarComponent->SetDrawSize(FVector2D(200.f, 20.f));
+
+	KnowledgeComponent = CreateDefaultSubobject<UAIKnowledgeComponent>(TEXT("KnowledgeComponent"));
+	PerceptionToFactComponent = CreateDefaultSubobject<UAIPerceptionToFactComponent>(TEXT("PerceptionToFactComponent"));
 }
 
 void AEnemyBase::OnHitReactionMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
 	if (!DamageSystem->isDead)
 		AICEnemyBase->SetStateAsAttacking(CachedDamageCauser, true);
 }
@@ -42,6 +48,7 @@ void AEnemyBase::BeginPlay()
 
 	DamageSystem->OnDeath.AddUniqueDynamic(this, &AEnemyBase::OnDeath_Event);
 	DamageSystem->OnDamageResponse.AddUniqueDynamic(this, &AEnemyBase::OnHitResponse_Event);
+	KnowledgeComponent->OnFactAdded.AddUniqueDynamic(this, &AEnemyBase::OnFactReceived);
 }
 
 // Called every frame
@@ -63,6 +70,16 @@ APatrolRoute* AEnemyBase::GetPatrolRoute_Implementation()
 	return PatrolRoute;
 }
 
+void AEnemyBase::OnFactReceived(FSharedFact Fact)
+{
+	if (Fact.FactType == FGameplayTag::RequestGameplayTag("Fact.UnderAttack") ||
+		Fact.FactType == FGameplayTag::RequestGameplayTag("Fact.EmemySighted"))
+	{
+		if (Fact.Subject.Actor.IsValid() && AICEnemyBase)
+			AICEnemyBase->SetStateAsAttacking(Fact.Subject.Actor.Get(), true);
+	}
+}
+
 void AEnemyBase::OnDeath_Event()
 {
 	GetMesh()->SetSimulatePhysics(true);
@@ -76,6 +93,7 @@ void AEnemyBase::OnDeath_Event()
 void AEnemyBase::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser)
 {
 	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
 
 	AICEnemyBase->SetStateAsFrozen();
 

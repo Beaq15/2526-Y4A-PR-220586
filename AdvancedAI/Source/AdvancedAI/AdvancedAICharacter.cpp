@@ -79,6 +79,8 @@ void AAdvancedAICharacter::BeginPlay()
 		HealthBarComponent->SetWidget(HealthBarWidget);
 	}
 
+	DisplayHUD();
+
 	DamageSystem->OnDeath.AddUniqueDynamic(this, &AAdvancedAICharacter::OnDeath_Event);
 }
 
@@ -117,6 +119,9 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(ChangeStateAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::ChangeState);
 		EnhancedInputComponent->BindAction(MakeNoiseAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::MakeSomeNoise);
 		EnhancedInputComponent->BindAction(DoDamageAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::DoDamage);
+
+		EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::EnterMagicStance);
+		EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AAdvancedAICharacter::EnterDefaultStance);
 	}
 	else
 	{
@@ -203,6 +208,30 @@ void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 	}
 }
 
+void AAdvancedAICharacter::EnterMagicStance()
+{
+	Stance = EPlayerStance::Magic;
+
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	
+	GetCharacterMovement()->MaxWalkSpeed = MagicWalkSpeed;
+
+	PlayerHUDWidget->ShowCrosshair();
+}
+
+void AAdvancedAICharacter::EnterDefaultStance()
+{
+	Stance = EPlayerStance::Default;
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+
+	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
+
+	PlayerHUDWidget->HideCrosshair();
+}
+
 float AAdvancedAICharacter::Heal_Implementation(float Amount)
 {
 	return DamageSystem->Heal(Amount);
@@ -220,4 +249,17 @@ void AAdvancedAICharacter::OnDeath_Event()
 
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	DisableInput(PC);
+}
+
+void AAdvancedAICharacter::DisplayHUD()
+{
+	if (IsValid(PlayerHUDWidget))
+		PlayerHUDWidget->Visibility = ESlateVisibility::Visible;
+	else
+	{
+		PlayerHUDWidget = CreateWidget<UWidgetPlayerHUD>(GetWorld(), PlayerHUDWidgetClass);
+		if (PlayerHUDWidget)
+			PlayerHUDWidget->AddToViewport();
+
+	}
 }

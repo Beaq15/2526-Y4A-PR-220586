@@ -10,7 +10,15 @@
 #include "DamageSystem.h"
 #include "Components/WidgetComponent.h"
 #include "WidgetHealthBar.h"
+#include "WidgetPlayerHUD.h"
 #include "AdvancedAICharacter.generated.h"
+
+UENUM(BlueprintType)
+enum class EPlayerStance : uint8
+{
+	Default,
+	Magic
+};
 
 class USpringArmComponent;
 class UCameraComponent;
@@ -58,6 +66,9 @@ class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterfac
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* DoDamageAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ChangeStanceAction;
+
 public:
 	AAdvancedAICharacter();
 
@@ -66,6 +77,9 @@ public:
 	bool Pressed = false;
 
 	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(0); }
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	EPlayerStance Stance = EPlayerStance::Default;
 protected:
 
 	/** Called for movement input */
@@ -80,6 +94,10 @@ protected:
 			
 	void DoDamage(const FInputActionValue& Value);
 
+	void EnterMagicStance();
+
+	void EnterDefaultStance();
+
 	UPROPERTY(VisibleAnywhere)
 	UDamageSystem* DamageSystem;
 
@@ -89,8 +107,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UWidgetHealthBar>HealthBarWidgetClass;
 
+	float MagicWalkSpeed = 200.f;
+	float DefaultWalkSpeed = 500.f;
+
 	UFUNCTION()
 	void OnDeath_Event();
+
+	UFUNCTION()
+	void DisplayHUD();
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UWidgetPlayerHUD>PlayerHUDWidgetClass;
+
+	UWidgetPlayerHUD* PlayerHUDWidget;
 	
 protected:
 

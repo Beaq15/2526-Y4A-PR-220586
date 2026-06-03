@@ -11,6 +11,7 @@
 #include "Components/WidgetComponent.h"
 #include "WidgetHealthBar.h"
 #include "WidgetPlayerHUD.h"
+#include "AttackSystem.h"
 #include "AdvancedAICharacter.generated.h"
 
 UENUM(BlueprintType)
@@ -80,6 +81,16 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	EPlayerStance Stance = EPlayerStance::Default;
+
+	UPROPERTY(EditDefaultsonly)
+	TObjectPtr<UAnimMontage>MagicSpellMontage;
+
+	UFUNCTION()
+	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
+
+	UFUNCTION()
+	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
 protected:
 
 	/** Called for movement input */
@@ -101,6 +112,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UDamageSystem* DamageSystem;
 
+	UPROPERTY(VisibleAnywhere)
+	UAttackSystem* AttackSystem;
+
 	UPROPERTY(VisibleAnywhere, Category = "UI")
 	UWidgetComponent* HealthBarComponent;
 
@@ -109,6 +123,7 @@ protected:
 
 	float MagicWalkSpeed = 200.f;
 	float DefaultWalkSpeed = 500.f;
+	bool CanMove = true;
 
 	UFUNCTION()
 	void OnDeath_Event();

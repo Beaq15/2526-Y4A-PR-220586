@@ -13,6 +13,7 @@
 #include "WidgetHealthBar.h"
 #include "AITeamComms/Public/AIKnowledgeComponent.h"
 #include "AITeamComms/Public/AIPerceptionToFactComponent.h"
+#include "AttackSystem.h"
 #include "EnemyBase.generated.h"
 
 class AAIC_Enemy_Base;
@@ -86,6 +87,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	UDamageSystem* DamageSystem;
+
+	UPROPERTY(VisibleAnywhere)
+	UAttackSystem* AttackSystem;
 
 	UPROPERTY(VisibleAnywhere, Category = "UI")
 	UWidgetComponent* HealthBarComponent;

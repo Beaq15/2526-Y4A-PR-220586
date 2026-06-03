@@ -69,33 +69,12 @@ void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointN
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(this);
 
-		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility, Params);
+		FDamageInfo DamageInfo;
+		DamageInfo.Amount = 20.f;
+		DamageInfo.DamageType = EDamageType::Projectile;
+		DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 
-		if (bHit)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Hit Target"));
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green,
-				FString::Printf(TEXT("Hit: %s"), *HitResult.GetActor()->GetName()));
-
-			AActor* HitActor = HitResult.GetActor();
-
-			if (HitActor && HitActor->Implements<UDamageableInterface>())
-			{
-				FDamageInfo DamageInfo;
-				DamageInfo.Amount = 20.f;
-				DamageInfo.DamageType = EDamageType::Projectile;
-				DamageInfo.DamageResponse = EDamageResponse::HitReaction;
-				Execute_TakeDamage(HitActor, DamageInfo, this);
-			}
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Not the player"));
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green,
-				FString::Printf(TEXT("Hit: %s"), *HitResult.GetActor()->GetName()));
-		}
-
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1.f, 0, 1.f);
+		AttackSystem->FireBullet(Start, End, DamageInfo);
 	}
 }
 

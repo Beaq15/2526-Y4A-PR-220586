@@ -15,6 +15,7 @@
 #include "AIC_Enemy_Base.h"
 #include "DrawDebugHelpers.h"
 #include "Components/PawnNoiseEmitterComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -62,6 +63,8 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 	CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("NoiseEmitter"));
 
 	DamageSystem = CreateDefaultSubobject<UDamageSystem>(TEXT("DamageSystem"));
+	AttackSystem = CreateDefaultSubobject<UAttackSystem>(TEXT("AttackSystem"));
+
 	HealthBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
 	HealthBarComponent->SetupAttachment(GetMesh());
 	HealthBarComponent->SetWidgetSpace(EWidgetSpace::Screen);
@@ -131,24 +134,28 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 void AAdvancedAICharacter::Move(const FInputActionValue& Value)
 {
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
+	if (CanMove)
 	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		// input is a Vector2D
+		FVector2D MovementVector = Value.Get<FVector2D>();
 
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		if (Controller != nullptr)
+		{
+			// find out which way is forward
+			const FRotator Rotation = Controller->GetControlRotation();
+			const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+			// get forward vector
+			const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+			// get right vector 
+			const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+			// add movement 
+			AddMovementInput(ForwardDirection, MovementVector.Y);
+			AddMovementInput(RightDirection, MovementVector.X);
+		}
+
 	}
 }
 
@@ -192,22 +199,54 @@ void AAdvancedAICharacter::MakeSomeNoise(const FInputActionValue& Value)
 
 void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 {
-	AActor* Actor = UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyBase::StaticClass());
+	if (!(Stance == EPlayerStance::Magic))
+		return;
 
-	if (!IsValid(Actor)) return;
+	CanMove = false;
 
-	UAISense_Damage::ReportDamageEvent(GetWorld(), Actor, this, 10.f, GetActorLocation(), GetActorLocation());
-
-	if (Actor->Implements<UDamageableInterface>())
+	if (MagicSpellMontage)
 	{
-		FDamageInfo DamageInfo;
-		DamageInfo.Amount = 15.f;
-		DamageInfo.DamageType = EDamageType::Explosion;
-		DamageInfo.DamageResponse = EDamageResponse::HitReaction;
-		IDamageableInterface::Execute_TakeDamage(Actor, DamageInfo, this);
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(MagicSpellMontage, 1.0f);
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, MagicSpellMontage);
+
+			FOnMontageBlendingOutStarted BlendOutDelegate;
+			BlendOutDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
+			AnimInstance->Montage_SetBlendingOutDelegate(BlendOutDelegate, MagicSpellMontage);
+		}
 	}
 }
 
+void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
+{
+	if (NotifyName == FName("Fire"))
+	{
+		FDamageInfo DamageInfo;
+		DamageInfo.Amount = 20.f;
+		DamageInfo.DamageType = EDamageType::Explosion;
+		DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+		DamageInfo.bCanBeBlocked = true;
+
+		FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("hand_l"));
+		FVector TargetLocation = FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector() * 10000.0f;
+
+		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, TargetLocation);
+
+		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector(1.0f));
+		AttackSystem->MagicSpell(SpawnTransform, nullptr, DamageInfo);
+	}
+}
+
+void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	CanMove = true;
+}
 void AAdvancedAICharacter::EnterMagicStance()
 {
 	Stance = EPlayerStance::Magic;
@@ -254,7 +293,8 @@ void AAdvancedAICharacter::OnDeath_Event()
 void AAdvancedAICharacter::DisplayHUD()
 {
 	if (IsValid(PlayerHUDWidget))
-		PlayerHUDWidget->Visibility = ESlateVisibility::Visible;
+		PlayerHUDWidget->SetVisibility(ESlateVisibility::Visible);
+		
 	else
 	{
 		PlayerHUDWidget = CreateWidget<UWidgetPlayerHUD>(GetWorld(), PlayerHUDWidgetClass);

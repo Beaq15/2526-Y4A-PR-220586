@@ -25,6 +25,7 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 AAdvancedAICharacter::AAdvancedAICharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -85,6 +86,21 @@ void AAdvancedAICharacter::BeginPlay()
 	DisplayHUD();
 
 	DamageSystem->OnDeath.AddUniqueDynamic(this, &AAdvancedAICharacter::OnDeath_Event);
+
+	// TIMELINE
+	UCurveFloat* LinearCurve = NewObject<UCurveFloat>(this);
+	LinearCurve->FloatCurve.AddKey(0.0f, 0.0f);
+	LinearCurve->FloatCurve.AddKey(0.3f, 1.0f);
+
+	FOnTimelineFloat UpdateDelegate;
+	UpdateDelegate.BindUFunction(this, FName("OnAimTimeLineUpdate"));
+	AimTimeline.AddInterpFloat(LinearCurve, UpdateDelegate);
+}
+
+void AAdvancedAICharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	AimTimeline.TickTimeline(DeltaTime);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -255,6 +271,8 @@ void AAdvancedAICharacter::EnterMagicStance()
 	GetCharacterMovement()->MaxWalkSpeed = MagicWalkSpeed;
 
 	PlayerHUDWidget->ShowCrosshair();
+
+	AimTimeline.Play();
 }
 
 void AAdvancedAICharacter::EnterDefaultStance()
@@ -267,6 +285,8 @@ void AAdvancedAICharacter::EnterDefaultStance()
 	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
 
 	PlayerHUDWidget->HideCrosshair();
+
+	AimTimeline.Reverse();
 }
 
 float AAdvancedAICharacter::Heal_Implementation(float Amount)
@@ -282,6 +302,11 @@ bool AAdvancedAICharacter::TakeDamage_Implementation(const FDamageInfo& DamageIn
 bool AAdvancedAICharacter::IsAttacking_Implementation()
 {
 	return Attacking;
+}
+
+void AAdvancedAICharacter::OnAimTimeLineUpdate(float Value)
+{
+	CameraBoom->SocketOffset = FMath::Lerp(DefaultBoomOffset, AimBoomOffset, Value);
 }
 
 void AAdvancedAICharacter::OnDeath_Event()

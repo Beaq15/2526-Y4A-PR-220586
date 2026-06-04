@@ -12,6 +12,7 @@
 #include "WidgetHealthBar.h"
 #include "WidgetPlayerHUD.h"
 #include "AttackSystem.h"
+#include "Components/TimelineComponent.h"
 #include "AdvancedAICharacter.generated.h"
 
 UENUM(BlueprintType)
@@ -74,6 +75,7 @@ public:
 	AAdvancedAICharacter();
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 	
 	bool Pressed = false;
 
@@ -121,10 +123,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UWidgetHealthBar>HealthBarWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly)
+	FVector AimBoomOffset = { 200.f, 65.f, 45.f };
+
+	UPROPERTY(EditDefaultsOnly)
+	FVector DefaultBoomOffset = { 0.f, 60.f, 30.f };
+
 	float MagicWalkSpeed = 200.f;
 	float DefaultWalkSpeed = 500.f;
 	bool CanMove = true;
 	bool Attacking = false;
+
+	FTimeline AimTimeline;
+
+	UFUNCTION()
+	void OnAimTimeLineUpdate(float Value);
 
 	UFUNCTION()
 	void OnDeath_Event();

@@ -124,6 +124,7 @@ protected:
 	float MagicWalkSpeed = 200.f;
 	float DefaultWalkSpeed = 500.f;
 	bool CanMove = true;
+	bool Attacking = false;
 
 	UFUNCTION()
 	void OnDeath_Event();
@@ -152,6 +153,8 @@ protected:
 	bool TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser);
 
 	bool IsDead_Implementation() { return DamageSystem->isDead; }
+
+	bool IsAttacking_Implementation();
 
 public:
 	/** Returns CameraBoom subobject **/

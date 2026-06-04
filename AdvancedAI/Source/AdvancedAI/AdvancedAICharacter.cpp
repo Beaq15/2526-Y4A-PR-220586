@@ -215,10 +215,6 @@ void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, MagicSpellMontage);
-
-			FOnMontageBlendingOutStarted BlendOutDelegate;
-			BlendOutDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
-			AnimInstance->Montage_SetBlendingOutDelegate(BlendOutDelegate, MagicSpellMontage);
 		}
 	}
 }
@@ -227,6 +223,7 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 {
 	if (NotifyName == FName("Fire"))
 	{
+		Attacking = true;
 		FDamageInfo DamageInfo;
 		DamageInfo.Amount = 20.f;
 		DamageInfo.DamageType = EDamageType::Explosion;
@@ -246,6 +243,7 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	CanMove = true;
+	Attacking = false;
 }
 void AAdvancedAICharacter::EnterMagicStance()
 {
@@ -279,6 +277,11 @@ float AAdvancedAICharacter::Heal_Implementation(float Amount)
 bool AAdvancedAICharacter::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
 	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+}
+
+bool AAdvancedAICharacter::IsAttacking_Implementation()
+{
+	return Attacking;
 }
 
 void AAdvancedAICharacter::OnDeath_Event()

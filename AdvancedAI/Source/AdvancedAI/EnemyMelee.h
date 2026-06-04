@@ -6,12 +6,24 @@
 #include "EnemyBase.h"
 #include "EnemyMelee.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlockEnd);
+
+UENUM(BlueprintType)
+enum class EBlockingState : uint8
+{
+	None,
+	Blocking,
+	BlockedSuccessfully
+};
+
 UCLASS()
 class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 {
 	GENERATED_BODY()
 
 public:
+
+	virtual void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> EquipSwordMontage;
@@ -21,6 +33,32 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AttackMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SwordBlockMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SwordBlockHitMontage;
+
+	EBlockingState BlockingState;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnBlockEnd OnBlockEnd;
+
+	UFUNCTION()
+	void OnSwordBlockMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnBlockHitMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void StartBlock();
+
+	UFUNCTION()
+	void EndBlock();
+
+	UFUNCTION()
+	void OnBlocked(bool bCanBeParried, AActor* DamageCauser);
 
 	virtual void Attack() override;
 

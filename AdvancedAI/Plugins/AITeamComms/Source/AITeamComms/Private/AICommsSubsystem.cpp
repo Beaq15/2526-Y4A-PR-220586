@@ -12,13 +12,13 @@ void UAICommsSubsystem::BroadcastFact(UAIKnowledgeComponent* Sender, const FShar
 
     if (!Fact.CanRelay())
     {
-        if (GEngine)
+        /*if (GEngine)
         {
             GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
                 FString::Printf(TEXT("%s: Fact reached MaxHops (%d), not broadcasting"),
                     *Sender->GetOwner()->GetName(),
                     Fact.MaxHops));
-        }
+        }*/
         return;  // Don't broadcast - hop limit reached
     }
 
@@ -54,25 +54,25 @@ void UAICommsSubsystem::BroadcastFact(UAIKnowledgeComponent* Sender, const FShar
                 {
                     Copy.Confidence *= 0.3f; // 70% signal loss through walls
 
-                    if (GEngine)
+                    /*if (GEngine)
                     {
                         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange,
                             FString::Printf(TEXT("%s -> %s: LOS BLOCKED (confidence reduced to %.2f)"),
                                 *Sender->GetOwner()->GetName(),
                                 *Receiver->GetOwner()->GetName(),
                                 Copy.Confidence));
-                    }
+                    }*/
                 }
                 else
                 {
-                    if (GEngine)
+                    /*if (GEngine)
                     {
                         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green,
                             FString::Printf(TEXT("%s -> %s: Clear LOS (confidence %.2f)"),
                                 *Sender->GetOwner()->GetName(),
                                 *Receiver->GetOwner()->GetName(),
                                 Copy.Confidence));
-                    }
+                    }*/
                 }
 
                 if (bEnableLatency)
@@ -84,13 +84,13 @@ void UAICommsSubsystem::BroadcastFact(UAIKnowledgeComponent* Sender, const FShar
                     // Queue for delayed delivery
                     PendingDeliveries.Add(FPendingFactDelivery(Receiver, Copy, DeliveryTime));
 
-                    if (GEngine)
+                    /*if (GEngine)
                     {
                         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
                             FString::Printf(TEXT("📡 Queued for %s (%.2fs delay)"),
                                 *Receiver->GetOwner()->GetName(),
                                 Latency));
-                    }
+                    }*/
                 }
                 else
                 {
@@ -100,7 +100,7 @@ void UAICommsSubsystem::BroadcastFact(UAIKnowledgeComponent* Sender, const FShar
 
                // Receiver->AddOrUpdateFact(Copy, false);
             }
-            else if (!bListeningToChannel)
+           /* else if (!bListeningToChannel)
             {
                 if (GEngine)
                 {
@@ -108,7 +108,7 @@ void UAICommsSubsystem::BroadcastFact(UAIKnowledgeComponent* Sender, const FShar
                         FString::Printf(TEXT("%s blocked fact - not listening to Channel %d"),
                             *Receiver->GetOwner()->GetName(), Channel));
                 }
-            }
+            }*/
         }
         else
         {
@@ -196,14 +196,14 @@ void UAICommsSubsystem::DeliverFactImmediate(UAIKnowledgeComponent* Receiver, co
         bShouldRebroadcast = true;
     }
 
-    if (GEngine && bShouldRebroadcast)
-    {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Magenta,
-            FString::Printf(TEXT("%s will RELAY fact (hop %d→%d)"),
-                *Receiver->GetOwner()->GetName(),
-                Fact.CurrentHops,
-                Fact.CurrentHops + 1));
-    }
+    //if (GEngine && bShouldRebroadcast)
+    //{
+    //    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Magenta,
+    //        FString::Printf(TEXT("%s will RELAY fact (hop %d→%d)"),
+    //            *Receiver->GetOwner()->GetName(),
+    //            Fact.CurrentHops,
+    //            Fact.CurrentHops + 1));
+    //}
 
     Receiver->AddOrUpdateFact(Fact, bShouldRebroadcast);
 }

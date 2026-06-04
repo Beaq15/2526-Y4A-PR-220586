@@ -46,6 +46,7 @@ void UAttackSystem::MagicSpell(FTransform SpawnTransform, AActor* TargetActor, F
 	Projectile->Speed = 1000.f;
 	Projectile->Target = TargetActor;
 	DamageInfoRef = DamageInfo;
+	
 
 	Projectile->OnProjectileImpact.AddDynamic(this, &UAttackSystem::OnProjectileHit);
 }

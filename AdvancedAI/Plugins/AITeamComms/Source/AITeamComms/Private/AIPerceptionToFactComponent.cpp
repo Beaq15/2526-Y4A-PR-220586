@@ -83,20 +83,20 @@ void UAIPerceptionToFactComponent::HandleSightStimulus(AActor* Actor, const FAIS
 
         KnowledgeComp->AddOrUpdateFact(Fact, true);
 
-        if (GEngine)
+       /* if (GEngine)
         {
             GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange,
                 FString::Printf(TEXT("%s saw %s!"), *GetOwner()->GetName(), *Actor->GetName()));
-        }
+        }*/
     }
-    else  // Lost sight
-    {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange,
-                FString::Printf(TEXT("%s lost sight of %s"), *GetOwner()->GetName(), *Actor->GetName()));
-        }
-    }
+    //else  // Lost sight
+    //{
+    //    if (GEngine)
+    //    {
+    //        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange,
+    //            FString::Printf(TEXT("%s lost sight of %s"), *GetOwner()->GetName(), *Actor->GetName()));
+    //    }
+    //}
 }
 
 void UAIPerceptionToFactComponent::HandleHearingStimulus(AActor* Actor, const FAIStimulus& Stimulus)
@@ -119,20 +119,20 @@ void UAIPerceptionToFactComponent::HandleHearingStimulus(AActor* Actor, const FA
 
         KnowledgeComp->AddOrUpdateFact(Fact, true);
 
-        if (GEngine)
+        /*if (GEngine)
         {
             GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
                 FString::Printf(TEXT("%s heard noise at %s!"), *GetOwner()->GetName(), *Stimulus.StimulusLocation.ToString()));
-        }
+        }*/
     }
-    else  // Lost hearing
-    {
-        if (GEngine)
-        {
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange,
-                FString::Printf(TEXT("%s lost hearing of %s"), *GetOwner()->GetName(), *Actor->GetName()));
-        }
-    }
+    //else  // Lost hearing
+    //{
+    //    if (GEngine)
+    //    {
+    //        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange,
+    //            FString::Printf(TEXT("%s lost hearing of %s"), *GetOwner()->GetName(), *Actor->GetName()));
+    //    }
+    //}
 }
 
 void UAIPerceptionToFactComponent::HandleDamageStimulus(AActor* Actor, const FAIStimulus& Stimulus)
@@ -150,10 +150,10 @@ void UAIPerceptionToFactComponent::HandleDamageStimulus(AActor* Actor, const FAI
 
         KnowledgeComp->AddOrUpdateFact(Fact, true);
 
-        if (GEngine)
+       /* if (GEngine)
         {
             GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red,
                 FString::Printf(TEXT("%s is under attack by %s!"), *GetOwner()->GetName(), *Actor->GetName()));
-        }
+        }*/
     }
 }

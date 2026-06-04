@@ -91,4 +91,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	bool IsDead();
+
+	UFUNCTION(BlueprintNativeEvent)
+	bool IsAttacking();
 };

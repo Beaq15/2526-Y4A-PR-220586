@@ -57,11 +57,11 @@ bool UAIKnowledgeComponent::IsLocationClaimed(const FVector& Location, float Che
                     FString ClaimerName = F.Subject.Actor.IsValid() ?
                         F.Subject.Actor->GetName() : TEXT("Unknown");
 
-                    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange,
+                    /*GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange,
                         FString::Printf(TEXT("%s: Location claimed by %s (%.0f units away)"),
                             *GetOwner()->GetName(),
                             *ClaimerName,
-                            Distance));
+                            Distance));*/
                 }
                 return true;
             }
@@ -86,14 +86,14 @@ void UAIKnowledgeComponent::ClaimArea(const FVector& Location, float Duration, i
 
     AddOrUpdateFact(Claim, true);
 
-    if (GEngine)
+   /* if (GEngine)
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan,
             FString::Printf(TEXT("🏁 %s claimed area at %s (%.0fs)"),
                 *GetOwner()->GetName(),
                 *Location.ToString(),
                 Duration));
-    }
+    }*/
 }
 
 void UAIKnowledgeComponent::TickComponent(float Dt, ELevelTick, FActorComponentTickFunction*)
@@ -106,11 +106,11 @@ void UAIKnowledgeComponent::TickComponent(float Dt, ELevelTick, FActorComponentT
         for (const FSharedFact& F : Facts)
         {
             float CurrentConf = F.GetCurrentConfidence(Now);
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green,
+            /*GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green,
                 FString::Printf(TEXT("%s: %s confidence %.2f"),
                     *GetOwner()->GetName(),
                     *F.FactType.ToString(),
-                    CurrentConf));
+                    CurrentConf));*/
         }
     }
 }

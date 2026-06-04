@@ -33,7 +33,7 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 		WeaponActor = GetWorld()->SpawnActor<AActor>(WeaponClass, GetActorTransform(), SpawnParams);
 		if (!WeaponActor) return;
 
-		WeaponActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("ik_hand_r_sword_socket"));
+		WeaponActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("hand_r_sword_socket"));
 
 		bIsWieldingWeapon = true;
 
@@ -111,6 +111,67 @@ void AEnemyMelee::UnequipWeapon_Implementation()
 	}
 }
 
+void AEnemyMelee::BeginPlay()
+{
+	Super::BeginPlay();
+
+	DamageSystem->OnBlocked.AddDynamic(this, &AEnemyMelee::OnBlocked);
+}
+
+void AEnemyMelee::OnSwordBlockMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (bInterrupted && BlockingState == EBlockingState::BlockedSuccessfully)
+		return;
+
+	EndBlock();
+}
+
+void AEnemyMelee::StartBlock()
+{
+	DamageSystem->isBlocking = true;
+	BlockingState = EBlockingState::Blocking;
+
+	if (SwordBlockMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(SwordBlockMontage, 1.0f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyMelee::OnSwordBlockMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordBlockMontage);
+		}
+	}
+}
+
+void AEnemyMelee::EndBlock()
+{
+	DamageSystem->isBlocking = false;
+	BlockingState = EBlockingState::None;
+
+	OnBlockEnd.Broadcast();
+}
+
+
+void AEnemyMelee::OnBlocked(bool bCanBeParried, AActor* DamageCauser)
+{
+	BlockingState = EBlockingState::BlockedSuccessfully;
+
+	if (SwordBlockHitMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(SwordBlockHitMontage, 1.0f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyMelee::OnBlockHitMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordBlockHitMontage);
+		}
+	}
+}
+
 void AEnemyMelee::Attack()
 {
 	DamageSystem->isInterruptible = false;
@@ -128,4 +189,9 @@ void AEnemyMelee::Attack()
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
 		}
 	}
+}
+
+void AEnemyMelee::OnBlockHitMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	EndBlock();
 }

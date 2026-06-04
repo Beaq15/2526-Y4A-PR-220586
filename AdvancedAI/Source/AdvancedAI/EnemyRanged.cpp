@@ -46,6 +46,7 @@ void AEnemyRanged::GetIdealRange_Implementation(float& AttackRadius, float& Defe
 void AEnemyRanged::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 	OnAttackEnd.Broadcast();
+	Attacking = false;
 }
 
 void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
@@ -80,6 +81,7 @@ void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointN
 
 void AEnemyRanged::Attack()
 {
+	Attacking = true;
 	if (FireRifleMontage)
 	{
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -103,7 +105,7 @@ void AEnemyRanged::EquipWeapon_Implementation()
 	WeaponActor = GetWorld()->SpawnActor<AActor>(WeaponClass, GetActorTransform(), SpawnParams);
 	if (!WeaponActor) return;
 
-	WeaponActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("ik_hand_r_rifle_socket"));
+	WeaponActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("hand_r_rifle_socket"));
 
 	bIsWieldingWeapon = true;
 

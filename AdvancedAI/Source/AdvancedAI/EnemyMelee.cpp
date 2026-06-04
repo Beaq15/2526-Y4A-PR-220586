@@ -18,6 +18,7 @@ void AEnemyMelee::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupte
 
 void AEnemyMelee::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
+	UE_LOG(LogTemp, Warning, TEXT("OnDropSwordMontageEnd fired, bInterrupted: %d"), bInterrupted);
 	OnDropWeaponEnd.Broadcast();
 }
 
@@ -42,7 +43,11 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 
 	if (NotifyName == FName("DropSword"))
 	{
-		WeaponActor->Destroy();
+		if (WeaponActor)
+		{
+			WeaponActor->Destroy();
+			WeaponActor = nullptr;
+		}
 		bIsWieldingWeapon = false;
 
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);

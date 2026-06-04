@@ -136,6 +136,9 @@ protected:
 
 	FTimeline AimTimeline;
 
+	UPROPERTY()
+	UCurveFloat* LinearCurve;
+
 	UFUNCTION()
 	void OnAimTimeLineUpdate(float Value);
 

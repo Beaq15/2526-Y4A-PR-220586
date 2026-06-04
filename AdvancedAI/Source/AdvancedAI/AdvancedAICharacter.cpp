@@ -88,7 +88,7 @@ void AAdvancedAICharacter::BeginPlay()
 	DamageSystem->OnDeath.AddUniqueDynamic(this, &AAdvancedAICharacter::OnDeath_Event);
 
 	// TIMELINE
-	UCurveFloat* LinearCurve = NewObject<UCurveFloat>(this);
+	LinearCurve = NewObject<UCurveFloat>(this);
 	LinearCurve->FloatCurve.AddKey(0.0f, 0.0f);
 	LinearCurve->FloatCurve.AddKey(0.3f, 1.0f);
 
@@ -218,6 +218,9 @@ void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 	if (!(Stance == EPlayerStance::Magic))
 		return;
 
+	if (Attacking)
+		return;
+
 	CanMove = false;
 
 	if (MagicSpellMontage)
@@ -225,6 +228,7 @@ void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
+			Attacking = true;
 			AnimInstance->Montage_Play(MagicSpellMontage, 1.0f);
 			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
 
@@ -239,7 +243,6 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 {
 	if (NotifyName == FName("Fire"))
 	{
-		Attacking = true;
 		FDamageInfo DamageInfo;
 		DamageInfo.Amount = 20.f;
 		DamageInfo.DamageType = EDamageType::Explosion;
@@ -272,7 +275,7 @@ void AAdvancedAICharacter::EnterMagicStance()
 
 	PlayerHUDWidget->ShowCrosshair();
 
-	AimTimeline.Play();
+	AimTimeline.PlayFromStart();
 }
 
 void AAdvancedAICharacter::EnterDefaultStance()

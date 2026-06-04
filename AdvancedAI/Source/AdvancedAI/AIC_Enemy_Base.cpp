@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "EnemyBase.h"
 #include "AdvancedAICharacter.h"
+#include "DamageableInterface.h"
 
 AAIC_Enemy_Base::AAIC_Enemy_Base()
 {
@@ -217,13 +218,22 @@ void AAIC_Enemy_Base::SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnow
     if (!IsValid(NewAttackTarget))
         SetStateAsPassive();
 
-    if (UBlackboardComponent* BB = GetBlackboardComponent())
+    if (NewAttackTarget->Implements<UDamageableInterface>())
     {
-        BB->SetValueAsInt(StateKeyName, (int32)EAIState::Attacking);
-        BB->SetValueAsObject(AttackTargetKeyName, NewAttackTarget);
-    }
+        bool bIsDead = IDamageableInterface::Execute_IsDead(NewAttackTarget);
+        if (bIsDead)
+            SetStateAsPassive();
+        else
+        {
+            if (UBlackboardComponent* BB = GetBlackboardComponent())
+            {
+                BB->SetValueAsInt(StateKeyName, (int32)EAIState::Attacking);
+                BB->SetValueAsObject(AttackTargetKeyName, NewAttackTarget);
+            }
 
-    AttackTargetActor = NewAttackTarget;
+            AttackTargetActor = NewAttackTarget;
+        }
+    }
 }
 
 void AAIC_Enemy_Base::SetStateAsInvestigating(FVector Location)

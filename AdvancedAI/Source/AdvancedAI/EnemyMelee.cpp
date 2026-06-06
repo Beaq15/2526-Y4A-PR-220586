@@ -3,7 +3,7 @@
 
 #include "EnemyMelee.h"
 #include "Kismet/KismetSystemLibrary.h"
-
+#include "GameFramework/CharacterMovementComponent.h"
 
 void AEnemyMelee::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
@@ -135,6 +135,7 @@ void AEnemyMelee::OnSwordBlockMontageEnd(UAnimMontage* Montage, bool bInterrupte
 
 void AEnemyMelee::StartBlock()
 {
+	GetCharacterMovement()->StopMovementImmediately();
 	DamageSystem->isBlocking = true;
 	BlockingState = EBlockingState::Blocking;
 

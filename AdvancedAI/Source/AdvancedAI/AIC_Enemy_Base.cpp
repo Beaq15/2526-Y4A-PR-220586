@@ -145,12 +145,7 @@ void AAIC_Enemy_Base::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
         }
         if (CanSenseActor(Actor, EAISense::Damage))
         {
-            if (Actor->Implements<UGenericTeamAgentInterface>())
-            {
-                IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(Actor);
-                if (TeamAgent && TeamAgent->GetGenericTeamId() == GetGenericTeamId())
-                    continue;
-            }
+            
             HandleSensedDamage(Actor);
         }
     }
@@ -184,6 +179,13 @@ void AAIC_Enemy_Base::HandleSensedSound(FVector Location)
 
 void AAIC_Enemy_Base::HandleSensedDamage(AActor* Actor)
 {
+    if (Actor->Implements<UGenericTeamAgentInterface>())
+    {
+        IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(Actor);
+        if (TeamAgent && TeamAgent->GetGenericTeamId() == GetGenericTeamId())
+            return;
+    }
+
     switch (GetCurrentState())
     {
         case int32(EAIState::Passive):

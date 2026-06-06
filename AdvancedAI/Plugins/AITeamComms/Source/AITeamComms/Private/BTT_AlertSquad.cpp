@@ -12,7 +12,7 @@ UBTT_AlertSquad::UBTT_AlertSquad()
     bNotifyTick = false;
 
     // Default to "Fact.Alert"
-    FactType = FGameplayTag::RequestGameplayTag(FName("Fact.Alert"));
+    //FactType = FGameplayTag::RequestGameplayTag(FName("Fact.Alert"));
 }
 
 EBTNodeResult::Type UBTT_AlertSquad::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

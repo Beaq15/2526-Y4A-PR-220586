@@ -117,12 +117,6 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UAttackSystem* AttackSystem;
 
-	UPROPERTY(VisibleAnywhere, Category = "UI")
-	UWidgetComponent* HealthBarComponent;
-
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UWidgetHealthBar>HealthBarWidgetClass;
-
 	UPROPERTY(EditDefaultsOnly)
 	FVector AimBoomOffset = { 200.f, 65.f, 45.f };
 

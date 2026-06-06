@@ -74,7 +74,7 @@ APatrolRoute* AEnemyBase::GetPatrolRoute_Implementation()
 void AEnemyBase::OnFactReceived(FSharedFact Fact)
 {
 	if (Fact.FactType == FGameplayTag::RequestGameplayTag("Fact.UnderAttack") ||
-		Fact.FactType == FGameplayTag::RequestGameplayTag("Fact.EmemySighted"))
+		Fact.FactType == FGameplayTag::RequestGameplayTag("Fact.EnemySighted"))
 	{
 		if (Fact.Subject.Actor.IsValid() && AICEnemyBase)
 			AICEnemyBase->SetStateAsAttacking(Fact.Subject.Actor.Get(), true);

@@ -65,23 +65,11 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 
 	DamageSystem = CreateDefaultSubobject<UDamageSystem>(TEXT("DamageSystem"));
 	AttackSystem = CreateDefaultSubobject<UAttackSystem>(TEXT("AttackSystem"));
-
-	HealthBarComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBar"));
-	HealthBarComponent->SetupAttachment(GetMesh());
-	HealthBarComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	HealthBarComponent->SetDrawSize(FVector2D(200.f, 20.f));
 }
 
 void AAdvancedAICharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	UWidgetHealthBar* HealthBarWidget = CreateWidget<UWidgetHealthBar>(GetWorld(), HealthBarWidgetClass);
-	if (HealthBarWidget)
-	{
-		HealthBarWidget->DamageableActor = TScriptInterface<IDamageableInterface>(this);
-		HealthBarComponent->SetWidget(HealthBarWidget);
-	}
 
 	DisplayHUD();
 
@@ -317,6 +305,21 @@ void AAdvancedAICharacter::OnDeath_Event()
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
+	TArray<AActor*> AllEnemies;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyBase::StaticClass(), AllEnemies);
+
+	for (AActor* Actor : AllEnemies)
+	{
+		AEnemyBase* Enemy = Cast<AEnemyBase>(Actor);
+		if (!Enemy) continue;
+
+		AAIC_Enemy_Base* AIC = Cast<AAIC_Enemy_Base>(Enemy->GetController());
+		if (!AIC) continue;
+
+		if (AIC->AttackTargetActor == this)
+			AIC->SetStateAsPassive();
+	}
+
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	DisableInput(PC);
 }
@@ -329,6 +332,7 @@ void AAdvancedAICharacter::DisplayHUD()
 	else
 	{
 		PlayerHUDWidget = CreateWidget<UWidgetPlayerHUD>(GetWorld(), PlayerHUDWidgetClass);
+		PlayerHUDWidget->Player = this;
 		if (PlayerHUDWidget)
 			PlayerHUDWidget->AddToViewport();
 

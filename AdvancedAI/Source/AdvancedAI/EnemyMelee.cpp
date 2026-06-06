@@ -18,7 +18,7 @@ void AEnemyMelee::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupte
 
 void AEnemyMelee::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnDropSwordMontageEnd fired, bInterrupted: %d"), bInterrupted);
+	bIsWieldingWeapon = false;
 	OnDropWeaponEnd.Broadcast();
 }
 
@@ -105,9 +105,11 @@ void AEnemyMelee::UnequipWeapon_Implementation()
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		if (AnimInstance)
 		{
-			AnimInstance->Montage_Play(DropSwordMontage, 1.0f);
 
+			AnimInstance->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
 			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
+
+			AnimInstance->Montage_Play(DropSwordMontage, 1.0f);
 
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AEnemyMelee::OnDropSwordMontageEnd);

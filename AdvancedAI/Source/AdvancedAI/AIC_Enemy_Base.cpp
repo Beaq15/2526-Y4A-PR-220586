@@ -132,23 +132,25 @@ bool AAIC_Enemy_Base::CanSenseActor(AActor* Actor, EAISense Sense, FAIStimulus& 
 
 void AAIC_Enemy_Base::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
 {
-    UE_LOG(LogTemp, Warning, TEXT("OnPerceptionUpdated called on %s"), *GetPawn()->GetName());
     for (AActor* Actor : UpdatedActors)
     {
         if (CanSenseActor(Actor, EAISense::Sight))
         {
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Sensed Sight"));
             HandleSensedSight(Actor);
         }
         FAIStimulus OutStimulus;
         if (CanSenseActor(Actor, EAISense::Hearing, OutStimulus))
         {
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Sensed Sound"));
             HandleSensedSound(OutStimulus.StimulusLocation);
         }
         if (CanSenseActor(Actor, EAISense::Damage))
         {
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Sensed Damage"));
+            if (Actor->Implements<UGenericTeamAgentInterface>())
+            {
+                IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(Actor);
+                if (TeamAgent && TeamAgent->GetGenericTeamId() == GetGenericTeamId())
+                    continue;
+            }
             HandleSensedDamage(Actor);
         }
     }
@@ -216,7 +218,10 @@ void AAIC_Enemy_Base::SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnow
     AActor* NewAttackTarget = (UseLastKnownAttackTarget && IsValid(AttackTarget)) ? AttackTarget : AttackTargetActor;
 
     if (!IsValid(NewAttackTarget))
+    {
         SetStateAsPassive();
+        return;
+    }
 
     if (NewAttackTarget->Implements<UDamageableInterface>())
     {

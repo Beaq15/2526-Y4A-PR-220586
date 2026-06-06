@@ -74,6 +74,7 @@ void AAdvancedAICharacter::BeginPlay()
 	DisplayHUD();
 
 	DamageSystem->OnDeath.AddUniqueDynamic(this, &AAdvancedAICharacter::OnDeath_Event);
+	DamageSystem->OnDamageResponse.AddUniqueDynamic(this, &AAdvancedAICharacter::OnHitResponse_Event);
 
 	// TIMELINE
 	LinearCurve = NewObject<UCurveFloat>(this);
@@ -251,7 +252,30 @@ void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupt
 {
 	CanMove = true;
 	Attacking = false;
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	EnableInput(PC);
 }
+
+void AAdvancedAICharacter::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser)
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	DisableInput(PC);
+
+	if (HitReactionMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(HitReactionMontage, 1.0f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, HitReactionMontage);
+
+		}
+	}
+}
+
 void AAdvancedAICharacter::EnterMagicStance()
 {
 	Stance = EPlayerStance::Magic;

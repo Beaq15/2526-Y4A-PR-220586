@@ -87,11 +87,17 @@ public:
 	UPROPERTY(EditDefaultsonly)
 	TObjectPtr<UAnimMontage>MagicSpellMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> HitReactionMontage;
+
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
 
 	UFUNCTION()
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser);
 
 protected:
 

@@ -241,10 +241,18 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("hand_l"));
 		FVector TargetLocation = FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector() * 10000.0f;
 
-		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, TargetLocation);
+		FHitResult HitResult;
 
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, FollowCamera->GetComponentLocation(), TargetLocation, ECC_Visibility, Params);
+
+		FVector TargetPoint = bHit ? HitResult.Location : HitResult.TraceEnd;
+		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, TargetPoint);
 		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector(1.0f));
 		AttackSystem->MagicSpell(SpawnTransform, nullptr, DamageInfo);
+
 	}
 }
 

@@ -19,11 +19,14 @@ void AEnemyMelee::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupte
 void AEnemyMelee::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 	bIsWieldingWeapon = false;
+	UE_LOG(LogTemp, Warning, TEXT("OnDropWeaponEnd broadcasting, bInterrupted: %d"), bInterrupted);
 	OnDropWeaponEnd.Broadcast();
 }
 
 void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Notify fired: %s"), *NotifyName.ToString());
+
 	if (NotifyName == FName("HoldSword"))
 	{
 		if (!WeaponClass) return;

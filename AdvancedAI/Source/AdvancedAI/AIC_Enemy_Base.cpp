@@ -42,6 +42,21 @@ AAIC_Enemy_Base::AAIC_Enemy_Base()
 
     AIPerception->OnPerceptionUpdated.AddUniqueDynamic(this, &AAIC_Enemy_Base::OnPerceptionUpdated);
 }
+void AAIC_Enemy_Base::CheckIfForgottonSeenActor()
+{
+    TArray<AActor*> KnownPerceivedActors;
+    AIPerception->GetKnownPerceivedActors(UAISense_Sight::StaticClass(), KnownPerceivedActors);
+    if (KnownSeenActors.Num() != KnownPerceivedActors.Num())
+    {
+        for (AActor * Actor : KnownSeenActors)
+        {
+            if (!IsValid(Actor)) continue;
+
+            if (KnownPerceivedActors.Find(Actor) == -1)
+                HandleForgotActor(Actor);
+        }
+    }
+}
 void AAIC_Enemy_Base::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
@@ -60,6 +75,17 @@ void AAIC_Enemy_Base::OnPossess(APawn* InPawn)
             }
         }, 0.2f, false);
     
+    FTimerDelegate TimerDelegate;
+    TimerDelegate.BindUObject(this, &AAIC_Enemy_Base::CheckIfForgottonSeenActor);
+    GetWorldTimerManager().SetTimer(ForgottenActorTimerHandle, TimerDelegate, 0.5f, true);
+}
+
+void AAIC_Enemy_Base::OnUnPossess()
+{
+    Super::OnUnPossess();
+
+    GetWorldTimerManager().ClearTimer(ForgottenActorTimerHandle);
+    ForgottenActorTimerHandle.Invalidate();
 }
 
 void AAIC_Enemy_Base::StartBehaviorTree(AEnemyBase* Enemy)
@@ -153,6 +179,8 @@ void AAIC_Enemy_Base::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
 
 void AAIC_Enemy_Base::HandleSensedSight(AActor* Actor)
 {
+    KnownSeenActors.AddUnique(Actor);
+
     switch (GetCurrentState())
     {
     case int32(EAIState::Passive):
@@ -194,6 +222,15 @@ void AAIC_Enemy_Base::HandleSensedDamage(AActor* Actor)
         case int32(EAIState::Investigating):
             SetStateAsAttacking(Actor, false);
             break;
+    }
+}
+
+void AAIC_Enemy_Base::HandleForgotActor(AActor* Actor)
+{
+    KnownSeenActors.Remove(Actor);
+    if (Actor == AttackTargetActor)
+    {
+        SetStateAsPassive();
     }
 }
 

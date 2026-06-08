@@ -130,7 +130,7 @@ protected:
 	FVector DefaultBoomOffset = { 0.f, 60.f, 30.f };
 
 	float MagicWalkSpeed = 200.f;
-	float DefaultWalkSpeed = 500.f;
+	float DefaultWalkSpeed = 2000.f;
 	bool CanMove = true;
 	bool Attacking = false;
 

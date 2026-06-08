@@ -48,9 +48,16 @@ public:
 
 	AActor* AttackTargetActor;
 
+	TArray<AActor*> KnownSeenActors;
+
+	void CheckIfForgottonSeenActor();
+
+	FTimerHandle ForgottenActorTimerHandle;
+
 protected:
 
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnUnPossess() override;
 
 	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(1); }
 
@@ -109,6 +116,9 @@ private:
 
 	UFUNCTION()
 	void HandleSensedDamage(AActor* Actor);
+
+	UFUNCTION()
+	void HandleForgotActor(AActor* Actor);
 
 	UFUNCTION()
 	uint8 GetCurrentState();

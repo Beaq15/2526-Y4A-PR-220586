@@ -18,7 +18,7 @@ AAIC_Enemy_Base::AAIC_Enemy_Base()
     SightConfig->SightRadius = 800.f;
     SightConfig->LoseSightRadius = 1200.f;
     SightConfig->PeripheralVisionAngleDegrees = 60.f;
-    SightConfig->SetMaxAge(5.f);
+    SightConfig->SetMaxAge(20.f);
 
     SightConfig->DetectionByAffiliation.bDetectEnemies = true;
     SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
@@ -193,6 +193,9 @@ void AAIC_Enemy_Base::HandleSensedSight(AActor* Actor)
     case int32(EAIState::Investigating):
         SetStateAsAttacking(Actor, true);
         break;
+    case int32(EAIState::Seeking):
+        SetStateAsAttacking(Actor, true);
+        break;
     }
 }
 
@@ -204,6 +207,9 @@ void AAIC_Enemy_Base::HandleSensedSound(FVector Location)
         SetStateAsInvestigating(Location);
         break;
     case int32(EAIState::Investigating):
+        SetStateAsInvestigating(Location);
+        break;
+    case int32(EAIState::Seeking):
         SetStateAsInvestigating(Location);
         break;
     }
@@ -224,6 +230,9 @@ void AAIC_Enemy_Base::HandleSensedDamage(AActor* Actor)
             SetStateAsAttacking(Actor, false);
             break;
         case int32(EAIState::Investigating):
+            SetStateAsAttacking(Actor, false);
+            break;
+        case int32(EAIState::Seeking):
             SetStateAsAttacking(Actor, false);
             break;
     }

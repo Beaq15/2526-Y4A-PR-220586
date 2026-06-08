@@ -21,6 +21,6 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Keys")
-	FBlackboardKeySelector AttackTargetKey;
+	FBlackboardKeySelector FocusTargetKey;
 	
 };

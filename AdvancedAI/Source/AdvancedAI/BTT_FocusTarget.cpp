@@ -7,7 +7,7 @@
 
 UBTT_FocusTarget::UBTT_FocusTarget()
 {
-	NodeName = "Focus Target";
+	NodeName = "Focus";
 }
 
 EBTNodeResult::Type UBTT_FocusTarget::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -18,10 +18,18 @@ EBTNodeResult::Type UBTT_FocusTarget::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 	if (!BB) return EBTNodeResult::Failed;
 
-	AActor* Target = Cast<AActor>(BB->GetValueAsObject(AttackTargetKey.SelectedKeyName));
-	if (!Target) return EBTNodeResult::Failed;
+	AActor* Target = Cast<AActor>(BB->GetValueAsObject(FocusTargetKey.SelectedKeyName));
 
-	AIController->SetFocus(Target);
+	if (IsValid(Target))
+		AIController->SetFocus(Target);
+	else
+	{
+		FVector Location = BB->GetValueAsVector(FocusTargetKey.SelectedKeyName);
+		if (FAISystem::IsValidLocation(Location))
+			AIController->SetFocalPoint(Location);
+
+	}
+
 
 	return EBTNodeResult::Succeeded;
 }

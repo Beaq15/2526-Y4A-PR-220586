@@ -18,12 +18,6 @@ EBTNodeResult::Type UBTT_UnequipWeapon::ExecuteTask(UBehaviorTreeComponent& Owne
 	AEnemyBase* Enemy = Cast<AEnemyBase>(OwnerComp.GetAIOwner()->GetPawn());
 	if (!Enemy)  return EBTNodeResult::Failed;
 
-	if (!Enemy->bIsWieldingWeapon)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UnequipWeapon: not wielding, skipping"));
-		return EBTNodeResult::Succeeded; // ← succeeds instantly without animation
-	}
-
 	Enemy->OnDropWeaponEnd.AddUniqueDynamic(this, &UBTT_UnequipWeapon::OnUnequipWeaponEnd);
 	IEnemyInterface::Execute_UnequipWeapon(Enemy);
 	return EBTNodeResult::InProgress;

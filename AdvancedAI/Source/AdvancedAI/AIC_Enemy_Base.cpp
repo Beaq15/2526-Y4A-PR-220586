@@ -164,6 +164,10 @@ void AAIC_Enemy_Base::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
         {
             HandleSensedSight(Actor);
         }
+        else
+        {
+            HandleLostSight(Actor);
+        }
         FAIStimulus OutStimulus;
         if (CanSenseActor(Actor, EAISense::Hearing, OutStimulus))
         {
@@ -234,6 +238,26 @@ void AAIC_Enemy_Base::HandleForgotActor(AActor* Actor)
     }
 }
 
+void AAIC_Enemy_Base::HandleLostSight(AActor* Actor)
+{
+    if (Actor == AttackTargetActor)
+    {
+        switch (GetCurrentState())
+        {
+        case int32(EAIState::Attacking):
+            SetStateASSeeking(AttackTargetActor->GetActorLocation());
+            break;
+        case int32(EAIState::Frozen):
+            SetStateASSeeking(AttackTargetActor->GetActorLocation());
+            break;
+        case int32(EAIState::Investigating):
+            SetStateASSeeking(AttackTargetActor->GetActorLocation());
+            break;
+        }
+        
+    }
+}
+
 void AAIC_Enemy_Base::SetStateAsPassive()
 {
     if (UBlackboardComponent* BB = GetBlackboardComponent())
@@ -285,6 +309,15 @@ void AAIC_Enemy_Base::SetStateAsInvestigating(FVector Location)
     if (UBlackboardComponent* BB = GetBlackboardComponent())
     {
         BB->SetValueAsInt(StateKeyName, (int32)EAIState::Investigating);
+        BB->SetValueAsVector(PointOfInterestKeyName, Location);
+    }
+}
+
+void AAIC_Enemy_Base::SetStateASSeeking(FVector Location)
+{
+    if (UBlackboardComponent* BB = GetBlackboardComponent())
+    {
+        BB->SetValueAsInt(StateKeyName, (int32)EAIState::Seeking);
         BB->SetValueAsVector(PointOfInterestKeyName, Location);
     }
 }

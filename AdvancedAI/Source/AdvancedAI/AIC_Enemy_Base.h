@@ -46,6 +46,9 @@ public:
 	UFUNCTION()
 	void SetStateAsInvestigating(FVector Location);
 
+	UFUNCTION()
+	void SetStateASSeeking(FVector Location);
+
 	AActor* AttackTargetActor;
 
 	TArray<AActor*> KnownSeenActors;
@@ -53,6 +56,8 @@ public:
 	void CheckIfForgottonSeenActor();
 
 	FTimerHandle ForgottenActorTimerHandle;
+
+
 
 protected:
 
@@ -119,6 +124,9 @@ private:
 
 	UFUNCTION()
 	void HandleForgotActor(AActor* Actor);
+
+	UFUNCTION()
+	void HandleLostSight(AActor* Actor);
 
 	UFUNCTION()
 	uint8 GetCurrentState();

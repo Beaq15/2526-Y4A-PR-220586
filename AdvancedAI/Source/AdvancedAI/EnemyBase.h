@@ -25,7 +25,8 @@ enum class EAIState : uint8
 	Attacking, //1
 	Frozen, //2
 	Investigating, //3 
-	Dead //4
+	Dead, //4
+	Seeking //5
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAttackEnd);

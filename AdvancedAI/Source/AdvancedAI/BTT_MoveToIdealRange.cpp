@@ -27,32 +27,6 @@ EBTNodeResult::Type UBTT_MoveToIdealRange::ExecuteTask(UBehaviorTreeComponent& O
 
 	AIController->MoveToActor(TargetActor, AcceptanceRadius);
 	return EBTNodeResult::InProgress;
-
-	/*AAIController* AIController = OwnerComp.GetAIOwner();
-	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-
-	if (!AIController || !BB)
-		return EBTNodeResult::Failed;
-
-	AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(AttackTargetKey.SelectedKeyName));
-	CachedAcceptanceRadius = BB->GetValueAsFloat(IdealRangeKey.SelectedKeyName);
-
-	if (!TargetActor)
-		return EBTNodeResult::Failed;
-
-	CachedTargetLocation = TargetActor->GetActorLocation();
-
-	bIsAborting = false;
-
-	APawn* Pawn = AIController->GetPawn();
-	float Distance = FVector::Dist(Pawn->GetActorLocation(), CachedTargetLocation);
-	if (Distance <= CachedAcceptanceRadius)
-		return EBTNodeResult::Succeeded;
-
-	AIController->MoveToActor(TargetActor, CachedAcceptanceRadius);
-
-
-	return EBTNodeResult::InProgress;*/
 }
 
 void UBTT_MoveToIdealRange::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)

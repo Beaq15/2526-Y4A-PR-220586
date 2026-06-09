@@ -137,4 +137,6 @@ protected:
 	bool IsDead_Implementation() { return DamageSystem->isDead; }
 
 	bool IsAttacking_Implementation() { return Attacking; }
+
+	void JumpToDestination_Implementation(FVector Destination);
 };

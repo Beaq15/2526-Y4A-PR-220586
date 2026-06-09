@@ -37,4 +37,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void UnequipWeapon();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void JumpToDestination(FVector Destination);
 };

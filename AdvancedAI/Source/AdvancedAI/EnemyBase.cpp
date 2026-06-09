@@ -5,6 +5,7 @@
 #include "Animation/AnimMontage.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Math/UnrealMathUtility.h"
+#include "Kismet/GameplayStatics.h"
 #include "AIC_Enemy_Base.h"
 
 // Sets default values
@@ -153,6 +154,14 @@ float AEnemyBase::Heal_Implementation(float Amount)
 bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
 	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+}
+
+void AEnemyBase::JumpToDestination_Implementation(FVector Destination)
+{
+	FVector LaunchVelocity;
+	bool bSuccess = UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), { Destination.X, Destination.Y, Destination.Z + 250.f });
+	LaunchCharacter(LaunchVelocity, true, true);
+		
 }
 
 void AEnemyBase::Attack()

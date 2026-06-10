@@ -15,8 +15,8 @@ AAIC_Enemy_Base::AAIC_Enemy_Base()
     SetPerceptionComponent(*AIPerception);
 
     SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-    SightConfig->SightRadius = 800.f;
-    SightConfig->LoseSightRadius = 1200.f;
+    SightConfig->SightRadius = 1500.f;
+    SightConfig->LoseSightRadius = 2000.f;
     SightConfig->PeripheralVisionAngleDegrees = 60.f;
     SightConfig->SetMaxAge(20.f);
 
@@ -196,6 +196,13 @@ void AAIC_Enemy_Base::HandleSensedSight(AActor* Actor)
     case int32(EAIState::Seeking):
         SetStateAsAttacking(Actor, true);
         break;
+    case int32(EAIState::Attacking):
+        if (Actor == AttackTargetActor)
+        {
+            GetWorldTimerManager().ClearTimer(SeekAttackTargetTimer);
+            SeekAttackTargetTimer.Invalidate();
+        }
+        break;
     }
 }
 
@@ -254,13 +261,19 @@ void AAIC_Enemy_Base::HandleLostSight(AActor* Actor)
         switch (GetCurrentState())
         {
         case int32(EAIState::Attacking):
-            SetStateASSeeking(AttackTargetActor->GetActorLocation());
+            GetWorldTimerManager().ClearTimer(SeekAttackTargetTimer);
+            SeekAttackTargetTimer.Invalidate();
+            GetWorldTimerManager().SetTimer(SeekAttackTargetTimer, this, &AAIC_Enemy_Base::SeekAttackTarget, 3.0f, false);
             break;
         case int32(EAIState::Frozen):
-            SetStateASSeeking(AttackTargetActor->GetActorLocation());
+            GetWorldTimerManager().ClearTimer(SeekAttackTargetTimer);
+            SeekAttackTargetTimer.Invalidate();
+            GetWorldTimerManager().SetTimer(SeekAttackTargetTimer, this, &AAIC_Enemy_Base::SeekAttackTarget, 3.0f, false);
             break;
         case int32(EAIState::Investigating):
-            SetStateASSeeking(AttackTargetActor->GetActorLocation());
+            GetWorldTimerManager().ClearTimer(SeekAttackTargetTimer);
+            SeekAttackTargetTimer.Invalidate();
+            GetWorldTimerManager().SetTimer(SeekAttackTargetTimer, this, &AAIC_Enemy_Base::SeekAttackTarget, 3.0f, false);
             break;
         }
         
@@ -322,7 +335,7 @@ void AAIC_Enemy_Base::SetStateAsInvestigating(FVector Location)
     }
 }
 
-void AAIC_Enemy_Base::SetStateASSeeking(FVector Location)
+void AAIC_Enemy_Base::SetStateAsSeeking(FVector Location)
 {
     if (UBlackboardComponent* BB = GetBlackboardComponent())
     {
@@ -338,4 +351,11 @@ uint8 AAIC_Enemy_Base::GetCurrentState()
         return uint8(BB->GetValueAsInt(StateKeyName));
     }
     return -1;
+}
+
+void AAIC_Enemy_Base::SeekAttackTarget()
+{
+    SetStateAsSeeking(AttackTargetActor->GetActorLocation());
+    GetWorldTimerManager().ClearTimer(SeekAttackTargetTimer);
+    SeekAttackTargetTimer.Invalidate();
 }

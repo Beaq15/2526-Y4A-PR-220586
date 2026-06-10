@@ -47,7 +47,7 @@ public:
 	void SetStateAsInvestigating(FVector Location);
 
 	UFUNCTION()
-	void SetStateASSeeking(FVector Location);
+	void SetStateAsSeeking(FVector Location);
 
 	AActor* AttackTargetActor;
 
@@ -57,7 +57,7 @@ public:
 
 	FTimerHandle ForgottenActorTimerHandle;
 
-
+	FTimerHandle SeekAttackTargetTimer;
 
 protected:
 
@@ -130,5 +130,8 @@ private:
 
 	UFUNCTION()
 	uint8 GetCurrentState();
+
+	UFUNCTION()
+	void SeekAttackTarget();
 	
 };

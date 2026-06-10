@@ -20,14 +20,10 @@ void ANavLink_EnemyAI::PostInitializeComponents()
 
 void ANavLink_EnemyAI::OnSmartLinkReachedCustom(UNavLinkCustomComponent* LinkComp, UObject* PathingAgent, const FVector& DestPoint)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Reached Link"));
-
-
+    LinkComp->SetEnabled(false);
     UPathFollowingComponent* PathComp = Cast<UPathFollowingComponent>(PathingAgent);
     if (PathComp)
     {
-        //AActor* Actor = Cast<AActor>(PathComp->GetOwner()->GetOwner());
-        // PathFollowingComp -> AIController -> Pawn
         AAIController* AIC = Cast<AAIController>(PathComp->GetOwner());
         if (AIC)
         {

@@ -20,49 +20,45 @@
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
-//////////////////////////////////////////////////////////////////////////
-// AAdvancedAICharacter
+//----------------------------------------------------------------------
+// Lifecycle
+//----------------------------------------------------------------------
 
 AAdvancedAICharacter::AAdvancedAICharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
-	// Don't rotate when the controller rotates. Let that just affect the camera.
+
+	// Collision
+	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
+
+	// Rotation — controller drives camera only, not character
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
-
-	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
-	// instead of recompiling to adjust them
+	// Movement
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f);
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	GetCharacterMovement()->BrakingDecelerationFalling = 1500.f;
 
-	// Create a camera boom (pulls in towards the player if there is a collision)
+	// Camera boom
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
-	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	CameraBoom->TargetArmLength = 400.f;
+	CameraBoom->bUsePawnControlRotation = true;
 
-	// Create a follow camera
+	// Follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	FollowCamera->bUsePawnControlRotation = false;
 
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
-
+	// Components
 	CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("NoiseEmitter"));
-
 	DamageSystem = CreateDefaultSubobject<UDamageSystem>(TEXT("DamageSystem"));
 	AttackSystem = CreateDefaultSubobject<UAttackSystem>(TEXT("AttackSystem"));
 }
@@ -92,8 +88,9 @@ void AAdvancedAICharacter::Tick(float DeltaTime)
 	AimTimeline.TickTimeline(DeltaTime);
 }
 
-//////////////////////////////////////////////////////////////////////////
-// Input
+//----------------------------------------------------------------------
+// Input Setup
+//----------------------------------------------------------------------
 
 void AAdvancedAICharacter::NotifyControllerChanged()
 {
@@ -137,63 +134,55 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	}
 }
 
+//----------------------------------------------------------------------
+// Input Handlers
+//----------------------------------------------------------------------
+
 void AAdvancedAICharacter::Move(const FInputActionValue& Value)
 {
-	if (CanMove)
-	{
-		// input is a Vector2D
-		FVector2D MovementVector = Value.Get<FVector2D>();
-
-		if (Controller != nullptr)
-		{
-			// find out which way is forward
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-			// get forward vector
-			const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	if (!bCanMove || !Controller)
+		return;
 	
-			// get right vector 
-			const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	const FVector2D MovementVector = Value.Get<FVector2D>();
+	const FRotator Rotation = Controller->GetControlRotation();
+	const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-			// add movement 
-			AddMovementInput(ForwardDirection, MovementVector.Y);
-			AddMovementInput(RightDirection, MovementVector.X);
-		}
+	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
-	}
+	AddMovementInput(ForwardDirection, MovementVector.Y);
+	AddMovementInput(RightDirection, MovementVector.X);
 }
 
 void AAdvancedAICharacter::Look(const FInputActionValue& Value)
 {
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	if (!Controller)
+		return;
 
-	if (Controller != nullptr)
-	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
-	}
+	const FVector2D LookAxisVector = Value.Get<FVector2D>();
+
+	AddControllerYawInput(LookAxisVector.X);
+	AddControllerPitchInput(LookAxisVector.Y);
 }
 
 void AAdvancedAICharacter::ChangeState(const FInputActionValue& Value)
 {
-	Pressed = !Pressed;
+	bPressed = !bPressed;
+
 	AActor* Actor = UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyBase::StaticClass());
-	if (IsValid(Actor))
-	{
-		AEnemyBase* Enemy = Cast<AEnemyBase>(Actor);
-		if (Enemy)
-		{
-			AAIC_Enemy_Base* AIController = Cast<AAIC_Enemy_Base>(Enemy->GetController());
-			if (AIController)
-				if (Pressed)
-					AIController->SetStateAsAttacking(this, true);
-				else
-					AIController->SetStateAsPassive();
-		}
-	}
+	if (!IsValid(Actor)) return;
+
+	AEnemyBase* Enemy = Cast<AEnemyBase>(Actor);
+	if (!Enemy) return;
+		
+	AAIC_Enemy_Base* AIController = Cast<AAIC_Enemy_Base>(Enemy->GetController());
+	if (!AIController) return;
+
+	if (bPressed)
+		AIController->SetStateAsAttacking(this, true);
+	else
+		AIController->SetStateAsPassive();
+		
 }
 
 void AAdvancedAICharacter::MakeSomeNoise(const FInputActionValue& Value)
@@ -204,29 +193,51 @@ void AAdvancedAICharacter::MakeSomeNoise(const FInputActionValue& Value)
 
 void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 {
-	if (!(Stance == EPlayerStance::Magic))
-		return;
+	if (Stance != EPlayerStance::Magic || bAttacking) return;
 
-	if (Attacking)
-		return;
+	bCanMove = false;
 
-	CanMove = false;
+	if (!MagicSpellMontage) return;
 
-	if (MagicSpellMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			Attacking = true;
-			AnimInstance->Montage_Play(MagicSpellMontage, 1.0f);
-			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (!AnimInstance) return;
 
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, MagicSpellMontage);
-		}
-	}
+	bAttacking = true;
+	AnimInstance->Montage_Play(MagicSpellMontage, 1.0f);
+	AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
+	AnimInstance->Montage_SetEndDelegate(EndDelegate, MagicSpellMontage);
 }
+
+void AAdvancedAICharacter::EnterMagicStance()
+{
+	Stance = EPlayerStance::Magic;
+
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->MaxWalkSpeed = MagicWalkSpeed;
+
+	PlayerHUDWidget->ShowCrosshair();
+	AimTimeline.PlayFromStart();
+}
+
+void AAdvancedAICharacter::EnterDefaultStance()
+{
+	Stance = EPlayerStance::Default;
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
+
+	PlayerHUDWidget->HideCrosshair();
+	AimTimeline.Reverse();
+}
+
+//----------------------------------------------------------------------
+// Animation Callbacks
+//----------------------------------------------------------------------
 
 void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
 {
@@ -242,7 +253,6 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		FVector TargetLocation = FollowCamera->GetComponentLocation() + FollowCamera->GetForwardVector() * 10000.0f;
 
 		FHitResult HitResult;
-
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(this);
 
@@ -250,7 +260,8 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 
 		FVector TargetPoint = bHit ? HitResult.Location : HitResult.TraceEnd;
 		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, TargetPoint);
-		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector(1.0f));
+		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector::OneVector);
+
 		AttackSystem->MagicSpell(SpawnTransform, nullptr, DamageInfo);
 
 	}
@@ -258,78 +269,28 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 
 void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	CanMove = true;
-	Attacking = false;
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	EnableInput(PC);
+	bCanMove = true;
+	bAttacking = false;
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+		EnableInput(PC);
 }
 
 void AAdvancedAICharacter::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser)
 {
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	DisableInput(PC);
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+		DisableInput(PC);
 
-	if (HitReactionMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(HitReactionMontage, 1.0f);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, HitReactionMontage);
-
-		}
-	}
-}
-
-void AAdvancedAICharacter::EnterMagicStance()
-{
-	Stance = EPlayerStance::Magic;
-
-	GetCharacterMovement()->bOrientRotationToMovement = false;
-	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	if (!HitReactionMontage) return;
 	
-	GetCharacterMovement()->MaxWalkSpeed = MagicWalkSpeed;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (!AnimInstance) return;
+		
+	AnimInstance->Montage_Play(HitReactionMontage, 1.0f);
 
-	PlayerHUDWidget->ShowCrosshair();
-
-	AimTimeline.PlayFromStart();
-}
-
-void AAdvancedAICharacter::EnterDefaultStance()
-{
-	Stance = EPlayerStance::Default;
-
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->bUseControllerDesiredRotation = false;
-
-	GetCharacterMovement()->MaxWalkSpeed = DefaultWalkSpeed;
-
-	PlayerHUDWidget->HideCrosshair();
-
-	AimTimeline.Reverse();
-}
-
-float AAdvancedAICharacter::Heal_Implementation(float Amount)
-{
-	return DamageSystem->Heal(Amount);
-}
-
-bool AAdvancedAICharacter::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
-{
-	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
-}
-
-bool AAdvancedAICharacter::IsAttacking_Implementation()
-{
-	return Attacking;
-}
-
-void AAdvancedAICharacter::OnAimTimeLineUpdate(float Value)
-{
-	CameraBoom->SocketOffset = FMath::Lerp(DefaultBoomOffset, AimBoomOffset, Value);
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
+	AnimInstance->Montage_SetEndDelegate(EndDelegate, HitReactionMontage);
 }
 
 void AAdvancedAICharacter::OnDeath_Event()
@@ -352,21 +313,55 @@ void AAdvancedAICharacter::OnDeath_Event()
 			AIC->SetStateAsPassive();
 	}
 
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	DisableInput(PC);
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+		DisableInput(PC);
 }
+
+//----------------------------------------------------------------------
+// Timeline
+//----------------------------------------------------------------------
+
+void AAdvancedAICharacter::OnAimTimeLineUpdate(float Value)
+{
+	CameraBoom->SocketOffset = FMath::Lerp(DefaultBoomOffset, AimBoomOffset, Value);
+}
+
+//----------------------------------------------------------------------
+// UI
+//----------------------------------------------------------------------
 
 void AAdvancedAICharacter::DisplayHUD()
 {
 	if (IsValid(PlayerHUDWidget))
-		PlayerHUDWidget->SetVisibility(ESlateVisibility::Visible);
-		
-	else
 	{
-		PlayerHUDWidget = CreateWidget<UWidgetPlayerHUD>(GetWorld(), PlayerHUDWidgetClass);
-		PlayerHUDWidget->Player = this;
-		if (PlayerHUDWidget)
-			PlayerHUDWidget->AddToViewport();
-
+		PlayerHUDWidget->SetVisibility(ESlateVisibility::Visible);
+		return;
 	}
+		
+	PlayerHUDWidget = CreateWidget<UWidgetPlayerHUD>(GetWorld(), PlayerHUDWidgetClass);
+	if (!PlayerHUDWidget) return;
+	PlayerHUDWidget->Player = this;
+	PlayerHUDWidget->AddToViewport();
 }
+
+//----------------------------------------------------------------------
+// IDamageableInterface
+//----------------------------------------------------------------------
+
+float AAdvancedAICharacter::Heal_Implementation(float Amount)
+{
+	return DamageSystem->Heal(Amount);
+}
+
+bool AAdvancedAICharacter::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
+{
+	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+}
+
+bool AAdvancedAICharacter::IsAttacking_Implementation()
+{
+	return bAttacking;
+}
+
+
+

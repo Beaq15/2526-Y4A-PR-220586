@@ -15,66 +15,81 @@ UCLASS()
 class ADVANCEDAI_API AProjectileBase : public AActor
 {
 	GENERATED_BODY()
+
+	//----------------------------------------------------------------------
+	// Private — Callbacks
+	//----------------------------------------------------------------------
+
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	void RotateToTarget();
+	void PlayImpactSound(FVector Location) const;
+	void PlaySpawnSound() const;
+	void SpawnImpactEffect(FVector Location) const;
 	
 public:	
-	// Sets default values for this actor's properties
+	//----------------------------------------------------------------------
+	// Public — Lifecycle
+	//----------------------------------------------------------------------
 	AProjectileBase();
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	//----------------------------------------------------------------------
+	// Public — Delegates
+	//----------------------------------------------------------------------
 
 	UPROPERTY(BlueprintAssignable)
 	FOnProjectileImpact OnProjectileImpact;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	//----------------------------------------------------------------------
+	// Public — Config (set externally before BeginPlay)
+	//----------------------------------------------------------------------
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
 	float Speed = 500.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
 	float Gravity = 0.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	bool IsHoming = false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
+	bool bIsHoming = false;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	AActor* Target = nullptr;
+	UPROPERTY(BlueprintReadWrite, Category = "Projectile")
+	TObjectPtr<AActor> Target;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UBoxComponent* BoxCollision = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UBoxComponent> BoxCollision;
+
 protected:
-	// Called when the game starts or when spawned
+	//----------------------------------------------------------------------
+	// Protected — Lifecycle
+	//----------------------------------------------------------------------
+
 	virtual void BeginPlay() override;
 
+	//----------------------------------------------------------------------
+	// Protected — Components
+	//----------------------------------------------------------------------
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UParticleSystem* ImpactEffect = nullptr;
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> Mesh;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	USoundBase* SpawnSound = nullptr;
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UArrowComponent> Arrow;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	USoundBase* ImpactSound = nullptr;
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UStaticMeshComponent* Mesh = nullptr;
+	//----------------------------------------------------------------------
+	// Protected — Assets
+	//----------------------------------------------------------------------
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UProjectileMovementComponent* ProjectileMovement = nullptr;
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	TObjectPtr<UParticleSystem> ImpactEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UArrowComponent* Arrow = nullptr;
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	TObjectPtr<USoundBase> SpawnSound;
 
-	UFUNCTION()
-	void RotateToTarget();
-
-	UFUNCTION()
-	void PlayImpactSound(FVector Location);
-
-	UFUNCTION()
-	void PlaySpawnSound();
-
-	UFUNCTION()
-	void SpawnImpactEffect(FVector Location);
-
-	UFUNCTION()
-	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	UPROPERTY(EditDefaultsOnly, Category = "Audio")
+	TObjectPtr<USoundBase> ImpactSound;
 };

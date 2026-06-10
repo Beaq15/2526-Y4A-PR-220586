@@ -7,7 +7,7 @@
 
 UBTT_SetStrafing::UBTT_SetStrafing()
 {
-	NodeName = "SetStrafing";
+	NodeName = "Set Strafing";
 }
 
 EBTNodeResult::Type UBTT_SetStrafing::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -17,5 +17,6 @@ EBTNodeResult::Type UBTT_SetStrafing::ExecuteTask(UBehaviorTreeComponent& OwnerC
 
 	if (Enemy)
 		Enemy->bIsStrafing = bStrafingValue;
+
 	return EBTNodeResult::Succeeded;
 }

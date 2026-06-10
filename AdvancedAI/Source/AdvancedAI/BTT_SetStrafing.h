@@ -14,10 +14,10 @@ class ADVANCEDAI_API UBTT_SetStrafing : public UBTTaskNode
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, Category = "Config")
+	bool bStrafingValue = false;
+
 public:
 	UBTT_SetStrafing();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
-	UPROPERTY(EditAnywhere, Category = "Strafing")
-	bool bStrafingValue = false;
 };

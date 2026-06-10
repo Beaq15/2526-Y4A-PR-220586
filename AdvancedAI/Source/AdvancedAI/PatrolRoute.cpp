@@ -6,7 +6,6 @@
 // Sets default values
 APatrolRoute::APatrolRoute()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	PatrolSpline = CreateDefaultSubobject<USplineComponent>(TEXT("PatrolSpline"));
@@ -28,18 +27,9 @@ void APatrolRoute::IncrementPatrolRoute()
 		Direction = -1;
 	else if (PatrolIndex == 0)
 		Direction = 1;
-
 }
 
-FVector APatrolRoute::GetSplinePointAsWorldPosition()
+FVector APatrolRoute::GetSplinePointAsWorldPosition() const
 {
 	return PatrolSpline->GetLocationAtSplinePoint(PatrolIndex, ESplineCoordinateSpace::World);
 }
-
-// Called every frame
-void APatrolRoute::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-

@@ -13,25 +13,24 @@ void ANavLink_EnemyAI::PostInitializeComponents()
 	Super::PostInitializeComponents();
 
 	if (UNavLinkCustomComponent* LinkComp = GetSmartLinkComp())
-	{
 		LinkComp->SetMoveReachedLink(this, &ANavLink_EnemyAI::OnSmartLinkReachedCustom);
-	}
 }
 
 void ANavLink_EnemyAI::OnSmartLinkReachedCustom(UNavLinkCustomComponent* LinkComp, UObject* PathingAgent, const FVector& DestPoint)
 {
     LinkComp->SetEnabled(false);
+
     UPathFollowingComponent* PathComp = Cast<UPathFollowingComponent>(PathingAgent);
-    if (PathComp)
+    if (!PathComp) return;
+
+    AAIController* AIC = Cast<AAIController>(PathComp->GetOwner());
+    if (!AIC) return;
+        
+    AActor* Agent = AIC->GetPawn();
+    if (Agent && Agent->Implements<UEnemyInterface>())
     {
-        AAIController* AIC = Cast<AAIController>(PathComp->GetOwner());
-        if (AIC)
-        {
-            AActor* Agent = AIC->GetPawn();
-            if (Agent && Agent->Implements<UEnemyInterface>())
-            {
-                IEnemyInterface::Execute_JumpToDestination(Agent, DestPoint);
-            }
-        }
+        IEnemyInterface::Execute_JumpToDestination(Agent, DestPoint);
     }
+        
+    
 }

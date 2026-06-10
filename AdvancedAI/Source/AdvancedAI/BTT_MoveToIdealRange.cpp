@@ -7,7 +7,7 @@
 
 UBTT_MoveToIdealRange::UBTT_MoveToIdealRange()
 {
-	NodeName = "MoveToIdealRange";
+	NodeName = "Move To Ideal Range";
 	bNotifyTick = true;
 	bCreateNodeInstance = true;
 }
@@ -16,16 +16,15 @@ EBTNodeResult::Type UBTT_MoveToIdealRange::ExecuteTask(UBehaviorTreeComponent& O
 {
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-	if (!AIController || !BB)
-		return EBTNodeResult::Failed;
+	if (!AIController || !BB) return EBTNodeResult::Failed;
 
 	AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(AttackTargetKey.SelectedKeyName));
-	float AcceptanceRadius = BB->GetValueAsFloat(IdealRangeKey.SelectedKeyName);
+	const float AcceptanceRadius = BB->GetValueAsFloat(IdealRangeKey.SelectedKeyName);
 
-	if (!TargetActor)
-		return EBTNodeResult::Failed;
+	if (!TargetActor) return EBTNodeResult::Failed;
 
 	AIController->MoveToActor(TargetActor, AcceptanceRadius);
+
 	return EBTNodeResult::InProgress;
 }
 
@@ -48,8 +47,10 @@ void UBTT_MoveToIdealRange::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* N
 EBTNodeResult::Type UBTT_MoveToIdealRange::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	AAIController* AIController = OwnerComp.GetAIOwner();
+
 	if (AIController)
 		AIController->StopMovement();
+
 	return EBTNodeResult::Aborted;
 }
 

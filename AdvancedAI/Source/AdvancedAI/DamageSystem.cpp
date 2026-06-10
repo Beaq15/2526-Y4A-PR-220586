@@ -3,20 +3,29 @@
 
 #include "DamageSystem.h"
 
-// Sets default values
+//----------------------------------------------------------------------
+// Lifecycle
+//----------------------------------------------------------------------
+
 UDamageSystem::UDamageSystem()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryComponentTick.bCanEverTick = true;
-
 }
 
-// Called when the game starts or when spawned
 void UDamageSystem::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
+
+void UDamageSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+}
+
+//----------------------------------------------------------------------
+// API
+//----------------------------------------------------------------------
 
 float UDamageSystem::Heal(float Amount)
 {
@@ -49,12 +58,5 @@ bool UDamageSystem::TakeDamage(const FDamageInfo& DamageInfo, AActor* DamageCaus
 		break;
 	}
 	return false;
-}
-
-// Called every frame
-void UDamageSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
 }
 

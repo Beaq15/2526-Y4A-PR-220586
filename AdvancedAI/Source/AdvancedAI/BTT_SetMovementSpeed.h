@@ -14,11 +14,11 @@ UCLASS()
 class ADVANCEDAI_API UBTT_SetMovementSpeed : public UBTTaskNode
 {
 	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Config")
+	EMovementSpeed MovementSpeed = EMovementSpeed::Walking;
+
 public:
 	UBTT_SetMovementSpeed();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
-	UPROPERTY(EditAnywhere)
-	EMovementSpeed MovementSpeed = EMovementSpeed::Walking;
-	
 };

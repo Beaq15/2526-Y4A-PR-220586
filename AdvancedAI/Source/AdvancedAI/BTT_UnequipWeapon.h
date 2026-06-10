@@ -14,13 +14,12 @@ class ADVANCEDAI_API UBTT_UnequipWeapon : public UBTTaskNode
 {
 	GENERATED_BODY()
 
-public:
-	UBTT_UnequipWeapon();
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	UBehaviorTreeComponent* CachedOwnerComp = nullptr;
 
 	UFUNCTION()
 	void OnUnequipWeaponEnd();
 
-	UBehaviorTreeComponent* CachedOwnerComp = nullptr;
-	
+public:
+	UBTT_UnequipWeapon();
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

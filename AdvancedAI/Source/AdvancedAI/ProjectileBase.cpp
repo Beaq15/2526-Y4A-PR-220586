@@ -4,11 +4,13 @@
 #include "ProjectileBase.h"
 #include "Kismet/GameplayStatics.h"
 
-// Sets default values
+//----------------------------------------------------------------------
+// Lifecycle
+//----------------------------------------------------------------------
+
 AProjectileBase::AProjectileBase()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	BoxCollision->SetCollisionObjectType(ECC_WorldDynamic);
@@ -25,10 +27,8 @@ AProjectileBase::AProjectileBase()
 	Mesh->SetupAttachment(BoxCollision);
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-
 }
 
-// Called when the game starts or when spawned
 void AProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -39,12 +39,11 @@ void AProjectileBase::BeginPlay()
 	ProjectileMovement->MaxSpeed = Speed;
 	ProjectileMovement->ProjectileGravityScale = Gravity;
 
-	if (IsHoming)
-		if (IsValid(RootComponent))
-		{
-			ProjectileMovement->HomingTargetComponent = RootComponent;
-			ProjectileMovement->bIsHomingProjectile = true;
-		}
+	if (bIsHoming && IsValid(RootComponent))
+	{
+		ProjectileMovement->HomingTargetComponent = RootComponent;
+		ProjectileMovement->bIsHomingProjectile = true;
+	}
 
 	RotateToTarget();
 	PlaySpawnSound();
@@ -56,9 +55,11 @@ void AProjectileBase::BeginPlay()
 	AActor* InstigatorActor = GetInstigator();
 	if (InstigatorActor)
 		BoxCollision->IgnoreActorWhenMoving(InstigatorActor, true);
-
-	
 }
+
+//----------------------------------------------------------------------
+// Helpers
+//----------------------------------------------------------------------
 
 void AProjectileBase::RotateToTarget()
 {
@@ -75,29 +76,30 @@ void AProjectileBase::RotateToTarget()
 	else
 		Velocity = GetActorForwardVector() * Speed;
 
-		ProjectileMovement->Velocity = Velocity;
+	ProjectileMovement->Velocity = Velocity;
 }
 
-void AProjectileBase::PlayImpactSound(FVector Location)
+void AProjectileBase::PlayImpactSound(FVector Location) const
 {
-	if (!ImpactSound)
-		return;
-	UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, Location);
+	if (ImpactSound)	
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, Location);
 }
 
-void AProjectileBase::PlaySpawnSound()
+void AProjectileBase::PlaySpawnSound() const
 {
-	if (!SpawnSound)
-		return;
-	UGameplayStatics::PlaySoundAtLocation(this, SpawnSound, GetActorLocation());
+	if (SpawnSound)
+		UGameplayStatics::PlaySoundAtLocation(this, SpawnSound, GetActorLocation());
 }
 
-void AProjectileBase::SpawnImpactEffect(FVector Location)
+void AProjectileBase::SpawnImpactEffect(FVector Location) const
 {
-	if (!ImpactEffect)
-		return;
-	UGameplayStatics::SpawnEmitterAtLocation(this, ImpactEffect, Location, FRotator::ZeroRotator, FVector(1.0f), true);
+	if (ImpactEffect)
+		UGameplayStatics::SpawnEmitterAtLocation(this, ImpactEffect, Location, FRotator::ZeroRotator, FVector(1.0f), true);
 }
+
+//----------------------------------------------------------------------
+// Callbacks
+//----------------------------------------------------------------------
 
 void AProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
@@ -108,12 +110,5 @@ void AProjectileBase::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	PlayImpactSound(ImpactPoint);
 
 	Destroy();
-}
-
-// Called every frame
-void AProjectileBase::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 

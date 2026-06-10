@@ -3,7 +3,7 @@
 
 #include "WidgetHealthBar.h"
 
-float UWidgetHealthBar::GetPercent()
+float UWidgetHealthBar::GetPercent() const
 {
 	if (!DamageableActor) return 0;
 

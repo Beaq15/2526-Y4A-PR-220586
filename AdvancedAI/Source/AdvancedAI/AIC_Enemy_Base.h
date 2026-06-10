@@ -12,9 +12,6 @@
 #include "GenericTeamAgentInterface.h"
 #include "AIC_Enemy_Base.generated.h"
 
-/**
- * 
- */
 UENUM(BlueprintType)
 enum class EAISense : uint8
 {
@@ -28,8 +25,75 @@ UCLASS()
 class ADVANCEDAI_API AAIC_Enemy_Base : public AAIController
 {
 	GENERATED_BODY()
+
+	//----------------------------------------------------------------------
+	// Private — Blackboard Key Names
+	//----------------------------------------------------------------------
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FName AttackTargetKeyName = "AttackTarget";
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FName StateKeyName = "State";
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FName PointOfInterestKeyName = "PointOfInterest";
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FName AttackRadiusKeyName = "AttackRadius";
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	FName DefendRadiusKeyName = "DefendRadius";
+
+	//----------------------------------------------------------------------
+	// Private — Timers
+	//----------------------------------------------------------------------
+
+	FTimerHandle ForgottenActorTimerHandle;
+	FTimerHandle SeekAttackTargetTimer;
+
+	//----------------------------------------------------------------------
+	// Private — Perception Handlers
+	//----------------------------------------------------------------------
+
+	UFUNCTION()
+	void OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors);
+
+	void HandleSensedSight(AActor* Actor);
+	void HandleSensedSound(FVector Location);
+	void HandleSensedDamage(AActor* Actor);
+	void HandleForgotActor(AActor* Actor);
+	void HandleLostSight(AActor* Actor);
+
+	//----------------------------------------------------------------------
+	// Private — Internal Helpers
+	//----------------------------------------------------------------------
+
+	void StartBehaviorTree(AEnemyBase* Enemy);
+	void CheckIfForgottonSeenActor();
+
+	bool CanSenseActor(AActor* Actor, EAISense Sense, FAIStimulus& OutStimulus);
+	bool CanSenseActor(AActor* Actor, EAISense Sense)
+	{
+		FAIStimulus Dummy;
+		return CanSenseActor(Actor, Sense, Dummy);
+	}
+
+	UFUNCTION()
+	void SeekAttackTarget();
+
+	UFUNCTION()
+	EAIState GetCurrentState() const;
+
 public:
+	//----------------------------------------------------------------------
+	// Public — Lifecycle
+	//----------------------------------------------------------------------
 	AAIC_Enemy_Base();
+
+	//----------------------------------------------------------------------
+	// Public — State API
+	//----------------------------------------------------------------------
 
 	UFUNCTION()
 	void SetStateAsPassive();
@@ -49,89 +113,42 @@ public:
 	UFUNCTION()
 	void SetStateAsSeeking(FVector Location);
 
-	AActor* AttackTargetActor;
+	//----------------------------------------------------------------------
+	// Public — State (read access for external actors)
+	//----------------------------------------------------------------------
+
+	UPROPERTY()
+	TObjectPtr<AActor> AttackTargetActor;
 
 	TArray<AActor*> KnownSeenActors;
 
-	void CheckIfForgottonSeenActor();
-
-	FTimerHandle ForgottenActorTimerHandle;
-
-	FTimerHandle SeekAttackTargetTimer;
-
 protected:
+	//----------------------------------------------------------------------
+	// Protected — Lifecycle Overrides
+	//----------------------------------------------------------------------
 
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 
+	//----------------------------------------------------------------------
+	// Protected — Team
+	//----------------------------------------------------------------------
+
 	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(1); }
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-	UAIPerceptionComponent* AIPerception;
+	//----------------------------------------------------------------------
+	// Protected — Perception Components
+	//----------------------------------------------------------------------
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-	UAISenseConfig_Sight* SightConfig;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
+	TObjectPtr<UAIPerceptionComponent> AIPerception;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-	UAISenseConfig_Hearing* HearingConfig;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
+	TObjectPtr<UAISenseConfig_Sight> SightConfig;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
-	UAISenseConfig_Damage* DamageConfig;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
+	TObjectPtr<UAISenseConfig_Hearing> HearingConfig;
 
-private:
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	TObjectPtr<UBehaviorTree> BehaviorTreeAsset;
-
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	FName AttackTargetKeyName = "AttackTarget";
-
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	FName StateKeyName = "State";
-
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	FName PointOfInterestKeyName = "PointOfInterest";
-
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	FName AttackRadiusKeyName = "AttackRadius";
-		
-	UPROPERTY(EditDefaultsOnly, Category = "AI")
-	FName DefendRadiusKeyName = "DefendRadius";
-
-
-	UFUNCTION()
-	void StartBehaviorTree(AEnemyBase* Enemy);
-
-	UFUNCTION()
-	bool CanSenseActor(AActor* Actor, EAISense Sense, FAIStimulus& OutStimulus);
-
-	bool CanSenseActor(AActor* Actor, EAISense Sense)
-	{
-		FAIStimulus Dummy;
-		return CanSenseActor(Actor, Sense, Dummy);
-	}
-
-	UFUNCTION()
-	void OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors);
-
-	UFUNCTION()
-	void HandleSensedSight(AActor* Actor);
-
-	UFUNCTION()
-	void HandleSensedSound(FVector Location);
-
-	UFUNCTION()
-	void HandleSensedDamage(AActor* Actor);
-
-	UFUNCTION()
-	void HandleForgotActor(AActor* Actor);
-
-	UFUNCTION()
-	void HandleLostSight(AActor* Actor);
-
-	UFUNCTION()
-	uint8 GetCurrentState();
-
-	UFUNCTION()
-	void SeekAttackTarget();
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI|Perception")
+	TObjectPtr<UAISenseConfig_Damage> DamageConfig;
 };

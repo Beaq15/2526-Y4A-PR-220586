@@ -14,11 +14,10 @@ class ADVANCEDAI_API UBTT_Heal : public UBTTaskNode
 {
 	GENERATED_BODY()
 
-public:
-	UBTT_Heal();
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
 	UPROPERTY(EditAnywhere, meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float HealPercentage = 0.f;
 	
+public:
+	UBTT_Heal();
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

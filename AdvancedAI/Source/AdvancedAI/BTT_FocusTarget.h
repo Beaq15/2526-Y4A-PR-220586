@@ -14,13 +14,10 @@ class ADVANCEDAI_API UBTT_FocusTarget : public UBTTaskNode
 {
 	GENERATED_BODY()
 
-public:
-	UBTT_FocusTarget();
-
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
-private:
 	UPROPERTY(EditAnywhere, Category = "Keys")
 	FBlackboardKeySelector FocusTargetKey;
-	
+
+public:
+	UBTT_FocusTarget();
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

@@ -15,14 +15,11 @@ class ADVANCEDAI_API UBTT_DefaultAttack : public UBTTaskNode
 {
 	GENERATED_BODY()
 
-public:
-	UBTT_DefaultAttack();
-
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
-private:
 	UBehaviorTreeComponent* CachedOwnerComp = nullptr;
 
 	UFUNCTION()
 	void OnAttackEnd();
+public:
+	UBTT_DefaultAttack();
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

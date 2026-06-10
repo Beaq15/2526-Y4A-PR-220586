@@ -14,10 +14,10 @@ class ADVANCEDAI_API UBTT_SetStateAsAttacking : public UBTTaskNode
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, Category = "Keys")
+	FBlackboardKeySelector AttackTargetKey;
+
 public:
 	UBTT_SetStateAsAttacking();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
-	UPROPERTY(EditAnywhere, Category = "Keys")
-	FBlackboardKeySelector AttackTargetKey;
 };

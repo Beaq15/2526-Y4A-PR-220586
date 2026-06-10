@@ -14,16 +14,17 @@ class ADVANCEDAI_API UBTD_IsWithingIdealRange : public UBTDecorator
 {
 	GENERATED_BODY()
 
-public:
-	UBTD_IsWithingIdealRange();
-	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
-	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
-
-private:
 	UPROPERTY(EditAnywhere, Category = "Keys")
 	FBlackboardKeySelector IdealRangeKey;
 
 	UPROPERTY(EditAnywhere, Category = "Keys")
 	FBlackboardKeySelector AttackTargetKey;
-	
+
+	UPROPERTY(EditDefaultsOnly, Category = "Config")
+	float ErrorMargin = 50.f;
+
+public:
+	UBTD_IsWithingIdealRange();
+	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
+	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 };

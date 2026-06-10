@@ -27,9 +27,8 @@ EBTNodeResult::Type UBTT_DefaultAttack::ExecuteTask(UBehaviorTreeComponent& Owne
 
 void UBTT_DefaultAttack::OnAttackEnd()
 {
-	if (CachedOwnerComp)
-	{
-		FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
-		CachedOwnerComp = nullptr;
-	}
+	if (!CachedOwnerComp) return;
+
+	FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
+	CachedOwnerComp = nullptr;
 }

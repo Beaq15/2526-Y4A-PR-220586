@@ -15,7 +15,7 @@ bool UBTD_HasPatrolRoute::CalculateRawConditionValue(UBehaviorTreeComponent& Own
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	APawn* Pawn = AIController->GetPawn();
 
-	if (Pawn->Implements<UEnemyInterface>())
+	if ( Pawn && Pawn->Implements<UEnemyInterface>())
 	{
 		APatrolRoute* Route = IEnemyInterface::Execute_GetPatrolRoute(Pawn);
 		return IsValid(Route);

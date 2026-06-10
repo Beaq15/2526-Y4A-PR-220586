@@ -14,9 +14,12 @@ void UWidgetPlayerHUD::HideCrosshair()
 	Crosshair->SetVisibility(ESlateVisibility::Hidden);
 }
 
-float UWidgetPlayerHUD::GetPercent()
+float UWidgetPlayerHUD::GetPercent() const
 {
 	AAdvancedAICharacter* Character = Cast<AAdvancedAICharacter>(Player);
+
+	if (!Character) return 0.f;
+
 	float MaxHealth = IDamageableInterface::Execute_GetMaxHealth(Character);
 	float CurrentHealth = IDamageableInterface::Execute_GetCurrentHealth(Character);
 

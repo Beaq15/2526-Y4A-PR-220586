@@ -9,29 +9,35 @@
 #include "AdvancedAICharacter.h"
 #include "DamageableInterface.h"
 
+//----------------------------------------------------------------------
+// Lifecycle
+//----------------------------------------------------------------------
+
 AAIC_Enemy_Base::AAIC_Enemy_Base()
 {
+    // Perception component
     AIPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerception"));
     SetPerceptionComponent(*AIPerception);
 
+    // Sight
     SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
     SightConfig->SightRadius = 1500.f;
     SightConfig->LoseSightRadius = 2000.f;
     SightConfig->PeripheralVisionAngleDegrees = 60.f;
     SightConfig->SetMaxAge(20.f);
-
     SightConfig->DetectionByAffiliation.bDetectEnemies = true;
     SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
     SightConfig->DetectionByAffiliation.bDetectNeutrals = false;
 
+    // Hearing
     HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
     HearingConfig->HearingRange = 500.f;
     HearingConfig->SetMaxAge(3.f);
-
     HearingConfig->DetectionByAffiliation.bDetectEnemies = true;
     HearingConfig->DetectionByAffiliation.bDetectFriendlies = false;
     HearingConfig->DetectionByAffiliation.bDetectNeutrals = false;
 
+    // Damage
     DamageConfig = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("DamageConfig"));
     DamageConfig->SetMaxAge(5.f);
 
@@ -42,29 +48,14 @@ AAIC_Enemy_Base::AAIC_Enemy_Base()
 
     AIPerception->OnPerceptionUpdated.AddUniqueDynamic(this, &AAIC_Enemy_Base::OnPerceptionUpdated);
 }
-void AAIC_Enemy_Base::CheckIfForgottonSeenActor()
-{
-    TArray<AActor*> KnownPerceivedActors;
-    AIPerception->GetKnownPerceivedActors(UAISense_Sight::StaticClass(), KnownPerceivedActors);
-    if (KnownSeenActors.Num() != KnownPerceivedActors.Num())
-    {
-        for (AActor * Actor : KnownSeenActors)
-        {
-            if (!IsValid(Actor)) continue;
-
-            if (KnownPerceivedActors.Find(Actor) == -1)
-                HandleForgotActor(Actor);
-        }
-    }
-}
 void AAIC_Enemy_Base::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
 
     AEnemyBase* Enemy = Cast<AEnemyBase>(InPawn);
-    if (!Enemy)
-        return;
+    if (!Enemy) return;
 
+    // Short delay so the blackboard is ready before running the BT
     FTimerHandle BTStartTimerHandle;
     GetWorld()->GetTimerManager().SetTimer(BTStartTimerHandle, [this, Enemy]() 
         {
@@ -88,6 +79,10 @@ void AAIC_Enemy_Base::OnUnPossess()
     ForgottenActorTimerHandle.Invalidate();
 }
 
+//----------------------------------------------------------------------
+// Internal Helpers
+//----------------------------------------------------------------------
+
 void AAIC_Enemy_Base::StartBehaviorTree(AEnemyBase* Enemy)
 {
     if (!Enemy->BehaviorTree)
@@ -100,24 +95,37 @@ void AAIC_Enemy_Base::StartBehaviorTree(AEnemyBase* Enemy)
 
     SetStateAsPassive();
 
-    if (UBlackboardComponent* BB = GetBlackboardComponent())
+    UBlackboardComponent* BB = GetBlackboardComponent();
+    if (!BB) return;
+    
+    float AttackRadius = 0.f, DefendRadius = 0.f;
+    IEnemyInterface::Execute_GetIdealRange(Enemy, AttackRadius, DefendRadius);
+    BB->SetValueAsFloat(AttackRadiusKeyName, AttackRadius);
+    BB->SetValueAsFloat(DefendRadiusKeyName, DefendRadius);
+
+    // Handle any actors already in sight when we possess
+    TArray<AActor*> PerceivedActors;
+    AIPerception->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), PerceivedActors);
+    for (AActor* Actor : PerceivedActors)
     {
-        float AttackRadius = 0.f, DefendRadius = 0.f;
-        IEnemyInterface::Execute_GetIdealRange(Enemy, AttackRadius, DefendRadius);
-        BB->SetValueAsFloat(AttackRadiusKeyName, AttackRadius);
-        BB->SetValueAsFloat(DefendRadiusKeyName, DefendRadius);
-
-        //AAdvancedAICharacter* Player = Cast<AAdvancedAICharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-        //BB->SetValueAsObject(AttackTargetKeyName, Player);
-
-        TArray<AActor*> PerceivedActors;
-        AIPerception->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), PerceivedActors);
-        for (AActor* Actor : PerceivedActors)
-        {
-            HandleSensedSight(Actor);
-        }
+        HandleSensedSight(Actor);
     }
+}
 
+void AAIC_Enemy_Base::CheckIfForgottonSeenActor()
+{
+    TArray<AActor*> KnownPerceivedActors;
+    AIPerception->GetKnownPerceivedActors(UAISense_Sight::StaticClass(), KnownPerceivedActors);
+
+    if (KnownSeenActors.Num() == KnownPerceivedActors.Num()) return;
+        
+    for (AActor* Actor : KnownSeenActors)
+    {
+        if (!IsValid(Actor)) continue;
+
+        if (!KnownPerceivedActors.Contains(Actor))
+            HandleForgotActor(Actor);
+    }
 }
 
 bool AAIC_Enemy_Base::CanSenseActor(AActor* Actor, EAISense Sense, FAIStimulus& OutStimulus) // + outsense
@@ -128,17 +136,10 @@ bool AAIC_Enemy_Base::CanSenseActor(AActor* Actor, EAISense Sense, FAIStimulus& 
 
     switch (Sense)
     {
-    case EAISense::None: 
-        return false;
-    case EAISense::Sight:
-        SenseID = UAISense::GetSenseID<UAISense_Sight>();
-        break;
-    case EAISense::Hearing:
-        SenseID = UAISense::GetSenseID<UAISense_Hearing>();
-        break;
-    case EAISense::Damage:
-        SenseID = UAISense::GetSenseID<UAISense_Damage>();
-        break;
+    case EAISense::Sight:    SenseID = UAISense::GetSenseID<UAISense_Sight>();   break;
+    case EAISense::Hearing:  SenseID = UAISense::GetSenseID<UAISense_Hearing>(); break;
+    case EAISense::Damage:   SenseID = UAISense::GetSenseID<UAISense_Damage>();  break;
+    default:                 return false;
     }
 
     FActorPerceptionBlueprintInfo PerceptionInfo;
@@ -151,33 +152,38 @@ bool AAIC_Enemy_Base::CanSenseActor(AActor* Actor, EAISense Sense, FAIStimulus& 
             OutStimulus = Stimulus;
             return true;
         }
-
     }
     return false;
 }
+
+EAIState AAIC_Enemy_Base::GetCurrentState() const
+{
+    if (const UBlackboardComponent* BB = GetBlackboardComponent())
+    {
+        return EAIState(BB->GetValueAsInt(StateKeyName));
+    }
+    return EAIState::Passive;
+}
+
+//----------------------------------------------------------------------
+// Perception Handlers
+//----------------------------------------------------------------------
 
 void AAIC_Enemy_Base::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
 {
     for (AActor* Actor : UpdatedActors)
     {
         if (CanSenseActor(Actor, EAISense::Sight))
-        {
             HandleSensedSight(Actor);
-        }
         else
-        {
             HandleLostSight(Actor);
-        }
+
         FAIStimulus OutStimulus;
         if (CanSenseActor(Actor, EAISense::Hearing, OutStimulus))
-        {
             HandleSensedSound(OutStimulus.StimulusLocation);
-        }
+
         if (CanSenseActor(Actor, EAISense::Damage))
-        {
-            
             HandleSensedDamage(Actor);
-        }
     }
 }
 
@@ -187,21 +193,19 @@ void AAIC_Enemy_Base::HandleSensedSight(AActor* Actor)
 
     switch (GetCurrentState())
     {
-    case int32(EAIState::Passive):
+    case EAIState::Passive:
+    case EAIState::Investigating:
+    case EAIState::Seeking:
         SetStateAsAttacking(Actor, true);
         break;
-    case int32(EAIState::Investigating):
-        SetStateAsAttacking(Actor, true);
-        break;
-    case int32(EAIState::Seeking):
-        SetStateAsAttacking(Actor, true);
-        break;
-    case int32(EAIState::Attacking):
+    case EAIState::Attacking:
         if (Actor == AttackTargetActor)
         {
             GetWorldTimerManager().ClearTimer(SeekAttackTargetTimer);
             SeekAttackTargetTimer.Invalidate();
         }
+        break;
+    default:
         break;
     }
 }
@@ -210,14 +214,13 @@ void AAIC_Enemy_Base::HandleSensedSound(FVector Location)
 {
     switch (GetCurrentState())
     {
-    case int32(EAIState::Passive):
+    case EAIState::Passive:
+    case EAIState::Investigating:
+    case EAIState::Seeking:
         SetStateAsInvestigating(Location);
         break;
-    case int32(EAIState::Investigating):
-        SetStateAsInvestigating(Location);
-        break;
-    case int32(EAIState::Seeking):
-        SetStateAsInvestigating(Location);
+
+    default:
         break;
     }
 }
@@ -226,59 +229,56 @@ void AAIC_Enemy_Base::HandleSensedDamage(AActor* Actor)
 {
     if (Actor->Implements<UGenericTeamAgentInterface>())
     {
-        IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(Actor);
+        const IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(Actor);
         if (TeamAgent && TeamAgent->GetGenericTeamId() == GetGenericTeamId())
             return;
     }
 
     switch (GetCurrentState())
     {
-        case int32(EAIState::Passive):
-            SetStateAsAttacking(Actor, false);
-            break;
-        case int32(EAIState::Investigating):
-            SetStateAsAttacking(Actor, false);
-            break;
-        case int32(EAIState::Seeking):
-            SetStateAsAttacking(Actor, false);
-            break;
+    case EAIState::Passive:
+    case EAIState::Investigating:
+    case EAIState::Seeking:
+        SetStateAsAttacking(Actor, false);
+        break;
+
+    default:
+        break;
+    }
+}
+
+void AAIC_Enemy_Base::HandleLostSight(AActor* Actor)
+{
+    if (Actor != AttackTargetActor)
+        return;
+
+    switch (GetCurrentState())
+    {
+    case EAIState::Attacking:
+    case EAIState::Frozen:
+    case EAIState::Investigating:
+        GetWorldTimerManager().ClearTimer(SeekAttackTargetTimer);
+        SeekAttackTargetTimer.Invalidate();
+        GetWorldTimerManager().SetTimer(SeekAttackTargetTimer, this, &AAIC_Enemy_Base::SeekAttackTarget, 3.f, false);
+        break;
+
+    default:
+        break;
     }
 }
 
 void AAIC_Enemy_Base::HandleForgotActor(AActor* Actor)
 {
     KnownSeenActors.Remove(Actor);
+
     if (Actor == AttackTargetActor)
-    {
         SetStateAsPassive();
-    }
+
 }
 
-void AAIC_Enemy_Base::HandleLostSight(AActor* Actor)
-{
-    if (Actor == AttackTargetActor)
-    {
-        switch (GetCurrentState())
-        {
-        case int32(EAIState::Attacking):
-            GetWorldTimerManager().ClearTimer(SeekAttackTargetTimer);
-            SeekAttackTargetTimer.Invalidate();
-            GetWorldTimerManager().SetTimer(SeekAttackTargetTimer, this, &AAIC_Enemy_Base::SeekAttackTarget, 3.0f, false);
-            break;
-        case int32(EAIState::Frozen):
-            GetWorldTimerManager().ClearTimer(SeekAttackTargetTimer);
-            SeekAttackTargetTimer.Invalidate();
-            GetWorldTimerManager().SetTimer(SeekAttackTargetTimer, this, &AAIC_Enemy_Base::SeekAttackTarget, 3.0f, false);
-            break;
-        case int32(EAIState::Investigating):
-            GetWorldTimerManager().ClearTimer(SeekAttackTargetTimer);
-            SeekAttackTargetTimer.Invalidate();
-            GetWorldTimerManager().SetTimer(SeekAttackTargetTimer, this, &AAIC_Enemy_Base::SeekAttackTarget, 3.0f, false);
-            break;
-        }
-        
-    }
-}
+//----------------------------------------------------------------------
+// State API
+//----------------------------------------------------------------------
 
 void AAIC_Enemy_Base::SetStateAsPassive()
 {
@@ -300,7 +300,7 @@ void AAIC_Enemy_Base::SetStateAsFrozen()
 
 void AAIC_Enemy_Base::SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnownAttackTarget)
 {
-    AActor* NewAttackTarget = (UseLastKnownAttackTarget && IsValid(AttackTarget)) ? AttackTarget : AttackTargetActor;
+    AActor* NewAttackTarget = (UseLastKnownAttackTarget && IsValid(AttackTarget)) ? AttackTarget : AttackTargetActor.Get();
 
     if (!IsValid(NewAttackTarget))
     {
@@ -308,22 +308,21 @@ void AAIC_Enemy_Base::SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnow
         return;
     }
 
-    if (NewAttackTarget->Implements<UDamageableInterface>())
+    if (!NewAttackTarget->Implements<UDamageableInterface>()) return;
+    
+    if (IDamageableInterface::Execute_IsDead(NewAttackTarget))
     {
-        bool bIsDead = IDamageableInterface::Execute_IsDead(NewAttackTarget);
-        if (bIsDead)
-            SetStateAsPassive();
-        else
-        {
-            if (UBlackboardComponent* BB = GetBlackboardComponent())
-            {
-                BB->SetValueAsInt(StateKeyName, (int32)EAIState::Attacking);
-                BB->SetValueAsObject(AttackTargetKeyName, NewAttackTarget);
-            }
-
-            AttackTargetActor = NewAttackTarget;
-        }
+        SetStateAsPassive();
+        return;
     }
+
+    if (UBlackboardComponent* BB = GetBlackboardComponent())
+    {
+        BB->SetValueAsInt(StateKeyName, (int32)EAIState::Attacking);
+        BB->SetValueAsObject(AttackTargetKeyName, NewAttackTarget);
+    }
+
+    AttackTargetActor = NewAttackTarget;
 }
 
 void AAIC_Enemy_Base::SetStateAsInvestigating(FVector Location)
@@ -344,14 +343,9 @@ void AAIC_Enemy_Base::SetStateAsSeeking(FVector Location)
     }
 }
 
-uint8 AAIC_Enemy_Base::GetCurrentState()
-{
-    if (UBlackboardComponent* BB = GetBlackboardComponent())
-    {
-        return uint8(BB->GetValueAsInt(StateKeyName));
-    }
-    return -1;
-}
+//----------------------------------------------------------------------
+// Timer Callbacks
+//----------------------------------------------------------------------
 
 void AAIC_Enemy_Base::SeekAttackTarget()
 {

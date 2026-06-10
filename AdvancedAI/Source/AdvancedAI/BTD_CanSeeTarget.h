@@ -14,13 +14,11 @@ class ADVANCEDAI_API UBTD_CanSeeTarget : public UBTDecorator
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, Category = "Keys")
+	FBlackboardKeySelector AttackTargetKey;
+
 public:
 	UBTD_CanSeeTarget();
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
-
-private:
-	UPROPERTY(EditAnywhere, Category = "Keys")
-	FBlackboardKeySelector AttackTargetKey;
-	
 };

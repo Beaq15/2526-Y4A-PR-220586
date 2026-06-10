@@ -20,17 +20,16 @@ EBTNodeResult::Type UBTT_MoveAlongPatrolRoute::ExecuteTask(UBehaviorTreeComponen
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	APawn* Pawn = AIController->GetPawn();
 
-	if (Pawn->Implements<UEnemyInterface>())
+	if (Pawn && Pawn->Implements<UEnemyInterface>())
 	{
 		APatrolRoute* Route = IEnemyInterface::Execute_GetPatrolRoute(Pawn);
-		if (IsValid(Route))
-		{
-			CurrentTargetLocation = Route->GetSplinePointAsWorldPosition();
+		if (!IsValid(Route)) return EBTNodeResult::Failed;
+		
+		CurrentTargetLocation = Route->GetSplinePointAsWorldPosition();
 
-			AIController->MoveToLocation(CurrentTargetLocation, AcceptanceRadius);
+		AIController->MoveToLocation(CurrentTargetLocation, AcceptanceRadius);
 
-			return EBTNodeResult::InProgress;
-		}
+		return EBTNodeResult::InProgress;
 	}
 
 	return EBTNodeResult::Failed;
@@ -44,7 +43,7 @@ void UBTT_MoveAlongPatrolRoute::TickTask(UBehaviorTreeComponent& OwnerComp, uint
 
 	if (AIController->GetMoveStatus() == EPathFollowingStatus::Idle)
 	{
-			if (Pawn->Implements<UEnemyInterface>())
+			if (Pawn && Pawn->Implements<UEnemyInterface>())
 			{
 				APatrolRoute* Route = IEnemyInterface::Execute_GetPatrolRoute(Pawn);
 				if (IsValid(Route))

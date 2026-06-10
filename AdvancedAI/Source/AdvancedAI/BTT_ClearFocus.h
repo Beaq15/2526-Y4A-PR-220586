@@ -13,9 +13,9 @@ UCLASS()
 class ADVANCEDAI_API UBTT_ClearFocus : public UBTTaskNode
 {
 	GENERATED_BODY()
+
 public:
 	UBTT_ClearFocus();
-
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	
 };

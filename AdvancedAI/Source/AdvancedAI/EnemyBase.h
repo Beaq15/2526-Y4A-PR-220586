@@ -39,6 +39,18 @@ class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface, pub
 	GENERATED_BODY()
 
 public:
+	//----------------------------------------------------------------------
+	// Public — Lifecycle
+	//----------------------------------------------------------------------
+
+	AEnemyBase();
+
+	virtual void Tick(float DeltaTime) override;
+
+	//----------------------------------------------------------------------
+	// Public — Delegates
+	//----------------------------------------------------------------------
+
 	UPROPERTY(BlueprintAssignable, Category = "Animation")
 	FOnAttackEnd OnAttackEnd;
 
@@ -48,14 +60,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Animation")
 	FOnWeaponUnequipedEnd OnDropWeaponEnd;
 
-	// Sets default values for this character's properties
-	AEnemyBase();
-
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	//----------------------------------------------------------------------
+	// Public — State
+	//----------------------------------------------------------------------
 
 	UPROPERTY(VisibleAnywhere, Category = "Combat")
 	bool bIsWieldingWeapon = false;
@@ -66,51 +73,81 @@ public:
 	UPROPERTY()
 	EAIState State = EAIState::Passive;
 
-	virtual void Attack();
+	//----------------------------------------------------------------------
+	// Public — AI Asset
+	//----------------------------------------------------------------------
 
 	UPROPERTY(EditDefaultsOnly, Category = "AI")
 	TObjectPtr<UBehaviorTree> BehaviorTree;
 
-	UFUNCTION()
-	void OnHitReactionMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+	//----------------------------------------------------------------------
+	// Public — Combat
+	//----------------------------------------------------------------------
 
-	AActor* CachedDamageCauser;
-
-	bool Attacking = false;
+	virtual void Attack() {}
 protected:
+	//----------------------------------------------------------------------
+	// Protected — Lifecycle
+	//----------------------------------------------------------------------
+
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	TSubclassOf<AActor>WeaponClass;
-	UPROPERTY()
-	TObjectPtr<AActor> WeaponActor;
+	//----------------------------------------------------------------------
+	// Protected — Components
+	//----------------------------------------------------------------------
 
-	UPROPERTY(EditAnywhere, Category = "AI")
-	APatrolRoute* PatrolRoute;
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UDamageSystem> DamageSystem;
 
-	UPROPERTY(VisibleAnywhere)
-	UDamageSystem* DamageSystem;
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UAttackSystem> AttackSystem;
 
-	UPROPERTY(VisibleAnywhere)
-	UAttackSystem* AttackSystem;
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UAIKnowledgeComponent> KnowledgeComponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UAIPerceptionToFactComponent> PerceptionToFactComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "UI")
-	UWidgetComponent* HealthBarComponent;
+	TObjectPtr<UWidgetComponent> HealthBarComponent;
+
+	//----------------------------------------------------------------------
+	// Protected — Config
+	//----------------------------------------------------------------------
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	TObjectPtr<APatrolRoute> PatrolRouteActor;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UWidgetHealthBar>HealthBarWidgetClass;
+	TSubclassOf<UWidgetHealthBar> HealthBarWidgetClass;
 
-	UPROPERTY(VisibleAnywhere)
-	AAIC_Enemy_Base* AICEnemyBase;
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<AActor> WeaponClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> HitReactionMontage;
 
-	UPROPERTY(VisibleAnywhere)
-	UAIKnowledgeComponent* KnowledgeComponent;
+	//----------------------------------------------------------------------
+	// Protected — Runtime State
+	//----------------------------------------------------------------------
 
 	UPROPERTY()
-	UAIPerceptionToFactComponent* PerceptionToFactComponent;
+	TObjectPtr<AAIC_Enemy_Base> AICEnemyBase;
+
+	UPROPERTY()
+	TObjectPtr<AActor> WeaponActor;
+
+	UPROPERTY()
+	TObjectPtr<AActor> CachedDamageCauser;
+
+	bool bAttacking = false;
+
+	//----------------------------------------------------------------------
+	// Protected — Callbacks
+	//----------------------------------------------------------------------
+
+	UFUNCTION()
+	void OnHitReactionMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 
 	UFUNCTION()
 	void OnFactReceived(FSharedFact Fact);
@@ -121,22 +158,23 @@ protected:
 	UFUNCTION()
 	void OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser);
 
-	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
+	//----------------------------------------------------------------------
+	// Protected — IEnemyInterface
+	//----------------------------------------------------------------------
+
+	virtual float      SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
 	virtual APatrolRoute* GetPatrolRoute_Implementation() override;
+	virtual void       GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
+	virtual void       JumpToDestination_Implementation(FVector Destination) override;
 
-	virtual void GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
-
-	float GetCurrentHealth_Implementation() { return DamageSystem->Health; }
-
-	float GetMaxHealth_Implementation() { return DamageSystem->MaxHealth; }
-
-	float Heal_Implementation(float Amount);
-
-	bool TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser);
-
-	bool IsDead_Implementation() { return DamageSystem->isDead; }
-
-	bool IsAttacking_Implementation() { return Attacking; }
-
-	void JumpToDestination_Implementation(FVector Destination);
+	//----------------------------------------------------------------------
+	// Protected — IDamageableInterface
+	//----------------------------------------------------------------------
+	virtual float GetCurrentHealth_Implementation() override { return DamageSystem->Health; }
+	virtual float GetMaxHealth_Implementation()     override { return DamageSystem->MaxHealth; }
+	virtual bool  IsDead_Implementation()           override { return DamageSystem->isDead; }
+	virtual bool  IsAttacking_Implementation()      override { return bAttacking; }
+	virtual float Heal_Implementation(float Amount) override;
+	virtual bool  TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser) override;
+	
 };

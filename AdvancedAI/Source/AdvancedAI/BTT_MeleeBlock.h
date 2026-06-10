@@ -14,12 +14,12 @@ class ADVANCEDAI_API UBTT_MeleeBlock : public UBTTaskNode
 {
 	GENERATED_BODY()
 
+	UBehaviorTreeComponent* CachedOwnerComp = nullptr;
+
+	UFUNCTION()
+	void OnBlockEnd();
+
 public:
 	UBTT_MeleeBlock();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	
-	UFUNCTION()
-	void EndExecution();
-
-	UBehaviorTreeComponent* OwnerCompRef = nullptr;
 };

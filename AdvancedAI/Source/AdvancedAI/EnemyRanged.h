@@ -14,25 +14,42 @@ class ADVANCEDAI_API AEnemyRanged : public AEnemyBase
 {
 	GENERATED_BODY()
 
-public:
+	//----------------------------------------------------------------------
+	// Private — Animation Assets
+	//----------------------------------------------------------------------
+
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage>FireRifleMontage;
+
+	//----------------------------------------------------------------------
+	// Private — Animation Callbacks
+	//----------------------------------------------------------------------
 
 	UFUNCTION()
 	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
-	
+
 protected:
 
-	virtual void EquipWeapon_Implementation() override;
+	//----------------------------------------------------------------------
+	// Protected — Lifecycle
+	//----------------------------------------------------------------------
 
 	virtual void BeginPlay() override;
 
-	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
+	//----------------------------------------------------------------------
+	// Protected — IEnemyInterface
+	//----------------------------------------------------------------------
 
-	virtual void GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
-	
+	virtual void  EquipWeapon_Implementation() override;
+	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
+	virtual void  GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
+
+	//----------------------------------------------------------------------
+	// Protected — Combat
+	//----------------------------------------------------------------------
+
 	virtual void Attack() override;
 };

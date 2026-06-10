@@ -21,9 +21,9 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 {
 	GENERATED_BODY()
 
-public:
-
-	virtual void BeginPlay() override;
+	//----------------------------------------------------------------------
+	// Private — Animation Assets
+	//----------------------------------------------------------------------
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> EquipSwordMontage;
@@ -40,10 +40,25 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> SwordBlockHitMontage;
 
-	EBlockingState BlockingState;
+	// ----------------------------------------------------------------------
+	// Private — State
+	//----------------------------------------------------------------------
 
-	UPROPERTY(BlueprintAssignable)
-	FOnBlockEnd OnBlockEnd;
+	UPROPERTY(VisibleAnywhere, Category = "Combat")
+	EBlockingState BlockingState = EBlockingState::None;
+
+	//----------------------------------------------------------------------
+	// Private — Animation Callbacks
+	//----------------------------------------------------------------------
+
+	UFUNCTION()
+	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 
 	UFUNCTION()
 	void OnSwordBlockMontageEnd(UAnimMontage* Montage, bool bInterrupted);
@@ -52,29 +67,42 @@ public:
 	void OnBlockHitMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 
 	UFUNCTION()
-	void StartBlock();
+	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
 
-	UFUNCTION()
+	//----------------------------------------------------------------------
+	// Private — Block Helpers
+	//----------------------------------------------------------------------
+
 	void EndBlock();
 
 	UFUNCTION()
 	void OnBlocked(bool bCanBeParried, AActor* DamageCauser);
+public:
+	// ----------------------------------------------------------------------
+	// Public — Lifecycle
+	//----------------------------------------------------------------------
+
+	virtual void BeginPlay() override;
+
+	//----------------------------------------------------------------------
+	// Public — Delegates
+	//----------------------------------------------------------------------
+
+	UPROPERTY(BlueprintAssignable)
+	FOnBlockEnd OnBlockEnd;
+
+	//----------------------------------------------------------------------
+	// Public — Combat API
+	//----------------------------------------------------------------------
+
+	void StartBlock();
 
 	virtual void Attack() override;
 
-	UFUNCTION()
-	void OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+	//----------------------------------------------------------------------
+	// Public — IEnemyInterface
+	//----------------------------------------------------------------------
 
-	UFUNCTION()
-	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
-
-
-	UFUNCTION()
-	void OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
-
-	UFUNCTION()
-	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
-
-	virtual void EquipWeapon_Implementation() override;
-	virtual void UnequipWeapon_Implementation() override;	
+	virtual void EquipWeapon_Implementation()   override;
+	virtual void UnequipWeapon_Implementation() override;
 };

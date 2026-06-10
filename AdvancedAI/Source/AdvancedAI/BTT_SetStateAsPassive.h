@@ -16,6 +16,5 @@ class ADVANCEDAI_API UBTT_SetStateAsPassive : public UBTTaskNode
 	
 public:
 	UBTT_SetStateAsPassive();
-
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

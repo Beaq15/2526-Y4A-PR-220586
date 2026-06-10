@@ -8,10 +8,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "AIC_Enemy_Base.h"
 
-// Sets default values
+//----------------------------------------------------------------------
+// Lifecycle
+//----------------------------------------------------------------------
+
 AEnemyBase::AEnemyBase()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+
 	PrimaryActorTick.bCanEverTick = true;
 
 	DamageSystem = CreateDefaultSubobject<UDamageSystem>(TEXT("DamageSystem"));
@@ -26,55 +29,47 @@ AEnemyBase::AEnemyBase()
 	PerceptionToFactComponent = CreateDefaultSubobject<UAIPerceptionToFactComponent>(TEXT("PerceptionToFactComponent"));
 }
 
-void AEnemyBase::OnHitReactionMontageEnd(UAnimMontage* Montage, bool bInterrupted)
-{
-	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-
-	if (!DamageSystem->isDead)
-		AICEnemyBase->SetStateAsAttacking(CachedDamageCauser, true);
-}
-
-// Called when the game starts or when spawned
 void AEnemyBase::BeginPlay()
 {
 	Super::BeginPlay();
 
 	AICEnemyBase = Cast<AAIC_Enemy_Base>(GetController());
 
-	UWidgetHealthBar* HealthBarWidget = CreateWidget<UWidgetHealthBar>(GetWorld(), HealthBarWidgetClass);
-	if (HealthBarWidget)
+	if (HealthBarWidgetClass)
 	{
-		HealthBarWidget->DamageableActor = TScriptInterface<IDamageableInterface>(this);
-		HealthBarComponent->SetWidget(HealthBarWidget);
+		UWidgetHealthBar* HealthBarWidget = CreateWidget<UWidgetHealthBar>(GetWorld(), HealthBarWidgetClass);
+		if (HealthBarWidget)
+		{
+			HealthBarWidget->DamageableActor = TScriptInterface<IDamageableInterface>(this);
+			HealthBarComponent->SetWidget(HealthBarWidget);
+		}
 	}
-
+	
 	DamageSystem->OnDeath.AddUniqueDynamic(this, &AEnemyBase::OnDeath_Event);
 	DamageSystem->OnDamageResponse.AddUniqueDynamic(this, &AEnemyBase::OnHitResponse_Event);
 	KnowledgeComponent->OnFactAdded.AddUniqueDynamic(this, &AEnemyBase::OnFactReceived);
 }
 
-// Called every frame
 void AEnemyBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
-// Called to bind functionality to input
-void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+//----------------------------------------------------------------------
+// Callbacks
+//----------------------------------------------------------------------
 
-}
-
-APatrolRoute* AEnemyBase::GetPatrolRoute_Implementation()
+void AEnemyBase::OnHitReactionMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
-	return PatrolRoute;
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+	if (!DamageSystem->isDead && AICEnemyBase)
+		AICEnemyBase->SetStateAsAttacking(CachedDamageCauser, true);
 }
 
 void AEnemyBase::OnFactReceived(FSharedFact Fact)
 {
-	if (Fact.FactType == FGameplayTag::RequestGameplayTag("Fact.UnderAttack") ||
+ 	if (Fact.FactType == FGameplayTag::RequestGameplayTag("Fact.UnderAttack") ||
 		Fact.FactType == FGameplayTag::RequestGameplayTag("Fact.EnemySighted"))
 	{
 		if (Fact.Subject.Actor.IsValid() && AICEnemyBase)
@@ -87,6 +82,8 @@ void AEnemyBase::OnDeath_Event()
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
+	if (!AICEnemyBase) return;
+
 	AICEnemyBase->SetStateAsDead();
 
 	AICEnemyBase->BrainComponent->StopLogic("Dead");
@@ -97,7 +94,8 @@ void AEnemyBase::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* Dam
 	GetCharacterMovement()->StopMovementImmediately();
 	GetCharacterMovement()->DisableMovement();
 
-	AICEnemyBase->SetStateAsFrozen();
+	if (AICEnemyBase)
+		AICEnemyBase->SetStateAsFrozen();
 
 	CachedDamageCauser = DamageCauser;
 
@@ -116,6 +114,15 @@ void AEnemyBase::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* Dam
 	}
 }
 
+//----------------------------------------------------------------------
+// IEnemyInterface
+//----------------------------------------------------------------------
+
+APatrolRoute* AEnemyBase::GetPatrolRoute_Implementation()
+{
+	return PatrolRouteActor;
+}
+
 float AEnemyBase::SetMovementSpeed_Implementation(EMovementSpeed Speed)
 {
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
@@ -123,18 +130,10 @@ float AEnemyBase::SetMovementSpeed_Implementation(EMovementSpeed Speed)
 
 	switch (Speed)
 	{
-	case EMovementSpeed::Idle:
-		Movement->MaxWalkSpeed = 0.f;
-		break;
-	case EMovementSpeed::Walking:
-		Movement->MaxWalkSpeed = 100.f;
-		break;
-	case EMovementSpeed::Jogging:
-		Movement->MaxWalkSpeed = 300.f;
-		break;
-	case EMovementSpeed::Sprinting:
-		Movement->MaxWalkSpeed = 500.f;
-		break;
+	case EMovementSpeed::Idle:      Movement->MaxWalkSpeed = 0.f;   break;
+	case EMovementSpeed::Walking:   Movement->MaxWalkSpeed = 100.f; break;
+	case EMovementSpeed::Jogging:   Movement->MaxWalkSpeed = 300.f; break;
+	case EMovementSpeed::Sprinting: Movement->MaxWalkSpeed = 500.f; break;
 	}
 
 	return Movement->MaxWalkSpeed;
@@ -146,6 +145,18 @@ void AEnemyBase::GetIdealRange_Implementation(float& AttackRadius, float& Defend
 	DefendRadius = 350.f;
 }
 
+void AEnemyBase::JumpToDestination_Implementation(FVector Destination)
+{
+	FVector LaunchVelocity;
+	UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), { Destination.X, Destination.Y, Destination.Z + 250.f });
+	LaunchCharacter(LaunchVelocity, true, true);
+		
+}
+
+//----------------------------------------------------------------------
+// IDamageableInterface
+//----------------------------------------------------------------------
+
 float AEnemyBase::Heal_Implementation(float Amount)
 {
 	return DamageSystem->Heal(Amount);
@@ -155,17 +166,3 @@ bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor
 {
 	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
 }
-
-void AEnemyBase::JumpToDestination_Implementation(FVector Destination)
-{
-	FVector LaunchVelocity;
-	bool bSuccess = UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), { Destination.X, Destination.Y, Destination.Z + 250.f });
-	LaunchCharacter(LaunchVelocity, true, true);
-		
-}
-
-void AEnemyBase::Attack()
-{
-
-}
-

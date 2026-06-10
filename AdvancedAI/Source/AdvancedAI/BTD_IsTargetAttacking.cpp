@@ -7,7 +7,7 @@
 
 UBTD_IsTargetAttacking::UBTD_IsTargetAttacking()
 {
-	NodeName = "IsTargetAttacking";
+	NodeName = "Is Target Attacking";
 	bNotifyTick = true;
 }
 
@@ -15,9 +15,7 @@ bool UBTD_IsTargetAttacking::CalculateRawConditionValue(UBehaviorTreeComponent& 
 {
 	AActor* Actor = Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(AttackTargetKey.SelectedKeyName));
 
-	if (!Actor) return false;
-
-	if (Actor->Implements<UDamageableInterface>())
+	if (Actor && Actor->Implements<UDamageableInterface>())
 	{
 		if (IDamageableInterface::Execute_IsAttacking(Actor))
 			return true;
@@ -29,8 +27,6 @@ void UBTD_IsTargetAttacking::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* 
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-	const bool bCurrentValue = CalculateRawConditionValue(OwnerComp, NodeMemory);
-
-	if (bCurrentValue)
+	if (CalculateRawConditionValue(OwnerComp, NodeMemory))
 		OwnerComp.RequestExecution(this);
 }

@@ -18,12 +18,12 @@ class ADVANCEDAI_API UWidgetHealthBar : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintPure)
-	float GetPercent();
+	float GetPercent() const;
 
 	UPROPERTY(BlueprintReadWrite)
 	TScriptInterface<IDamageableInterface> DamageableActor;
 
 	UPROPERTY(meta = (BindWidget))
-	UProgressBar* ProgressBar_40;
+	TObjectPtr<UProgressBar> ProgressBar_40;
 	
 };

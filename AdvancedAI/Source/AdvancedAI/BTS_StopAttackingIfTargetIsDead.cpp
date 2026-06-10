@@ -8,8 +8,7 @@
 
 UBTS_StopAttackingIfTargetIsDead::UBTS_StopAttackingIfTargetIsDead()
 {
-	NodeName = "StopAttackingIfTargetIsDead";
-	
+	NodeName = "Stop Attacking If Target Is Dead";
 	Interval = 1.0f;
 	RandomDeviation = 0.f;
 }
@@ -20,13 +19,14 @@ void UBTS_StopAttackingIfTargetIsDead::TickNode(UBehaviorTreeComponent& OwnerCom
 
 	AActor* Target = Cast<AActor>(BB->GetValueAsObject(AttackTargetKey.SelectedKeyName));
 
-	if (Target->Implements<UDamageableInterface>())
+	if (Target && Target->Implements<UDamageableInterface>())
 	{
 		if (IDamageableInterface::Execute_IsDead(Target))
 		{
 			AAIC_Enemy_Base* AIC = Cast<AAIC_Enemy_Base>(OwnerComp.GetAIOwner());
 
-			AIC->SetStateAsPassive();
+			if (AIC)
+				AIC->SetStateAsPassive();
 		}
 
 	}

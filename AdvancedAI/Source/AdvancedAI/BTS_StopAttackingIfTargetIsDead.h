@@ -14,12 +14,10 @@ class ADVANCEDAI_API UBTS_StopAttackingIfTargetIsDead : public UBTService
 {
 	GENERATED_BODY()
 
-public:
-	UBTS_StopAttackingIfTargetIsDead();
-
-	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
-
 	UPROPERTY(EditAnywhere, Category = "Keys")
 	FBlackboardKeySelector AttackTargetKey;
 	
+public:
+	UBTS_StopAttackingIfTargetIsDead();
+	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 };

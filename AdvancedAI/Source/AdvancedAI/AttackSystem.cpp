@@ -6,47 +6,46 @@
 #include "Perception/AISense_Damage.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-// Sets default values for this component's properties
+
+//----------------------------------------------------------------------
+// Lifecycle
+//----------------------------------------------------------------------
+// 
+
 UAttackSystem::UAttackSystem()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
-
-// Called when the game starts
 void UAttackSystem::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-	
 }
 
-
-// Called every frame
 void UAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
+
+//----------------------------------------------------------------------
+// Attack API
+//----------------------------------------------------------------------
 
 void UAttackSystem::MagicSpell(FTransform SpawnTransform, AActor* TargetActor, FDamageInfo DamageInfo)
 {
+	if (!ProjectileClass) return;
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Instigator = Cast<APawn>(GetOwner());
+
 	AProjectileBase* Projectile = GetWorld()->SpawnActor<AProjectileBase>(ProjectileClass, SpawnTransform, SpawnParams);
+	if (!Projectile) return;
 
 	Projectile->BoxCollision->IgnoreActorWhenMoving(GetOwner(), true);
-	
 	Projectile->Speed = 1000.f;
 	Projectile->Target = TargetActor;
+
 	DamageInfoRef = DamageInfo;
-	
 
 	Projectile->OnProjectileImpact.AddDynamic(this, &UAttackSystem::OnProjectileHit);
 }
@@ -78,6 +77,10 @@ void UAttackSystem::FireBullet(FVector TraceStart, FVector TraceEnd, FDamageInfo
 		UAISense_Damage::ReportDamageEvent(GetWorld(), HitActor, GetOwner(), DamageInfo.Amount, GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation());
 	}
 }
+
+//----------------------------------------------------------------------
+// Callbacks
+//----------------------------------------------------------------------
 
 void UAttackSystem::OnProjectileHit(AActor* OtherActor, FHitResult Hit)
 {

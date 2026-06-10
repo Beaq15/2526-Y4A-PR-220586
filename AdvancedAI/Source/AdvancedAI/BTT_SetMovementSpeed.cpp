@@ -15,10 +15,8 @@ EBTNodeResult::Type UBTT_SetMovementSpeed::ExecuteTask(UBehaviorTreeComponent& O
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	APawn* Pawn = AIController->GetPawn();
 
-	if (Pawn->Implements<UEnemyInterface>())
-	{
-		float Speed = IEnemyInterface::Execute_SetMovementSpeed(Pawn, MovementSpeed);
-	}
+	if (Pawn && Pawn->Implements<UEnemyInterface>())
+		IEnemyInterface::Execute_SetMovementSpeed(Pawn, MovementSpeed);
 
 	return EBTNodeResult::Succeeded;
 }

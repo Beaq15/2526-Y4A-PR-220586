@@ -21,33 +21,18 @@ class ADVANCEDAI_API APatrolRoute : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
-	APatrolRoute();
+	UPROPERTY(VisibleAnywhere, Category = "Patrol")
+	TObjectPtr<USplineComponent> PatrolSpline;
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	UFUNCTION()
-	void IncrementPatrolRoute();
-
-	UFUNCTION()
-	FVector GetSplinePointAsWorldPosition();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-private:
-	
-
-	UPROPERTY(VisibleAnywhere)
-	USplineComponent* PatrolSpline;
-
-	UPROPERTY(VisibleAnywhere)
 	int32 PatrolIndex = 0;
-
-	UPROPERTY(VisibleAnywhere)
 	int32 Direction = 1;
 
+public:	
+	APatrolRoute();
+
+	void IncrementPatrolRoute();
+	FVector GetSplinePointAsWorldPosition() const;
+
+protected:
+	virtual void BeginPlay() override;
 };

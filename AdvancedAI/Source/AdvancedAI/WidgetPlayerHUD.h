@@ -19,20 +19,17 @@ class ADVANCEDAI_API UWidgetPlayerHUD : public UUserWidget
 
 public:
 	UPROPERTY(meta = (BindWidget))
-	UImage* Crosshair;
+	TObjectPtr<UImage> Crosshair;
 
 	UPROPERTY(meta = (BindWidget))
-	UProgressBar* ProgressBar_148;
+	TObjectPtr<UProgressBar> ProgressBar_148;
 
 	UPROPERTY(VisibleAnywhere)
-	ACharacter* Player;
+	TObjectPtr<ACharacter> Player;
 
 	UFUNCTION(BlueprintPure)
-	float GetPercent();
+	float GetPercent() const;
 
-	UFUNCTION()
 	void ShowCrosshair();
-
-	UFUNCTION()
 	void HideCrosshair();
 };

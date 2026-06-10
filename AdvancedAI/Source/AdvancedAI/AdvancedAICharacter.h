@@ -15,6 +15,16 @@
 #include "Components/TimelineComponent.h"
 #include "AdvancedAICharacter.generated.h"
 
+class USpringArmComponent;
+class UCameraComponent;
+class UInputMappingContext;
+class UInputAction;
+struct FInputActionValue;
+
+
+DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+
+
 UENUM(BlueprintType)
 enum class EPlayerStance : uint8
 {
@@ -22,73 +32,130 @@ enum class EPlayerStance : uint8
 	Magic
 };
 
-class USpringArmComponent;
-class UCameraComponent;
-class UInputMappingContext;
-class UInputAction;
-struct FInputActionValue;
 
-DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
 class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterface, public IDamageableInterface
 {
 	GENERATED_BODY()
 
-	/** Camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
+	//----------------------------------------------------------------------
+	// Private — Camera
+	//----------------------------------------------------------------------
 
-	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
+	TObjectPtr<USpringArmComponent> CameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCameraComponent> FollowCamera;
+
+	//----------------------------------------------------------------------
+	// Private — Input
+	//----------------------------------------------------------------------
 	
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext* DefaultMappingContext;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* JumpAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> JumpAction;
 
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* MoveAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> MoveAction;
 
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* LookAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> LookAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* ChangeStateAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> ChangeStateAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* MakeNoiseAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> MakeNoiseAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* DoDamageAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> DoDamageAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* ChangeStanceAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> ChangeStanceAction;
+
+	//----------------------------------------------------------------------
+	// Private — State
+	//----------------------------------------------------------------------
+
+	bool bPressed = false;
+	bool bCanMove = true;
+	bool bAttacking = false;
+
+	//----------------------------------------------------------------------
+	// Private — Movement Tuning
+	//----------------------------------------------------------------------
+
+	const float MagicWalkSpeed = 200.f;
+	const float DefaultWalkSpeed = 2000.f;
+
+	//----------------------------------------------------------------------
+	// Private — Timeline
+	//----------------------------------------------------------------------
+
+	FTimeline AimTimeline;
+
+	UPROPERTY()
+	TObjectPtr<UCurveFloat> LinearCurve;
+
+	UFUNCTION()
+	void OnAimTimeLineUpdate(float Value);
 
 public:
+	//----------------------------------------------------------------------
+	// Public — Lifecycle
+	//----------------------------------------------------------------------
 	AAdvancedAICharacter();
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
-	bool Pressed = false;
+	//----------------------------------------------------------------------
+	// Public — Team
+	//----------------------------------------------------------------------
 
 	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(0); }
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	//----------------------------------------------------------------------
+	// Public — State (read-only)
+	//----------------------------------------------------------------------
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	EPlayerStance Stance = EPlayerStance::Default;
 
-	UPROPERTY(EditDefaultsonly)
-	TObjectPtr<UAnimMontage>MagicSpellMontage;
+	//----------------------------------------------------------------------
+	// Public — Accessors
+	//----------------------------------------------------------------------
 
-	UPROPERTY(EditDefaultsOnly, Category = "Animation")
-	TObjectPtr<UAnimMontage> HitReactionMontage;
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+protected:
+	//----------------------------------------------------------------------
+	// Protected — Lifecycle Overrides
+	//----------------------------------------------------------------------
+
+	virtual void NotifyControllerChanged() override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	//----------------------------------------------------------------------
+	// Protected — Input Handlers
+	//----------------------------------------------------------------------
+
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	void ChangeState(const FInputActionValue& Value);
+	void MakeSomeNoise(const FInputActionValue& Value);
+	void DoDamage(const FInputActionValue& Value);
+	void EnterMagicStance();
+	void EnterDefaultStance();
+
+	//----------------------------------------------------------------------
+	// Protected — Animation Callbacks
+	//----------------------------------------------------------------------
 
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
@@ -99,83 +166,61 @@ public:
 	UFUNCTION()
 	void OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser);
 
-protected:
-
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
-
-	/** Called for looking input */
-	void Look(const FInputActionValue& Value);
-
-	void ChangeState(const FInputActionValue& Value);
-
-	void MakeSomeNoise(const FInputActionValue& Value);
-			
-	void DoDamage(const FInputActionValue& Value);
-
-	void EnterMagicStance();
-
-	void EnterDefaultStance();
-
-	UPROPERTY(VisibleAnywhere)
-	UDamageSystem* DamageSystem;
-
-	UPROPERTY(VisibleAnywhere)
-	UAttackSystem* AttackSystem;
-
-	UPROPERTY(EditDefaultsOnly)
-	FVector AimBoomOffset = { 200.f, 65.f, 45.f };
-
-	UPROPERTY(EditDefaultsOnly)
-	FVector DefaultBoomOffset = { 0.f, 60.f, 30.f };
-
-	float MagicWalkSpeed = 200.f;
-	float DefaultWalkSpeed = 2000.f;
-	bool CanMove = true;
-	bool Attacking = false;
-
-	FTimeline AimTimeline;
-
-	UPROPERTY()
-	UCurveFloat* LinearCurve;
-
-	UFUNCTION()
-	void OnAimTimeLineUpdate(float Value);
-
 	UFUNCTION()
 	void OnDeath_Event();
 
-	UFUNCTION()
-	void DisplayHUD();
+	//----------------------------------------------------------------------
+	// Protected — Animation Assets
+	//----------------------------------------------------------------------
+
+	UPROPERTY(EditDefaultsonly, Category = "Animation")
+	TObjectPtr<UAnimMontage>MagicSpellMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> HitReactionMontage;
+
+	//----------------------------------------------------------------------
+	// Protected — Components
+	//----------------------------------------------------------------------
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UDamageSystem> DamageSystem;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<UAttackSystem> AttackSystem;
+
+	//----------------------------------------------------------------------
+	// Protected — Camera Tuning
+	//----------------------------------------------------------------------
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera")
+	FVector AimBoomOffset = { 200.f, 65.f, 45.f };
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera")
+	FVector DefaultBoomOffset = { 0.f, 60.f, 30.f };
+
+	//----------------------------------------------------------------------
+	// Protected — UI
+	//----------------------------------------------------------------------
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UWidgetPlayerHUD>PlayerHUDWidgetClass;
+	TSubclassOf<UWidgetPlayerHUD> PlayerHUDWidgetClass;
 
-	UWidgetPlayerHUD* PlayerHUDWidget;
+	UPROPERTY()
+	TObjectPtr<UWidgetPlayerHUD> PlayerHUDWidget;
+
+	UFUNCTION()
+	void DisplayHUD();
 	
-protected:
+	//----------------------------------------------------------------------
+	// Protected — IDamageableInterface
+	//----------------------------------------------------------------------
 
-	virtual void NotifyControllerChanged() override;
-
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-
-	float GetCurrentHealth_Implementation() { return DamageSystem->Health; }
-
-	float GetMaxHealth_Implementation() { return DamageSystem->MaxHealth; }
-
-	float Heal_Implementation(float Amount);
-
-	bool TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser);
-
-	bool IsDead_Implementation() { return DamageSystem->isDead; }
-
-	bool IsAttacking_Implementation();
-
-public:
-	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
-	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	virtual float GetCurrentHealth_Implementation() override { return DamageSystem->Health; }
+	virtual float GetMaxHealth_Implementation()     override { return DamageSystem->MaxHealth; }
+	virtual bool  IsDead_Implementation()           override { return DamageSystem->isDead; }
+	virtual bool  IsAttacking_Implementation()      override;
+	virtual float Heal_Implementation(float Amount) override;
+	virtual bool  TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser) override;
 };
 

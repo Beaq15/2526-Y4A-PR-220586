@@ -17,11 +17,17 @@ class ADVANCEDAI_API UDamageSystem : public UActorComponent
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
+	//----------------------------------------------------------------------
+	// Public — Lifecycle
+	//----------------------------------------------------------------------
 	UDamageSystem();
 
-	// Called every frame
+	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	//----------------------------------------------------------------------
+	// Public — Delegates
+	//----------------------------------------------------------------------
 
 	UPROPERTY(BlueprintAssignable)
 	FOnBlocked OnBlocked;
@@ -32,16 +38,31 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnDamageResponse OnDamageResponse;
 
+	//----------------------------------------------------------------------
+	// Public — State
+	//----------------------------------------------------------------------
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
 	float Health = 100.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
 	float MaxHealth = 100.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	bool isDead = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "State")
 	bool isInvincible = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
 	bool isBlocking = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "State")
 	bool isInterruptible = true;
 
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
+	//----------------------------------------------------------------------
+	// Public — API
+	//----------------------------------------------------------------------
 
 	FORCEINLINE EDamageResult CanBeDamaged(bool bShouldDamageInvincible, bool bCanBeBlocked) const
 	{

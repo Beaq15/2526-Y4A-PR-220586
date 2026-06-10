@@ -15,35 +15,35 @@ class ADVANCEDAI_API UAttackSystem : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
-	UAttackSystem();
-
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	UFUNCTION()
-	void MagicSpell(FTransform SpawnTransform, AActor* TargetActor, FDamageInfo DamageInfo);
-
-	UFUNCTION()
-	void FireBullet(FVector TraceStart, FVector TraceEnd, FDamageInfo DamageInfo);
-
-	UFUNCTION()
-	void OnProjectileHit(AActor* OtherActor, FHitResult Hit);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FDamageInfo DamageInfoRef;
-
-	UPROPERTY(BlueprintAssignable)
-	FOnAttackEnded OnAttackEnd;
-
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-private:
-
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AProjectileBase> ProjectileClass;
 
+	FDamageInfo DamageInfoRef;
+
+	UFUNCTION()
+	void OnProjectileHit(AActor* OtherActor, FHitResult Hit);
+public:	
+	//----------------------------------------------------------------------
+	// Public — Lifecycle
+	//----------------------------------------------------------------------
+	// 
+
+	UAttackSystem();
+
+	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	//----------------------------------------------------------------------
+	// Public — Attack API
+	//----------------------------------------------------------------------
+
+	void MagicSpell(FTransform SpawnTransform, AActor* TargetActor, FDamageInfo DamageInfo);
+	void FireBullet(FVector TraceStart, FVector TraceEnd, FDamageInfo DamageInfo);
+
+	//----------------------------------------------------------------------
+	// Public — Delegates
+	//----------------------------------------------------------------------
+
+	UPROPERTY(BlueprintAssignable)
+	FOnAttackEnded OnAttackEnd;
 };

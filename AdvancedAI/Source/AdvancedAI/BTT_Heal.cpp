@@ -15,10 +15,11 @@ EBTNodeResult::Type UBTT_Heal::ExecuteTask(UBehaviorTreeComponent& OwnerComp, ui
 	APawn* Pawn = OwnerComp.GetAIOwner()->GetPawn();
 
 
-	if (Pawn->Implements<UDamageableInterface>())
+	if (Pawn && Pawn->Implements<UDamageableInterface>())
 	{
-		float MaxHealth = IDamageableInterface::Execute_GetMaxHealth(Pawn);
+		const float MaxHealth = IDamageableInterface::Execute_GetMaxHealth(Pawn);
 		IDamageableInterface::Execute_Heal(Pawn, MaxHealth * HealPercentage);
 	}
+
 	return EBTNodeResult::Succeeded;
 }

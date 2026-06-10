@@ -17,5 +17,6 @@ class ADVANCEDAI_API ANavLink_EnemyAI : public ANavLinkProxy
 public:
 	virtual void PostInitializeComponents() override;
 
+private:
 	void OnSmartLinkReachedCustom(UNavLinkCustomComponent* LinkComp, UObject* PathingAgent, const FVector& DestPoint);
 };

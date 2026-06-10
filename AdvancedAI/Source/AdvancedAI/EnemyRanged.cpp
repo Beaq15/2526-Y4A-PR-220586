@@ -7,11 +7,59 @@
 #include "AIC_Enemy_Base.h"
 #include "Kismet/GameplayStatics.h"
 
+//----------------------------------------------------------------------
+// Lifecycle
+//----------------------------------------------------------------------
+
 void AEnemyRanged::BeginPlay()
 {
 	Super::BeginPlay();
 	EquipWeapon_Implementation();
 }
+
+//----------------------------------------------------------------------
+// Combat
+//----------------------------------------------------------------------
+
+void AEnemyRanged::Attack()
+{
+	bAttacking = true;
+
+	if (FireRifleMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(FireRifleMontage, 1.0f);
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyRanged::OnMontageNotifyBegin);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyRanged::OnAttackMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, FireRifleMontage);
+		}
+	}
+}
+
+//----------------------------------------------------------------------
+// IEnemyInterface
+//----------------------------------------------------------------------
+
+void AEnemyRanged::EquipWeapon_Implementation()
+{
+	if (!WeaponClass) return;
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Instigator = this;
+
+	WeaponActor = GetWorld()->SpawnActor<AActor>(WeaponClass, GetActorTransform(), SpawnParams);
+	if (!WeaponActor) return;
+
+	WeaponActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("hand_r_rifle_socket"));
+
+	bIsWieldingWeapon = true;
+	OnEquipWeaponEnd.Broadcast();
+}
+
 
 float AEnemyRanged::SetMovementSpeed_Implementation(EMovementSpeed Speed)
 {
@@ -20,18 +68,10 @@ float AEnemyRanged::SetMovementSpeed_Implementation(EMovementSpeed Speed)
 
 	switch (Speed)
 	{
-	case EMovementSpeed::Idle:
-		Movement->MaxWalkSpeed = 0.f;
-		break;
-	case EMovementSpeed::Walking:
-		Movement->MaxWalkSpeed = 200.f;
-		break;
-	case EMovementSpeed::Jogging:
-		Movement->MaxWalkSpeed = 300.f;
-		break;
-	case EMovementSpeed::Sprinting:
-		Movement->MaxWalkSpeed = 500.f;
-		break;
+	case EMovementSpeed::Idle:      Movement->MaxWalkSpeed = 0.f;   break;
+	case EMovementSpeed::Walking:   Movement->MaxWalkSpeed = 200.f; break;
+	case EMovementSpeed::Jogging:   Movement->MaxWalkSpeed = 300.f; break;
+	case EMovementSpeed::Sprinting: Movement->MaxWalkSpeed = 500.f; break;
 	}
 
 	return Movement->MaxWalkSpeed;
@@ -43,10 +83,14 @@ void AEnemyRanged::GetIdealRange_Implementation(float& AttackRadius, float& Defe
 	DefendRadius = 600.f;
 }
 
+//----------------------------------------------------------------------
+// Animation Callbacks
+//----------------------------------------------------------------------
+
 void AEnemyRanged::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 	OnAttackEnd.Broadcast();
-	Attacking = false;
+	bAttacking = false;
 }
 
 void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
@@ -66,10 +110,6 @@ void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointN
 		FVector Start = WeaponActor->GetActorLocation();
 		FVector End = AttackTarget->GetActorLocation();
 
-		FHitResult HitResult;
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
-
 		FDamageInfo DamageInfo;
 		DamageInfo.Amount = 20.f;
 		DamageInfo.DamageType = EDamageType::Projectile;
@@ -78,37 +118,3 @@ void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointN
 		AttackSystem->FireBullet(Start, End, DamageInfo);
 	}
 }
-
-void AEnemyRanged::Attack()
-{
-	Attacking = true;
-	if (FireRifleMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(FireRifleMontage, 1.0f);
-			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyRanged::OnMontageNotifyBegin);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyRanged::OnAttackMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, FireRifleMontage);
-		}
-	}
-}
-
-void AEnemyRanged::EquipWeapon_Implementation()
-{
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Instigator = this;
-
-	WeaponActor = GetWorld()->SpawnActor<AActor>(WeaponClass, GetActorTransform(), SpawnParams);
-	if (!WeaponActor) return;
-
-	WeaponActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("hand_r_rifle_socket"));
-
-	bIsWieldingWeapon = true;
-
-	OnEquipWeaponEnd.Broadcast();
-}
-

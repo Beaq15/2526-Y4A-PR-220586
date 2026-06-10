@@ -24,12 +24,10 @@ EBTNodeResult::Type UBTT_FocusTarget::ExecuteTask(UBehaviorTreeComponent& OwnerC
 		AIController->SetFocus(Target);
 	else
 	{
-		FVector Location = BB->GetValueAsVector(FocusTargetKey.SelectedKeyName);
+		const FVector Location = BB->GetValueAsVector(FocusTargetKey.SelectedKeyName);
 		if (FAISystem::IsValidLocation(Location))
 			AIController->SetFocalPoint(Location);
-
 	}
-
 
 	return EBTNodeResult::Succeeded;
 }

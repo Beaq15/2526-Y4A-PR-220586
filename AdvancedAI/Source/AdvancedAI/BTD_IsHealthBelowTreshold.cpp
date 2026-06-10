@@ -15,7 +15,7 @@ bool UBTD_IsHealthBelowTreshold::CalculateRawConditionValue(UBehaviorTreeCompone
 {
 	APawn* Pawn = OwnerComp.GetAIOwner()->GetPawn();
 
-	if (Pawn->Implements<UDamageableInterface>())
+	if (Pawn && Pawn->Implements<UDamageableInterface>())
 	{
 		float MaxHealth = IDamageableInterface::Execute_GetMaxHealth(Pawn);
 		float CurrentHealth = IDamageableInterface::Execute_GetCurrentHealth(Pawn);
@@ -31,9 +31,7 @@ void UBTD_IsHealthBelowTreshold::TickNode(UBehaviorTreeComponent& OwnerComp, uin
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-	const bool bCurrentValue = CalculateRawConditionValue(OwnerComp, NodeMemory);
-
-	if (bCurrentValue)
+	if (CalculateRawConditionValue(OwnerComp, NodeMemory))
 		OwnerComp.RequestExecution(this);
 }
 

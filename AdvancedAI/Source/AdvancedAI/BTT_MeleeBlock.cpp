@@ -7,26 +7,28 @@
 
 UBTT_MeleeBlock::UBTT_MeleeBlock()
 {
-	NodeName = "MeleeBlock";
+	NodeName = "Melee Block";
 }
 
 EBTNodeResult::Type UBTT_MeleeBlock::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	AEnemyMelee* Enemy = Cast<AEnemyMelee>(OwnerComp.GetAIOwner()->GetPawn());
 
-	if (!Enemy)
-		return EBTNodeResult::Failed;
+	if (!Enemy) return EBTNodeResult::Failed;
 
-	OwnerCompRef = &OwnerComp;
+	CachedOwnerComp = &OwnerComp;
 
 	Enemy->StartBlock();
-	Enemy->OnBlockEnd.AddDynamic(this, &UBTT_MeleeBlock::EndExecution);
+	Enemy->OnBlockEnd.AddDynamic(this, &UBTT_MeleeBlock::OnBlockEnd);
 
 	return EBTNodeResult::InProgress;
 }
 
-void UBTT_MeleeBlock::EndExecution()
+void UBTT_MeleeBlock::OnBlockEnd()
 {
-	if (OwnerCompRef)
-		FinishLatentTask(*OwnerCompRef, EBTNodeResult::Succeeded);
+	if (!CachedOwnerComp)
+		return;
+
+	FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
+	CachedOwnerComp = nullptr;
 }

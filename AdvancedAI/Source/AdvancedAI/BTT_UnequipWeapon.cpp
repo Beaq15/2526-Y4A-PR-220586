@@ -13,24 +13,26 @@ UBTT_UnequipWeapon::UBTT_UnequipWeapon()
 
 EBTNodeResult::Type UBTT_UnequipWeapon::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	CachedOwnerComp = &OwnerComp;
-
 	AEnemyBase* Enemy = Cast<AEnemyBase>(OwnerComp.GetAIOwner()->GetPawn());
 	if (!Enemy)  return EBTNodeResult::Failed;
 
+	CachedOwnerComp = &OwnerComp;
+
 	Enemy->OnDropWeaponEnd.AddUniqueDynamic(this, &UBTT_UnequipWeapon::OnUnequipWeaponEnd);
+
 	IEnemyInterface::Execute_UnequipWeapon(Enemy);
+
 	return EBTNodeResult::InProgress;
 }
 
 void UBTT_UnequipWeapon::OnUnequipWeaponEnd()
 {
-	if (CachedOwnerComp)
-	{
-		AEnemyBase* Enemy = Cast<AEnemyBase>(CachedOwnerComp->GetAIOwner()->GetPawn());
-		if (Enemy)
-			Enemy->OnDropWeaponEnd.RemoveDynamic(this, &UBTT_UnequipWeapon::OnUnequipWeaponEnd);
+	if (!CachedOwnerComp) return;
+	
+	AEnemyBase* Enemy = Cast<AEnemyBase>(CachedOwnerComp->GetAIOwner()->GetPawn());
+	if (Enemy)
+		Enemy->OnDropWeaponEnd.RemoveDynamic(this, &UBTT_UnequipWeapon::OnUnequipWeaponEnd);
 
-		FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
-	}
+	FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
+	CachedOwnerComp = nullptr;
 }

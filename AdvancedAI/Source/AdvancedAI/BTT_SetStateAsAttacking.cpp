@@ -7,7 +7,7 @@
 
 UBTT_SetStateAsAttacking::UBTT_SetStateAsAttacking()
 {
-	NodeName = "SetStateAsAttacking";
+	NodeName = "Set State As Attacking";
 }
 
 EBTNodeResult::Type UBTT_SetStateAsAttacking::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -15,6 +15,8 @@ EBTNodeResult::Type UBTT_SetStateAsAttacking::ExecuteTask(UBehaviorTreeComponent
 	AAIC_Enemy_Base* AIController = Cast<AAIC_Enemy_Base>(OwnerComp.GetAIOwner());
 	
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+
+	if (!AIController || !BB) return EBTNodeResult::Failed;
 
 	AActor* Target = Cast<AActor>(BB->GetValueAsObject(AttackTargetKey.SelectedKeyName));
 

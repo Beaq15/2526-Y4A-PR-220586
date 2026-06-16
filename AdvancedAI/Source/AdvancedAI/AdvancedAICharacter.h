@@ -90,7 +90,7 @@ class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterfac
 	//----------------------------------------------------------------------
 
 	const float MagicWalkSpeed = 200.f;
-	const float DefaultWalkSpeed = 2000.f;
+	const float DefaultWalkSpeed = 700.f;
 
 	//----------------------------------------------------------------------
 	// Private — Timeline

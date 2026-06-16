@@ -94,4 +94,10 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	bool IsAttacking();
+
+	UFUNCTION(BlueprintNativeEvent)
+	bool ReserveAttackToken(int32 Amount);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void ReturnAttackToken(int32 Amount);
 };

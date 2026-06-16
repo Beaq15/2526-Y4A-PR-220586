@@ -42,22 +42,20 @@ void AEnemyMelee::Attack()
 
 void AEnemyMelee::StartBlock()
 {
+	GetWorldTimerManager().ClearTimer(HoldBlockTimer);
+	HoldBlockTimer.Invalidate();
+
 	GetCharacterMovement()->StopMovementImmediately();
 	DamageSystem->isBlocking = true;
 	BlockingState = EBlockingState::Blocking;
 
-	if (SwordBlockMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(SwordBlockMontage, 1.0f);
+	GetWorldTimerManager().SetTimer(HoldBlockTimer, this, &AEnemyMelee::EndBlock, 2.0f, false);
+}
 
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyMelee::OnSwordBlockMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordBlockMontage);
-		}
-	}
+void AEnemyMelee::TryToBlock()
+{
+	if (FMath::FRand() <= BlockChance)
+		StartBlock();
 }
 
 void AEnemyMelee::EndBlock()
@@ -108,6 +106,14 @@ void AEnemyMelee::UnequipWeapon_Implementation()
 	}
 }
 
+bool AEnemyMelee::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
+{
+	if (DamageInfo.bCanBeBlocked)
+		TryToBlock();
+
+	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+}
+
 //----------------------------------------------------------------------
 // Animation Callbacks
 //----------------------------------------------------------------------
@@ -129,17 +135,12 @@ void AEnemyMelee::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted
 	OnDropWeaponEnd.Broadcast();
 }
 
-void AEnemyMelee::OnSwordBlockMontageEnd(UAnimMontage* Montage, bool bInterrupted)
-{
-	if (bInterrupted && BlockingState == EBlockingState::BlockedSuccessfully)
-		return;
-
-	EndBlock();
-}
-
 void AEnemyMelee::OnBlocked(bool bCanBeParried, AActor* DamageCauser)
 {
 	BlockingState = EBlockingState::BlockedSuccessfully;
+
+	GetWorldTimerManager().ClearTimer(HoldBlockTimer);
+	HoldBlockTimer.Invalidate();
 
 	if (SwordBlockHitMontage)
 	{

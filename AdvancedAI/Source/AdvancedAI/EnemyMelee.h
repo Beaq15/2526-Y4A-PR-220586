@@ -61,9 +61,6 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	void OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 
 	UFUNCTION()
-	void OnSwordBlockMontageEnd(UAnimMontage* Montage, bool bInterrupted);
-
-	UFUNCTION()
 	void OnBlockHitMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 
 	UFUNCTION()
@@ -74,9 +71,14 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	//----------------------------------------------------------------------
 
 	void EndBlock();
-
+	void TryToBlock();
 	UFUNCTION()
 	void OnBlocked(bool bCanBeParried, AActor* DamageCauser);
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float BlockChance = 0.25f;
+
+	FTimerHandle HoldBlockTimer;
 public:
 	// ----------------------------------------------------------------------
 	// Public — Lifecycle
@@ -96,8 +98,9 @@ public:
 	//----------------------------------------------------------------------
 
 	void StartBlock();
-
+	
 	virtual void Attack() override;
+
 
 	//----------------------------------------------------------------------
 	// Public — IEnemyInterface
@@ -105,4 +108,5 @@ public:
 
 	virtual void EquipWeapon_Implementation()   override;
 	virtual void UnequipWeapon_Implementation() override;
+	virtual bool  TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser) override;
 };

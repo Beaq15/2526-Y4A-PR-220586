@@ -34,7 +34,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponEquippedEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponUnequipedEnd);
 
 UCLASS()
-class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface, public IDamageableInterface
+class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface, public IDamageableInterface, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -85,6 +85,15 @@ public:
 	//----------------------------------------------------------------------
 
 	virtual void Attack() {}
+
+	//----------------------------------------------------------------------
+	// Protected — Team
+	//----------------------------------------------------------------------
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	uint8 TeamId = 1;
+	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(TeamId); }
+
 protected:
 	//----------------------------------------------------------------------
 	// Protected — Lifecycle
@@ -176,5 +185,6 @@ protected:
 	virtual bool  IsAttacking_Implementation()      override { return bAttacking; }
 	virtual float Heal_Implementation(float Amount) override;
 	virtual bool  TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser) override;
-	
+	virtual bool ReserveAttackToken_Implementation(int32 Amount) override;
+	virtual void ReturnAttackToken_Implementation(int32 Amount) override;
 };

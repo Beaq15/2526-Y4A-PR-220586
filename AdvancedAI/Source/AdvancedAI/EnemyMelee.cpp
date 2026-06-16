@@ -204,19 +204,18 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 		TArray<AActor*> ActorsToIgnore;
 		ActorsToIgnore.Add(this);
 
-		FHitResult HitResult;
+		TArray <FHitResult> OutHits;
 
-		bool bHit = UKismetSystemLibrary::SphereTraceSingleForObjects(GetWorld(), Start, End, 20.f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, HitResult, true);
+		bool bHit = UKismetSystemLibrary::SphereTraceMultiForObjects(GetWorld(), Start, End, 20.f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHits, true);
 
 		if (bHit)
 		{
-			AActor* HitActor = HitResult.GetActor();
-
 			FDamageInfo DamageInfo;
-			DamageInfo.Amount = 25.f;
+			DamageInfo.Amount = 10.f;
 			DamageInfo.DamageType = EDamageType::Melee;
 			DamageInfo.DamageResponse = EDamageResponse::HitReaction;
-			Execute_TakeDamage(HitActor, DamageInfo, this);
+			
+			AttackSystem->DamageAllNonTeamMembers(DamageInfo, OutHits);
 		}
 	}
 }

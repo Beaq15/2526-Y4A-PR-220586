@@ -24,6 +24,25 @@ void UDamageSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 }
 
 //----------------------------------------------------------------------
+// TOKENS
+//----------------------------------------------------------------------
+
+bool UDamageSystem::ReserveAttackToken(int32 Amount)
+{
+	if (AttackTokensCount >= Amount)
+	{
+		AttackTokensCount -= Amount;
+		return true;
+	}
+	return false;
+}
+
+void UDamageSystem::ReturnAttackToken(int32 Amount)
+{
+	AttackTokensCount += Amount;
+}
+
+//----------------------------------------------------------------------
 // API
 //----------------------------------------------------------------------
 

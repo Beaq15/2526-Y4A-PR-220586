@@ -133,8 +133,9 @@ protected:
 	//----------------------------------------------------------------------
 	// Protected — Team
 	//----------------------------------------------------------------------
+	virtual FGenericTeamId GetGenericTeamId() const override;
 
-	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(1); }
+	bool OnSameTeam(AActor* OtherActor);
 
 	//----------------------------------------------------------------------
 	// Protected — Perception Components

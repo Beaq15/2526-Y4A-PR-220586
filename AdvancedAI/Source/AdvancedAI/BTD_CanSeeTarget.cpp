@@ -23,7 +23,7 @@ bool UBTD_CanSeeTarget::CalculateRawConditionValue(UBehaviorTreeComponent& Owner
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Pawn);
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Pawn->GetActorLocation(), Actor->GetActorLocation(), ECollisionChannel::ECC_Visibility, Params);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Pawn->GetPawnViewLocation(), Actor->GetActorLocation() + FVector(0, 0, 60.f), ECollisionChannel::ECC_Visibility, Params);
 
 	return bHit && HitResult.GetActor() == Actor;
 }
@@ -32,6 +32,6 @@ void UBTD_CanSeeTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
-	if(CalculateRawConditionValue(OwnerComp, NodeMemory))
+	if(!CalculateRawConditionValue(OwnerComp, NodeMemory))
 		OwnerComp.RequestExecution(this);
 }

@@ -42,29 +42,33 @@ public:
 	// Public — State
 	//----------------------------------------------------------------------
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
 	float Health = 100.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Health")
 	float MaxHealth = 100.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "State")
 	bool isDead = false;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "State")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "State")
 	bool isInvincible = false;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "State")
 	bool isBlocking = false;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "State")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "State")
 	bool isInterruptible = true;
 
 	//----------------------------------------------------------------------
 	// Public — Tokens
 	//----------------------------------------------------------------------
 
+	bool ReserveAttackToken(int32 Amount);
+	void ReturnAttackToken(int32 Amount);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Tokens")
+	int32 AttackTokensCount = 1;
 
 	//----------------------------------------------------------------------
 	// Public — API

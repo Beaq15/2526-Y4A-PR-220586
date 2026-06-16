@@ -64,7 +64,9 @@ void AEnemyBase::OnHitReactionMontageEnd(UAnimMontage* Montage, bool bInterrupte
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 
 	if (!DamageSystem->isDead && AICEnemyBase)
+	{
 		AICEnemyBase->SetStateAsAttacking(CachedDamageCauser, true);
+	}
 }
 
 void AEnemyBase::OnFactReceived(FSharedFact Fact)
@@ -165,4 +167,14 @@ float AEnemyBase::Heal_Implementation(float Amount)
 bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
 	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+}
+
+bool AEnemyBase::ReserveAttackToken_Implementation(int32 Amount)
+{
+	return DamageSystem->ReserveAttackToken(Amount);
+}
+
+void AEnemyBase::ReturnAttackToken_Implementation(int32 Amount)
+{
+	DamageSystem->ReturnAttackToken(Amount);
 }

@@ -52,30 +52,72 @@ void UAttackSystem::MagicSpell(FTransform SpawnTransform, AActor* TargetActor, F
 
 void UAttackSystem::FireBullet(FVector TraceStart, FVector TraceEnd, FDamageInfo DamageInfo)
 {
-	FHitResult HitResult;
+	TArray<FHitResult> OutHits;
 
-	TArray <TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
 
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(GetOwner());
 
-	bool bHit = UKismetSystemLibrary::LineTraceSingleForObjects(this, TraceStart, TraceEnd, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::None, HitResult, true);
-	
+	bool bHit = UKismetSystemLibrary::LineTraceMultiForObjects(this, TraceStart, TraceEnd, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHits, true);
+
 	if (bHit)
 	{
-		AActor* HitActor = HitResult.GetActor();
-
-		if (HitActor && HitActor->Implements<UDamageableInterface>())
-		{
-			DamageInfo.Amount = 20.f;
-			DamageInfo.DamageType = EDamageType::Projectile;
-			DamageInfo.DamageResponse = EDamageResponse::HitReaction;
-			IDamageableInterface::Execute_TakeDamage(HitActor, DamageInfo, GetOwner());
-		}
-
-		UAISense_Damage::ReportDamageEvent(GetWorld(), HitActor, GetOwner(), DamageInfo.Amount, GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation());
+		AActor* DamagedActor = DamageFirstNonTeamMember(DamageInfo, OutHits);
+		if (DamagedActor)
+			UAISense_Damage::ReportDamageEvent(GetWorld(), DamagedActor, GetOwner(), DamageInfo.Amount, GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation());
 	}
+}
+
+TArray<AActor*> UAttackSystem::DamageAllNonTeamMembers(FDamageInfo DamageInfo, TArray<FHitResult> Hits)
+{
+	TArray<AActor*> ActorsDamagedSoFar;
+	AActor* Owner = GetOwner();
+	const IGenericTeamAgentInterface* OwnerTeam = Cast<IGenericTeamAgentInterface>(Owner);
+	if (!OwnerTeam) return TArray<AActor*>();
+	for (FHitResult& Hit : Hits)
+	{
+		AActor* HitActor = Hit.GetActor();
+		if (!HitActor) continue;
+		const IGenericTeamAgentInterface* HitTeam = Cast<IGenericTeamAgentInterface>(HitActor);
+		if (!HitTeam) continue;
+		if ((HitTeam->GetGenericTeamId() != OwnerTeam->GetGenericTeamId()) && !ActorsDamagedSoFar.Contains(HitActor))
+		{
+			if (HitActor->Implements<UDamageableInterface>())
+			{
+				IDamageableInterface::Execute_TakeDamage(HitActor, DamageInfo, GetOwner());
+				ActorsDamagedSoFar.AddUnique(HitActor);
+			}
+		}
+	}
+	return ActorsDamagedSoFar;
+}
+
+AActor* UAttackSystem::DamageFirstNonTeamMember(FDamageInfo DamageInfo, TArray<FHitResult> Hits)
+{
+	AActor* Owner = GetOwner();
+	const IGenericTeamAgentInterface* OwnerTeam = Cast<IGenericTeamAgentInterface>(Owner);
+	if (!OwnerTeam) return nullptr;
+
+	for (FHitResult Hit : Hits)
+	{
+		AActor* HitActor = Hit.GetActor();
+		if (!HitActor) continue;
+
+		const IGenericTeamAgentInterface* HitTeam = Cast<IGenericTeamAgentInterface>(HitActor);
+		if (!HitTeam) continue;
+
+		if (HitTeam->GetGenericTeamId() != OwnerTeam->GetGenericTeamId())
+		{
+			if (HitActor->Implements<UDamageableInterface>())
+			{
+				IDamageableInterface::Execute_TakeDamage(HitActor, DamageInfo, GetOwner());
+				return HitActor;
+			}
+		}
+	}
+	return nullptr;
 }
 
 //----------------------------------------------------------------------

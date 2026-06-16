@@ -79,6 +79,22 @@ void AAIC_Enemy_Base::OnUnPossess()
     ForgottenActorTimerHandle.Invalidate();
 }
 
+FGenericTeamId AAIC_Enemy_Base::GetGenericTeamId() const
+{
+    if (const AEnemyBase* Enemy = Cast <AEnemyBase>(GetPawn()))
+        return Enemy->GetGenericTeamId();
+    return FGenericTeamId(0);
+}
+
+bool AAIC_Enemy_Base::OnSameTeam(AActor* OtherActor)
+{
+    if (!OtherActor) return false;
+    const IGenericTeamAgentInterface* OtherAgent = Cast<IGenericTeamAgentInterface>(OtherActor);
+    if (!OtherAgent) return false;
+
+    return GetGenericTeamId() == OtherAgent->GetGenericTeamId();
+}
+
 //----------------------------------------------------------------------
 // Internal Helpers
 //----------------------------------------------------------------------
@@ -189,6 +205,8 @@ void AAIC_Enemy_Base::OnPerceptionUpdated(const TArray<AActor*>& UpdatedActors)
 
 void AAIC_Enemy_Base::HandleSensedSight(AActor* Actor)
 {
+    if (OnSameTeam(Actor)) return;
+    
     KnownSeenActors.AddUnique(Actor);
 
     switch (GetCurrentState())
@@ -227,12 +245,7 @@ void AAIC_Enemy_Base::HandleSensedSound(FVector Location)
 
 void AAIC_Enemy_Base::HandleSensedDamage(AActor* Actor)
 {
-    if (Actor->Implements<UGenericTeamAgentInterface>())
-    {
-        const IGenericTeamAgentInterface* TeamAgent = Cast<IGenericTeamAgentInterface>(Actor);
-        if (TeamAgent && TeamAgent->GetGenericTeamId() == GetGenericTeamId())
-            return;
-    }
+    if (OnSameTeam(Actor)) return;
 
     switch (GetCurrentState())
     {

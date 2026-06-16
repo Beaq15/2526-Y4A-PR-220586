@@ -61,6 +61,9 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 	CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("NoiseEmitter"));
 	DamageSystem = CreateDefaultSubobject<UDamageSystem>(TEXT("DamageSystem"));
 	AttackSystem = CreateDefaultSubobject<UAttackSystem>(TEXT("AttackSystem"));
+
+	// Tokens
+	DamageSystem->AttackTokensCount = 1;
 }
 
 void AAdvancedAICharacter::BeginPlay()
@@ -363,5 +366,13 @@ bool AAdvancedAICharacter::IsAttacking_Implementation()
 	return bAttacking;
 }
 
+bool AAdvancedAICharacter::ReserveAttackToken_Implementation(int32 Amount)
+{
+	return DamageSystem->ReserveAttackToken(Amount);
+}
 
+void AAdvancedAICharacter::ReturnAttackToken_Implementation(int32 Amount)
+{
+	DamageSystem->ReturnAttackToken(Amount);
+}
 

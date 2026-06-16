@@ -222,5 +222,7 @@ protected:
 	virtual bool  IsAttacking_Implementation()      override;
 	virtual float Heal_Implementation(float Amount) override;
 	virtual bool  TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser) override;
+	virtual bool ReserveAttackToken_Implementation(int32 Amount) override;
+	virtual void ReturnAttackToken_Implementation(int32 Amount) override;
 };
 

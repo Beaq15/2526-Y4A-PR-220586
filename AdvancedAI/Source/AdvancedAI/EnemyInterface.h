@@ -35,4 +35,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void JumpToDestination(FVector Destination);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void Attack(AActor* AttackTarget);
 };

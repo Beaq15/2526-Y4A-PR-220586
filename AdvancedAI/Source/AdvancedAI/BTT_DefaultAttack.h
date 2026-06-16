@@ -15,6 +15,9 @@ class ADVANCEDAI_API UBTT_DefaultAttack : public UBTTaskNode
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, Category = "Keys")
+	FBlackboardKeySelector AttackTargetKey;
+
 	UBehaviorTreeComponent* CachedOwnerComp = nullptr;
 
 	UFUNCTION()

@@ -20,23 +20,39 @@ void AEnemyMelee::BeginPlay()
 // Combat API
 //----------------------------------------------------------------------
 
-void AEnemyMelee::Attack()
+void AEnemyMelee::Attack_Implementation(AActor* AttackTarget)
 {
-	DamageSystem->isInterruptible = false;
-
-	if (AttackMontage)
+	if (AttackTarget && AttackTarget->Implements<UDamageableInterface>())
 	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
+		bool bSuccess = IDamageableInterface::Execute_ReserveAttackToken(AttackTarget, 1);
+		if (!bSuccess)
 		{
-			AnimInstance->Montage_Play(AttackMontage, 1.0f);
-
-			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
+			GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+				{	OnAttackEnd.Broadcast();
+				});
+			return;
 		}
+
+		CachedAttackTarget = AttackTarget;
+
+		DamageSystem->isInterruptible = false;
+
+		if (AttackMontage)
+		{
+			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+			if (AnimInstance)
+			{
+				AnimInstance->Montage_Play(AttackMontage, 1.0f);
+
+				AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
+
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
+				AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
+			}
+		}
+
+
 	}
 }
 
@@ -114,6 +130,8 @@ bool AEnemyMelee::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActo
 	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
 }
 
+
+
 //----------------------------------------------------------------------
 // Animation Callbacks
 //----------------------------------------------------------------------
@@ -121,6 +139,10 @@ bool AEnemyMelee::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActo
 void AEnemyMelee::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 	OnAttackEnd.Broadcast();
+
+	if (CachedAttackTarget && CachedAttackTarget->Implements<UDamageableInterface>())
+		IDamageableInterface::Execute_ReturnAttackToken(CachedAttackTarget, 1);
+
 	DamageSystem->isInterruptible = true;
 }
 

@@ -81,7 +81,7 @@ public:
 	TObjectPtr<UBehaviorTree> BehaviorTree;
 
 	//----------------------------------------------------------------------
-	// Public — Combat
+	// Public Combat
 	//----------------------------------------------------------------------
 
 	virtual void Attack() {}

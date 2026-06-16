@@ -79,6 +79,9 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	float BlockChance = 0.25f;
 
 	FTimerHandle HoldBlockTimer;
+
+	UPROPERTY()
+	TObjectPtr<AActor> CachedAttackTarget;
 public:
 	// ----------------------------------------------------------------------
 	// Public — Lifecycle
@@ -99,7 +102,7 @@ public:
 
 	void StartBlock();
 	
-	virtual void Attack() override;
+	//virtual void Attack() override;
 
 
 	//----------------------------------------------------------------------
@@ -109,4 +112,5 @@ public:
 	virtual void EquipWeapon_Implementation()   override;
 	virtual void UnequipWeapon_Implementation() override;
 	virtual bool  TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser) override;
+	virtual void Attack_Implementation(AActor* AttackTarget) override;
 };

@@ -48,6 +48,13 @@ AAIC_Enemy_Base::AAIC_Enemy_Base()
 
     AIPerception->OnPerceptionUpdated.AddUniqueDynamic(this, &AAIC_Enemy_Base::OnPerceptionUpdated);
 }
+
+void AAIC_Enemy_Base::OnEnemyAttackEnd()
+{
+    OnAttackEndDelegate.ExecuteIfBound();
+    OnAttackEndDelegate.Unbind();
+}
+
 void AAIC_Enemy_Base::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
@@ -108,6 +115,8 @@ void AAIC_Enemy_Base::StartBehaviorTree(AEnemyBase* Enemy)
     }
 
     RunBehaviorTree(Enemy->BehaviorTree);
+
+    Enemy->OnAttackEnd.AddUniqueDynamic(this, &AAIC_Enemy_Base::OnEnemyAttackEnd);
 
     SetStateAsPassive();
 

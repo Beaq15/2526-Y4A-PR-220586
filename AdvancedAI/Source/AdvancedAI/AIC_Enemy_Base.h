@@ -122,6 +122,11 @@ public:
 
 	TArray<AActor*> KnownSeenActors;
 
+	UFUNCTION()
+	void OnEnemyAttackEnd();
+
+	FSimpleDelegate OnAttackEndDelegate;
+
 protected:
 	//----------------------------------------------------------------------
 	// Protected — Lifecycle Overrides

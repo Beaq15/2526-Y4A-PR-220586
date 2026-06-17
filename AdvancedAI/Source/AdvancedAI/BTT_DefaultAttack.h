@@ -18,10 +18,6 @@ class ADVANCEDAI_API UBTT_DefaultAttack : public UBTTaskNode
 	UPROPERTY(EditAnywhere, Category = "Keys")
 	FBlackboardKeySelector AttackTargetKey;
 
-	UBehaviorTreeComponent* CachedOwnerComp = nullptr;
-
-	UFUNCTION()
-	void OnAttackEnd();
 public:
 	UBTT_DefaultAttack();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;

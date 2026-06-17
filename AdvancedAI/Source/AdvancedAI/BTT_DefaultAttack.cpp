@@ -18,29 +18,21 @@ EBTNodeResult::Type UBTT_DefaultAttack::ExecuteTask(UBehaviorTreeComponent& Owne
 	if (!Enemy)  return EBTNodeResult::Failed;
 
 	AAIC_Enemy_Base* AIController = Cast<AAIC_Enemy_Base>(OwnerComp.GetAIOwner());
-
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 
 	if (!AIController || !BB) return EBTNodeResult::Failed;
 
 	AActor* Target = Cast<AActor>(BB->GetValueAsObject(AttackTargetKey.SelectedKeyName));
-
-	CachedOwnerComp = &OwnerComp;
-
-	Enemy->OnAttackEnd.RemoveDynamic(this, &UBTT_DefaultAttack::OnAttackEnd);
-	Enemy->OnAttackEnd.AddUniqueDynamic(this, &UBTT_DefaultAttack::OnAttackEnd);
+	
+	AIController->OnAttackEndDelegate.BindLambda([this, &OwnerComp]()
+		{
+			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+		});
 
 	if (Enemy->Implements<UEnemyInterface>())
 	{
 		IEnemyInterface::Execute_Attack(Enemy, Target);
 	}
+
 	return EBTNodeResult::InProgress;
-}
-
-void UBTT_DefaultAttack::OnAttackEnd()
-{
-	if (!CachedOwnerComp) return;
-
-	FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
-	CachedOwnerComp = nullptr;
 }

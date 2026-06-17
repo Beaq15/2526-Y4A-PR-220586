@@ -138,10 +138,14 @@ bool AEnemyMelee::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActo
 
 void AEnemyMelee::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
-	OnAttackEnd.Broadcast();
+	UE_LOG(LogTemp, Warning, TEXT("OnAttackMontageEnd — CachedAttackTarget: %s, bInterrupted: %d"),
+		CachedAttackTarget ? *CachedAttackTarget->GetName() : TEXT("NULL"), bInterrupted);
+
 
 	if (CachedAttackTarget && CachedAttackTarget->Implements<UDamageableInterface>())
 		IDamageableInterface::Execute_ReturnAttackToken(CachedAttackTarget, 1);
+
+	OnAttackEnd.Broadcast();
 
 	DamageSystem->isInterruptible = true;
 }

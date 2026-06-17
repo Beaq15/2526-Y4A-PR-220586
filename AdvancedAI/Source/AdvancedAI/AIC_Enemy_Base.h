@@ -10,6 +10,7 @@
 #include "Perception/AISenseConfig_Damage.h"
 #include "EnemyBase.h"
 #include "GenericTeamAgentInterface.h"
+#include "DetourCrowdAIController.h"
 #include "AIC_Enemy_Base.generated.h"
 
 UENUM(BlueprintType)
@@ -22,7 +23,7 @@ enum class EAISense : uint8
 };
 
 UCLASS()
-class ADVANCEDAI_API AAIC_Enemy_Base : public AAIController
+class ADVANCEDAI_API AAIC_Enemy_Base : public ADetourCrowdAIController
 {
 	GENERATED_BODY()
 

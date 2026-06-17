@@ -18,17 +18,6 @@
 
 class AAIC_Enemy_Base;
 
-UENUM(BlueprintType)
-enum class EAIState : uint8
-{
-	Passive, //0
-	Attacking, //1
-	Frozen, //2
-	Investigating, //3 
-	Dead, //4
-	Seeking //5
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAttackEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponEquippedEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponUnequipedEnd);
@@ -152,6 +141,15 @@ protected:
 	bool bAttacking = false;
 
 	//----------------------------------------------------------------------
+	// Protected — Tokens
+	//----------------------------------------------------------------------
+
+	UPROPERTY()
+	TMap<TObjectPtr<AActor>, int32> ReservedAttackTokens;
+
+	int32 TokensUsedInCurrentAttack;
+
+	//----------------------------------------------------------------------
 	// Protected — Callbacks
 	//----------------------------------------------------------------------
 
@@ -171,10 +169,14 @@ protected:
 	// Protected — IEnemyInterface
 	//----------------------------------------------------------------------
 
+	virtual void Attack_Implementation(AActor* AttackTarget) override;
 	virtual float      SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
 	virtual APatrolRoute* GetPatrolRoute_Implementation() override;
 	virtual void       GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
 	virtual void       JumpToDestination_Implementation(FVector Destination) override;
+	virtual bool DidAttackStart_Implementation(AActor* AttackTarget, int32 Amount) override;
+	virtual void StoreAttackTokens_Implementation(AActor* AttackTarget, int32 Amount) override;
+	virtual void AttackEnd_Implementation(AActor* AttackTarget) override;
 
 	//----------------------------------------------------------------------
 	// Protected — IDamageableInterface

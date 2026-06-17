@@ -18,29 +18,6 @@ void AEnemyRanged::BeginPlay()
 }
 
 //----------------------------------------------------------------------
-// Combat
-//----------------------------------------------------------------------
-
-void AEnemyRanged::Attack()
-{
-	bAttacking = true;
-
-	if (FireRifleMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(FireRifleMontage, 1.0f);
-			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyRanged::OnMontageNotifyBegin);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyRanged::OnAttackMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, FireRifleMontage);
-		}
-	}
-}
-
-//----------------------------------------------------------------------
 // IEnemyInterface
 //----------------------------------------------------------------------
 
@@ -83,14 +60,34 @@ void AEnemyRanged::GetIdealRange_Implementation(float& AttackRadius, float& Defe
 	DefendRadius = 600.f;
 }
 
+void AEnemyRanged::Attack_Implementation(AActor* AttackTarget)
+{
+	Super::Attack_Implementation(AttackTarget);
+
+	CachedAttackTarget = AttackTarget;
+
+	if (FireRifleMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(FireRifleMontage, 1.0f);
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyRanged::OnMontageNotifyBegin);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyRanged::OnAttackMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, FireRifleMontage);
+		}
+	}
+}
+
 //----------------------------------------------------------------------
 // Animation Callbacks
 //----------------------------------------------------------------------
 
 void AEnemyRanged::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
-	OnAttackEnd.Broadcast();
-	bAttacking = false;
+	IEnemyInterface::Execute_AttackEnd(this, CachedAttackTarget);
 }
 
 void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
@@ -99,16 +96,8 @@ void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointN
 	{
 		if (!WeaponClass) return;
 
-		AAIC_Enemy_Base* AIC = Cast<AAIC_Enemy_Base>(GetController());
-		if (!AIC) return;
-
-		AActor* AttackTarget = AIC->AttackTargetActor;
-
-		if (!AttackTarget)
-			return;
-
 		FVector Start = WeaponActor->GetActorLocation();
-		FVector End = AttackTarget->GetActorLocation();
+		FVector End = CachedAttackTarget->GetActorLocation();
 
 		FDamageInfo DamageInfo;
 		DamageInfo.Amount = 20.f;

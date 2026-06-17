@@ -31,6 +31,9 @@ class ADVANCEDAI_API AEnemyRanged : public AEnemyBase
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
 
+	UPROPERTY()
+	TObjectPtr<AActor> CachedAttackTarget;
+
 protected:
 
 	//----------------------------------------------------------------------
@@ -46,10 +49,5 @@ protected:
 	virtual void  EquipWeapon_Implementation() override;
 	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
 	virtual void  GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
-
-	//----------------------------------------------------------------------
-	// Protected — Combat
-	//----------------------------------------------------------------------
-
-	virtual void Attack() override;
+	virtual void Attack_Implementation(AActor* AttackTarget) override;
 };

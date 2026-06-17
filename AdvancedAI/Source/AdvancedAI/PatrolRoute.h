@@ -7,14 +7,7 @@
 #include "Components/SplineComponent.h"
 #include "PatrolRoute.generated.h"
 
-UENUM()
-enum class EMovementSpeed : uint8
-{
-	Idle,
-	Walking,
-	Jogging,
-	Sprinting
-};
+
 
 UCLASS()
 class ADVANCEDAI_API APatrolRoute : public AActor

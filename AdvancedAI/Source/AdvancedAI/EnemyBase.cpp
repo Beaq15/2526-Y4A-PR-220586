@@ -125,6 +125,11 @@ APatrolRoute* AEnemyBase::GetPatrolRoute_Implementation()
 	return PatrolRouteActor;
 }
 
+void AEnemyBase::Attack_Implementation(AActor* AttackTarget)
+{
+	bAttacking = true;
+}
+
 float AEnemyBase::SetMovementSpeed_Implementation(EMovementSpeed Speed)
 {
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
@@ -153,6 +158,43 @@ void AEnemyBase::JumpToDestination_Implementation(FVector Destination)
 	UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), { Destination.X, Destination.Y, Destination.Z + 250.f });
 	LaunchCharacter(LaunchVelocity, true, true);
 		
+}
+
+void AEnemyBase::StoreAttackTokens_Implementation(AActor* AttackTarget, int32 Amount)
+{
+	if (ReservedAttackTokens.Find(AttackTarget))
+	{
+		int32* Current = ReservedAttackTokens.Find(AttackTarget);
+		ReservedAttackTokens.Add(AttackTarget, Amount + *Current);
+	}
+	else
+		ReservedAttackTokens.Add(AttackTarget, Amount);
+}
+
+void AEnemyBase::AttackEnd_Implementation(AActor* AttackTarget)
+{
+	if (AttackTarget->Implements<UDamageableInterface>() && AttackTarget)
+	{
+		IDamageableInterface::Execute_ReturnAttackToken(AttackTarget, TokensUsedInCurrentAttack);
+		IEnemyInterface::Execute_StoreAttackTokens(this, AttackTarget, TokensUsedInCurrentAttack * -1);
+
+		bAttacking = false;
+		OnAttackEnd.Broadcast();
+	}
+}
+
+bool AEnemyBase::DidAttackStart_Implementation(AActor* AttackTarget, int32 Amount)
+{
+	if (AttackTarget->Implements<UDamageableInterface>() && AttackTarget)
+	{
+		if (IDamageableInterface::Execute_ReserveAttackToken(AttackTarget, Amount))
+		{
+			IEnemyInterface::Execute_StoreAttackTokens(this, AttackTarget, Amount);
+			TokensUsedInCurrentAttack = Amount;
+			return true;
+		}
+	}
+	return false;
 }
 
 //----------------------------------------------------------------------

@@ -22,37 +22,25 @@ void AEnemyMelee::BeginPlay()
 
 void AEnemyMelee::Attack_Implementation(AActor* AttackTarget)
 {
-	if (AttackTarget && AttackTarget->Implements<UDamageableInterface>())
+	Super::Attack_Implementation(AttackTarget);
+
+	CachedAttackTarget = AttackTarget;
+
+	DamageSystem->isInterruptible = false;
+
+	if (AttackMontage)
 	{
-		bool bSuccess = IDamageableInterface::Execute_ReserveAttackToken(AttackTarget, 1);
-		if (!bSuccess)
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
 		{
-			GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
-				{	OnAttackEnd.Broadcast();
-				});
-			return;
+			AnimInstance->Montage_Play(AttackMontage, 1.0f);
+
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
 		}
-
-		CachedAttackTarget = AttackTarget;
-
-		DamageSystem->isInterruptible = false;
-
-		if (AttackMontage)
-		{
-			UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-			if (AnimInstance)
-			{
-				AnimInstance->Montage_Play(AttackMontage, 1.0f);
-
-				AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
-
-				FOnMontageEnded EndDelegate;
-				EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
-				AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
-			}
-		}
-
-
 	}
 }
 
@@ -138,14 +126,7 @@ bool AEnemyMelee::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActo
 
 void AEnemyMelee::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnAttackMontageEnd — CachedAttackTarget: %s, bInterrupted: %d"),
-		CachedAttackTarget ? *CachedAttackTarget->GetName() : TEXT("NULL"), bInterrupted);
-
-
-	if (CachedAttackTarget && CachedAttackTarget->Implements<UDamageableInterface>())
-		IDamageableInterface::Execute_ReturnAttackToken(CachedAttackTarget, 1);
-
-	OnAttackEnd.Broadcast();
+	IEnemyInterface::Execute_AttackEnd(this, CachedAttackTarget);
 
 	DamageSystem->isInterruptible = true;
 }

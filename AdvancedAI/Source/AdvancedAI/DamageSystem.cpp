@@ -10,6 +10,8 @@
 UDamageSystem::UDamageSystem()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+	Health = MaxHealth;
 }
 
 void UDamageSystem::BeginPlay()

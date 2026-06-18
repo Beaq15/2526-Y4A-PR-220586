@@ -63,7 +63,7 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 	AttackSystem = CreateDefaultSubobject<UAttackSystem>(TEXT("AttackSystem"));
 
 	// Tokens
-	DamageSystem->AttackTokensCount = 1;
+	DamageSystem->AttackTokensCount = 2;
 }
 
 void AAdvancedAICharacter::BeginPlay()

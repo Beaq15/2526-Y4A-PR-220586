@@ -195,6 +195,7 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 			WeaponActor->Destroy();
 			WeaponActor = nullptr;
 		}
+
 		bIsWieldingWeapon = false;
 
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);

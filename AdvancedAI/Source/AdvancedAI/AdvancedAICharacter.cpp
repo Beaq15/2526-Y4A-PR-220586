@@ -63,7 +63,7 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 	AttackSystem = CreateDefaultSubobject<UAttackSystem>(TEXT("AttackSystem"));
 
 	// Tokens
-	DamageSystem->AttackTokensCount = 2;
+	DamageSystem->AttackTokensCount = 1;
 }
 
 void AAdvancedAICharacter::BeginPlay()
@@ -83,6 +83,17 @@ void AAdvancedAICharacter::BeginPlay()
 	FOnTimelineFloat UpdateDelegate;
 	UpdateDelegate.BindUFunction(this, FName("OnAimTimeLineUpdate"));
 	AimTimeline.AddInterpFloat(LinearCurve, UpdateDelegate);
+
+	if(!ShieldClass) return;
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Instigator = this;
+
+	ShieldActor = GetWorld()->SpawnActor<AActor>(ShieldClass, GetActorTransform(), SpawnParams);
+	if (!ShieldActor) return;
+
+	ShieldActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("arm_l_shield_socket"));
+	
 }
 
 void AAdvancedAICharacter::Tick(float DeltaTime)
@@ -124,12 +135,12 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::Look);
 
-		EnhancedInputComponent->BindAction(ChangeStateAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::ChangeState);
+		EnhancedInputComponent->BindAction(ChangeStateAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::ChangeStance);
 		EnhancedInputComponent->BindAction(MakeNoiseAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::MakeSomeNoise);
-		EnhancedInputComponent->BindAction(DoDamageAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::DoDamage);
+		EnhancedInputComponent->BindAction(DoDamageAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::MeleeAttack);
 
-		EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::EnterMagicStance);
-		EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AAdvancedAICharacter::EnterDefaultStance);
+		//EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::MagicStance);
+		//EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AAdvancedAICharacter::UnarmedStance);
 	}
 	else
 	{
@@ -168,24 +179,14 @@ void AAdvancedAICharacter::Look(const FInputActionValue& Value)
 	AddControllerPitchInput(LookAxisVector.Y);
 }
 
-void AAdvancedAICharacter::ChangeState(const FInputActionValue& Value)
+void AAdvancedAICharacter::ChangeStance(const FInputActionValue& Value)
 {
 	bPressed = !bPressed;
 
-	AActor* Actor = UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyBase::StaticClass());
-	if (!IsValid(Actor)) return;
-
-	AEnemyBase* Enemy = Cast<AEnemyBase>(Actor);
-	if (!Enemy) return;
-		
-	AAIC_Enemy_Base* AIController = Cast<AAIC_Enemy_Base>(Enemy->GetController());
-	if (!AIController) return;
-
 	if (bPressed)
-		AIController->SetStateAsAttacking(this, true);
+		EquipWeapon();
 	else
-		AIController->SetStateAsPassive();
-		
+		UnequipWeapon();
 }
 
 void AAdvancedAICharacter::MakeSomeNoise(const FInputActionValue& Value)
@@ -214,7 +215,21 @@ void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 	AnimInstance->Montage_SetEndDelegate(EndDelegate, MagicSpellMontage);
 }
 
-void AAdvancedAICharacter::EnterMagicStance()
+void AAdvancedAICharacter::MeleeAttack(const FInputActionValue& Value)
+{
+	if (Stance != EPlayerStance::Melee || bAttacking) return;
+	bAttacking = true;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	AnimInstance->Montage_Play(SwordSlashMontage, 1.0f);
+	AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
+	AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordSlashMontage);
+}
+
+void AAdvancedAICharacter::MagicStance()
 {
 	Stance = EPlayerStance::Magic;
 
@@ -224,11 +239,14 @@ void AAdvancedAICharacter::EnterMagicStance()
 
 	PlayerHUDWidget->ShowCrosshair();
 	AimTimeline.PlayFromStart();
+
+	if (IsValid(WeaponActor))
+		WeaponActor->Destroy();
 }
 
-void AAdvancedAICharacter::EnterDefaultStance()
+void AAdvancedAICharacter::UnarmedStance()
 {
-	Stance = EPlayerStance::Default;
+	Stance = EPlayerStance::Unarmed;
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->bUseControllerDesiredRotation = false;
@@ -236,6 +254,17 @@ void AAdvancedAICharacter::EnterDefaultStance()
 
 	PlayerHUDWidget->HideCrosshair();
 	AimTimeline.Reverse();
+
+	if (IsValid(WeaponActor))
+		WeaponActor->Destroy();
+}
+
+void AAdvancedAICharacter::MeleeStance()
+{
+	Stance = EPlayerStance::Melee;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->MaxWalkSpeed = MeleeWalkSpeed;
 }
 
 //----------------------------------------------------------------------
@@ -268,6 +297,59 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		AttackSystem->MagicSpell(SpawnTransform, nullptr, DamageInfo);
 
 	}
+	if (NotifyName == FName("Slash"))
+	{
+		FVector Start = GetActorLocation();
+		FVector End = GetActorForwardVector() * 200.f + GetActorLocation();
+
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+
+		TArray<AActor*> ActorsToIgnore;
+		ActorsToIgnore.Add(this);
+
+		TArray <FHitResult> OutHits;
+
+		bool bHit = UKismetSystemLibrary::SphereTraceMultiForObjects(GetWorld(), Start, End, 20.f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
+
+		if (bHit)
+		{
+			FDamageInfo DamageInfo;
+			DamageInfo.Amount = 20.f;
+			DamageInfo.DamageType = EDamageType::Melee;
+			DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+			DamageInfo.bCanBeBlocked = true;
+			DamageInfo.bCanBeParried = true;
+
+			AttackSystem->DamageAllNonTeamMembers(DamageInfo, OutHits);
+		}
+	}
+
+	if (NotifyName == FName("HoldSword"))
+	{
+		if (!WeaponClass) return;
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Instigator = this;
+
+		WeaponActor = GetWorld()->SpawnActor<AActor>(WeaponClass, GetActorTransform(), SpawnParams);
+		if (!WeaponActor) return;
+
+		WeaponActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("hand_r_sword_socket"));
+
+		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+	}
+
+	if (NotifyName == FName("DropSword"))
+	{
+		if (WeaponActor)
+		{
+			WeaponActor->Destroy();
+			WeaponActor = nullptr;
+		}
+
+		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+	}
 }
 
 void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -277,6 +359,7 @@ void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupt
 
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		EnableInput(PC);
+
 }
 
 void AAdvancedAICharacter::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser)
@@ -318,6 +401,53 @@ void AAdvancedAICharacter::OnDeath_Event()
 
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		DisableInput(PC);
+}
+
+void AAdvancedAICharacter::EquipWeapon()
+{
+	if (EquipSwordMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(EquipSwordMontage, 1.0f);
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnEquipSwordMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, EquipSwordMontage);
+		}
+	}
+}
+
+void AAdvancedAICharacter::UnequipWeapon()
+{
+	if (DropSwordMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(DropSwordMontage, 1.0f);
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnDropSwordMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, DropSwordMontage);
+		}
+	}
+}
+
+void AAdvancedAICharacter::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (!bInterrupted)
+		MeleeStance();
+}
+
+void AAdvancedAICharacter::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (!bInterrupted)
+		UnarmedStance();
 }
 
 //----------------------------------------------------------------------

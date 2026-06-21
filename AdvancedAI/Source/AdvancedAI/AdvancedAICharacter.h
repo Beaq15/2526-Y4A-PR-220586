@@ -28,8 +28,9 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 UENUM(BlueprintType)
 enum class EPlayerStance : uint8
 {
-	Default,
-	Magic
+	Unarmed,
+	Magic,
+	Melee
 };
 
 
@@ -91,6 +92,23 @@ class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterfac
 
 	const float MagicWalkSpeed = 200.f;
 	const float DefaultWalkSpeed = 700.f;
+	const float MeleeWalkSpeed = 500.f;
+
+	//----------------------------------------------------------------------
+	// Pivate — Config
+	//----------------------------------------------------------------------
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<AActor> WeaponClass;
+
+	UPROPERTY()
+	TObjectPtr<AActor> WeaponActor;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<AActor> ShieldClass;
+
+	UPROPERTY()
+	TObjectPtr<AActor> ShieldActor;
 
 	//----------------------------------------------------------------------
 	// Private — Timeline
@@ -124,7 +142,7 @@ public:
 	//----------------------------------------------------------------------
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
-	EPlayerStance Stance = EPlayerStance::Default;
+	EPlayerStance Stance = EPlayerStance::Unarmed;
 
 	//----------------------------------------------------------------------
 	// Public — Accessors
@@ -147,15 +165,28 @@ protected:
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
-	void ChangeState(const FInputActionValue& Value);
+	void ChangeStance(const FInputActionValue& Value);
 	void MakeSomeNoise(const FInputActionValue& Value);
 	void DoDamage(const FInputActionValue& Value);
-	void EnterMagicStance();
-	void EnterDefaultStance();
+	void MeleeAttack(const FInputActionValue& Value);
+
+	//----------------------------------------------------------------------
+	// Protected — Stance 
+	//----------------------------------------------------------------------
+
+	void MagicStance();
+	void UnarmedStance();
+	void MeleeStance();
 
 	//----------------------------------------------------------------------
 	// Protected — Animation Callbacks
 	//----------------------------------------------------------------------
+
+	UFUNCTION()
+	void EquipWeapon();
+
+	UFUNCTION()
+	void UnequipWeapon();
 
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
@@ -169,15 +200,30 @@ protected:
 	UFUNCTION()
 	void OnDeath_Event();
 
+	UFUNCTION()
+	void OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
 	//----------------------------------------------------------------------
 	// Protected — Animation Assets
 	//----------------------------------------------------------------------
 
 	UPROPERTY(EditDefaultsonly, Category = "Animation")
-	TObjectPtr<UAnimMontage>MagicSpellMontage;
+	TObjectPtr<UAnimMontage> MagicSpellMontage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> HitReactionMontage;
+
+	UPROPERTY(EditDefaultsonly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SwordSlashMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> EquipSwordMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> DropSwordMontage;
 
 	//----------------------------------------------------------------------
 	// Protected — Components

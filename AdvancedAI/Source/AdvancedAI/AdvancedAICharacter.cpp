@@ -74,6 +74,7 @@ void AAdvancedAICharacter::BeginPlay()
 
 	DamageSystem->OnDeath.AddUniqueDynamic(this, &AAdvancedAICharacter::OnDeath_Event);
 	DamageSystem->OnDamageResponse.AddUniqueDynamic(this, &AAdvancedAICharacter::OnHitResponse_Event);
+	DamageSystem->OnBlocked.AddDynamic(this, &AAdvancedAICharacter::OnBlocked);
 
 	// TIMELINE
 	LinearCurve = NewObject<UCurveFloat>(this);
@@ -83,17 +84,6 @@ void AAdvancedAICharacter::BeginPlay()
 	FOnTimelineFloat UpdateDelegate;
 	UpdateDelegate.BindUFunction(this, FName("OnAimTimeLineUpdate"));
 	AimTimeline.AddInterpFloat(LinearCurve, UpdateDelegate);
-
-	if(!ShieldClass) return;
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Instigator = this;
-
-	ShieldActor = GetWorld()->SpawnActor<AActor>(ShieldClass, GetActorTransform(), SpawnParams);
-	if (!ShieldActor) return;
-
-	ShieldActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("arm_l_shield_socket"));
-	
 }
 
 void AAdvancedAICharacter::Tick(float DeltaTime)
@@ -141,6 +131,9 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 		//EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::MagicStance);
 		//EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AAdvancedAICharacter::UnarmedStance);
+
+		EnhancedInputComponent->BindAction(SwordBlockAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::StartBlock);
+		EnhancedInputComponent->BindAction(SwordBlockAction, ETriggerEvent::Completed, this, &AAdvancedAICharacter::EndBlock);
 	}
 	else
 	{
@@ -350,6 +343,11 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
 	}
+
+	if (NotifyName == FName("Block"))
+	{
+		DamageSystem->isBlocking = true;
+	}
 }
 
 void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -438,6 +436,36 @@ void AAdvancedAICharacter::UnequipWeapon()
 	}
 }
 
+void AAdvancedAICharacter::StartBlock(const FInputActionValue& Value)
+{
+	if (Stance != EPlayerStance::Melee || DamageSystem->isBlocking) return;
+
+	DamageSystem->isBlocking = true;
+	bCanMove = false;
+	
+	if (!SwordBlockMontage) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	AnimInstance->Montage_Play(SwordBlockMontage, 1.0f);
+}
+
+void AAdvancedAICharacter::EndBlock(const FInputActionValue& Value)
+{
+	StopAnimMontage(SwordBlockMontage);
+	DamageSystem->isBlocking = false;
+	bCanMove = true;
+}
+
+void AAdvancedAICharacter::OnBlocked(bool bCanBeParried, AActor* DamageCauser)
+{
+	if (SwordBlockHitMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+		AnimInstance->Montage_Play(SwordBlockHitMontage, 1.0f);
+	}
+}
+
 void AAdvancedAICharacter::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (!bInterrupted)
@@ -448,6 +476,11 @@ void AAdvancedAICharacter::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bIn
 {
 	if (!bInterrupted)
 		UnarmedStance();
+}
+
+void AAdvancedAICharacter::OnShieldBlockMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	//DamageSystem->isBlocking = false;
 }
 
 //----------------------------------------------------------------------
@@ -488,6 +521,19 @@ float AAdvancedAICharacter::Heal_Implementation(float Amount)
 
 bool AAdvancedAICharacter::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
+	if (DamageSystem->isBlocking && DamageCauser)
+	{
+		FVector ToDamageCauser = (DamageCauser->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+		float DotProduct = FVector::DotProduct(GetActorForwardVector(), ToDamageCauser);
+
+		if (DotProduct < 0.5f)
+		{
+			DamageSystem->isBlocking = false;
+			bool bResult = DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+			DamageSystem->isBlocking = true;
+			return bResult;
+		}
+	}
 	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
 }
 

@@ -222,6 +222,8 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 			DamageInfo.Amount = 10.f;
 			DamageInfo.DamageType = EDamageType::Melee;
 			DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+			DamageInfo.bCanBeBlocked = true;
+			DamageInfo.bCanBeParried = true;
 			
 			AttackSystem->DamageAllNonTeamMembers(DamageInfo, OutHits);
 		}

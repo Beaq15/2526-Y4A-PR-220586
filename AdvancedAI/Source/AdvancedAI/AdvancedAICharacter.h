@@ -78,6 +78,9 @@ class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterfac
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> ChangeStanceAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> SwordBlockAction;
+
 	//----------------------------------------------------------------------
 	// Private — State
 	//----------------------------------------------------------------------
@@ -103,12 +106,6 @@ class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterfac
 
 	UPROPERTY()
 	TObjectPtr<AActor> WeaponActor;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Combat")
-	TSubclassOf<AActor> ShieldClass;
-
-	UPROPERTY()
-	TObjectPtr<AActor> ShieldActor;
 
 	//----------------------------------------------------------------------
 	// Private — Timeline
@@ -189,6 +186,15 @@ protected:
 	void UnequipWeapon();
 
 	UFUNCTION()
+	void StartBlock(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void EndBlock(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void OnBlocked(bool bCanBeParried, AActor* DamageCauser);
+
+	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
 
 	UFUNCTION()
@@ -205,6 +211,9 @@ protected:
 
 	UFUNCTION()
 	void OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnShieldBlockMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 
 	//----------------------------------------------------------------------
 	// Protected — Animation Assets
@@ -224,6 +233,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> DropSwordMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SwordBlockMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SwordBlockHitMontage;
 
 	//----------------------------------------------------------------------
 	// Protected — Components

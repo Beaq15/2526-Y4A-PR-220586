@@ -118,8 +118,6 @@ bool AEnemyMelee::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActo
 	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
 }
 
-
-
 //----------------------------------------------------------------------
 // Animation Callbacks
 //----------------------------------------------------------------------

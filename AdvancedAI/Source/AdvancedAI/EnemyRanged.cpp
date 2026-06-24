@@ -100,7 +100,7 @@ void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointN
 		FVector End = CachedAttackTarget->GetActorLocation();
 
 		FDamageInfo DamageInfo;
-		DamageInfo.Amount = 20.f;
+		DamageInfo.Amount = 5.f;
 		DamageInfo.DamageType = EDamageType::Projectile;
 		DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 

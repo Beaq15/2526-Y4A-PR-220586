@@ -76,7 +76,7 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	void OnBlocked(bool bCanBeParried, AActor* DamageCauser);
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-	float BlockChance = 1.0f;
+	float BlockChance = 0.5f;
 
 	FTimerHandle HoldBlockTimer;
 

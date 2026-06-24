@@ -312,7 +312,6 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 			DamageInfo.DamageType = EDamageType::Melee;
 			DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 			DamageInfo.bCanBeBlocked = true;
-			DamageInfo.bCanBeParried = true;
 
 			AttackSystem->DamageAllNonTeamMembers(DamageInfo, OutHits);
 		}

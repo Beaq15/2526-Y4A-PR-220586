@@ -64,9 +64,15 @@ void UAttackSystem::FireBullet(FVector TraceStart, FVector TraceEnd, FDamageInfo
 
 	if (bHit)
 	{
-		AActor* DamagedActor = DamageFirstNonTeamMember(DamageInfo, OutHits);
-		if (DamagedActor)
-			UAISense_Damage::ReportDamageEvent(GetWorld(), DamagedActor, GetOwner(), DamageInfo.Amount, GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation());
+		for (FHitResult Hit : OutHits)
+		{
+			AActor* HitActor = Hit.GetActor();
+
+			UE_LOG(LogTemp, Warning, TEXT("FireBullet HIT: %s — Damage: %.1f"), *HitActor->GetName(), DamageInfo.Amount);
+
+			IDamageableInterface::Execute_TakeDamage(HitActor, DamageInfo, GetOwner());
+			UAISense_Damage::ReportDamageEvent(GetWorld(), HitActor, GetOwner(), DamageInfo.Amount, GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation());
+		}
 	}
 }
 

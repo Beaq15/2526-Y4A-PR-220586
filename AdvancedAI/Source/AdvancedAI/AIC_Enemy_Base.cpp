@@ -256,6 +256,9 @@ void AAIC_Enemy_Base::HandleSensedDamage(AActor* Actor)
 {
     if (OnSameTeam(Actor)) return;
 
+    UE_LOG(LogTemp, Warning, TEXT("HandleSensedDamage from: %s"), *Actor->GetName());
+
+
     switch (GetCurrentState())
     {
     case EAIState::Passive:
@@ -329,6 +332,10 @@ void AAIC_Enemy_Base::SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnow
         SetStateAsPassive();
         return;
     }
+
+    if (!Cast<AAdvancedAICharacter>(NewAttackTarget))
+        return;
+
 
     if (!NewAttackTarget->Implements<UDamageableInterface>()) return;
     

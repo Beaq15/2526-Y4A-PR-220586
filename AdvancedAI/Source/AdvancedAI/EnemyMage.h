@@ -26,6 +26,11 @@ class ADVANCEDAI_API AEnemyMage : public AEnemyBase
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
 
+	UFUNCTION()
+	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	TObjectPtr<AActor> CachedAttackTarget;
+
 public:
 
 	//----------------------------------------------------------------------

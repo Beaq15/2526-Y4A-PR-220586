@@ -36,6 +36,7 @@ void UAttackSystem::MagicSpell(FTransform SpawnTransform, AActor* TargetActor, F
 	if (!ProjectileClass) return;
 
 	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = GetOwner();
 	SpawnParams.Instigator = Cast<APawn>(GetOwner());
 
 	AProjectileBase* Projectile = GetWorld()->SpawnActor<AProjectileBase>(ProjectileClass, SpawnTransform, SpawnParams);
@@ -67,8 +68,6 @@ void UAttackSystem::FireBullet(FVector TraceStart, FVector TraceEnd, FDamageInfo
 		for (FHitResult Hit : OutHits)
 		{
 			AActor* HitActor = Hit.GetActor();
-
-			UE_LOG(LogTemp, Warning, TEXT("FireBullet HIT: %s — Damage: %.1f"), *HitActor->GetName(), DamageInfo.Amount);
 
 			IDamageableInterface::Execute_TakeDamage(HitActor, DamageInfo, GetOwner());
 			UAISense_Damage::ReportDamageEvent(GetWorld(), HitActor, GetOwner(), DamageInfo.Amount, GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation());

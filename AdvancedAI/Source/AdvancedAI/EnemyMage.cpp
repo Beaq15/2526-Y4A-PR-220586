@@ -3,7 +3,12 @@
 
 #include "EnemyMage.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
+
+//----------------------------------------------------------------------
+// Public — IEnemyInterface
+//----------------------------------------------------------------------
 
 float AEnemyMage::SetMovementSpeed_Implementation(EMovementSpeed Speed)
 {
@@ -30,6 +35,7 @@ void AEnemyMage::GetIdealRange_Implementation(float& AttackRadius, float& Defend
 void AEnemyMage::Attack_Implementation(AActor* AttackTarget)
 {
 	Super::Attack_Implementation(AttackTarget);
+	CachedAttackTarget = AttackTarget;
 
 	if (FireMontage)
 	{
@@ -37,11 +43,40 @@ void AEnemyMage::Attack_Implementation(AActor* AttackTarget)
 		if (AnimInstance)
 		{
 			AnimInstance->Montage_Play(FireMontage, 1.0f);
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMage::OnMontageNotifyBegin);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyMage::OnAttackMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, FireMontage);
 		}
 	}
 }
 
+//----------------------------------------------------------------------
+// Animation Callbacks
+//----------------------------------------------------------------------
+
+void AEnemyMage::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	IEnemyInterface::Execute_AttackEnd(this, CachedAttackTarget);
+}
+
 void AEnemyMage::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
 {
+	if (NotifyName == "Fire")
+	{
+		FDamageInfo DamageInfo;
+		DamageInfo.Amount = 20.f;
+		DamageInfo.DamageType = EDamageType::Explosion;
+		DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+		DamageInfo.bCanBeBlocked = true;
 
+		FVector SocketLocation = GetMesh()->GetSocketLocation(FName("RightHand"));
+		FVector SpawnLocation = SocketLocation + GetActorForwardVector() * 50.f;
+
+		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, CachedAttackTarget->GetActorLocation());
+		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector::OneVector);
+
+		AttackSystem->MagicSpell(SpawnTransform, CachedAttackTarget, DamageInfo);
+	}
 }

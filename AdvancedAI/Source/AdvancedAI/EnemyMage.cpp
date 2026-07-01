@@ -4,7 +4,10 @@
 #include "EnemyMage.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-
+#include "AIC_Enemy_Base.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/CapsuleComponent.h"
+#include "Particles/ParticleSystemComponent.h"
 
 //----------------------------------------------------------------------
 // Public — IEnemyInterface
@@ -79,4 +82,63 @@ void AEnemyMage::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNot
 
 		AttackSystem->MagicSpell(SpawnTransform, CachedAttackTarget, DamageInfo);
 	}
+}
+
+//----------------------------------------------------------------------
+// Private — Teleport
+//----------------------------------------------------------------------
+
+void AEnemyMage::Teleport(FVector Location)
+{
+	GetMesh()->SetVisibility(false, true);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	
+	TeleportBodyEffect = UGameplayStatics::SpawnEmitterAttached(
+		P_GideonBurde, GetMesh(), FName("Spine1"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
+
+	TeleportTrailEffect = UGameplayStatics::SpawnEmitterAttached(
+		P_GideonMeteor, GetMesh(), FName("Spine1"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+		AnimInstance->StopAllMontages(0.25f);
+
+	CachedTeleportLocation = Location;
+	GetWorldTimerManager().SetTimer(TeleportMoveTimerHandle, [this]()
+		{
+			float Distance = FVector::Dist(GetActorLocation(), CachedTeleportLocation);
+
+			if (Distance <= 50.f)
+			{
+				GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
+				TeleportEnd();
+				return;
+			}
+
+			FVector Direction = (CachedTeleportLocation - GetActorLocation()).GetSafeNormal();
+			FVector NewLocation = GetActorLocation() + Direction * 80.f;
+			SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+
+		}, 0.016f, true);
+}
+
+void AEnemyMage::TeleportEnd()
+{
+	GetMesh()->SetVisibility(true, true);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+
+	if (OnTeleportEndCallback)
+	{
+		OnTeleportEndCallback();
+		OnTeleportEndCallback = nullptr;
+	}
+
+	if (TeleportBodyEffect.Get()) { TeleportBodyEffect->DestroyComponent(); TeleportBodyEffect = nullptr; }
+	if (TeleportTrailEffect.Get()) { TeleportTrailEffect->DestroyComponent(); TeleportTrailEffect = nullptr; }
+}
+
+void AEnemyMage::BeginPlay()
+{
+	Super::BeginPlay();
 }

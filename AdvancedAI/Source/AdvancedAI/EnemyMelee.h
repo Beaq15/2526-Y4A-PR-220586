@@ -40,6 +40,9 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> SwordBlockHitMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SwordJumpAttackMontage;
+
 	// ----------------------------------------------------------------------
 	// Private — State
 	//----------------------------------------------------------------------
@@ -102,7 +105,8 @@ public:
 
 	void StartBlock();
 	
-	//virtual void Attack() override;
+	void ShortRangeAttack(AActor* AttackTarget);
+	void LongRangeAttack(AActor* AttackTarget);
 
 
 	//----------------------------------------------------------------------

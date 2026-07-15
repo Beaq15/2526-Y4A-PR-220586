@@ -24,6 +24,11 @@ void AEnemyMelee::Attack_Implementation(AActor* AttackTarget)
 {
 	Super::Attack_Implementation(AttackTarget);
 
+	LongRangeAttack(AttackTarget);
+}
+
+void AEnemyMelee::ShortRangeAttack(AActor* AttackTarget)
+{
 	CachedAttackTarget = AttackTarget;
 
 	DamageSystem->isInterruptible = false;
@@ -40,6 +45,28 @@ void AEnemyMelee::Attack_Implementation(AActor* AttackTarget)
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
+		}
+	}
+}
+
+void AEnemyMelee::LongRangeAttack(AActor* AttackTarget)
+{
+	CachedAttackTarget = AttackTarget;
+
+	DamageSystem->isInterruptible = false;
+
+	if (SwordJumpAttackMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(SwordJumpAttackMontage, 1.0f);
+
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordJumpAttackMontage);
 		}
 	}
 }
@@ -225,5 +252,10 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 			
 			AttackSystem->DamageAllNonTeamMembers(DamageInfo, OutHits);
 		}
+	}
+
+	if (NotifyName == FName("Jump"))
+	{
+		LaunchCharacter(FVector(0.0f, 0.0f, 500.f), false, true);
 	}
 }

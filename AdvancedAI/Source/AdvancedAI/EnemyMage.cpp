@@ -138,7 +138,99 @@ void AEnemyMage::TeleportEnd()
 	if (TeleportTrailEffect.Get()) { TeleportTrailEffect->DestroyComponent(); TeleportTrailEffect = nullptr; }
 }
 
+void AEnemyMage::HealOverTime()
+{
+	if (HealMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			const float MontageLength = AnimInstance->Montage_Play(HealMontage, 1.0f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyMage::HealEnded);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, HealMontage);
+
+
+			FHitResult HitResult;
+			TArray<AActor*>ActorsToIgnore;
+			ActorsToIgnore.Add(this);
+
+			const FVector TraceStart = GetActorLocation();
+			const FVector TraceEnd = TraceStart + FVector(0.0f, 0.0f, -1000.0f);
+
+			const bool bHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), TraceStart, TraceEnd, UEngineTypes::ConvertToTraceType(ECC_Visibility),
+				false, ActorsToIgnore, EDrawDebugTrace::None, HitResult, true);
+
+			FVector SpawnTransformLocation = TraceStart;
+
+			if (bHit)
+			{
+				SpawnTransformLocation = HitResult.ImpactPoint;
+			}
+			else
+				StopAnimMontage();
+
+			const FTransform SpawnTransform(GetActorRotation(), SpawnTransformLocation);
+			
+			HealAOE = GetWorld()->SpawnActorDeferred<AAOE_Heal>(ActorToSpawn, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+
+			if (HealAOE)
+			{
+				HealAOE->SpawnInterval = 1.0f;
+				HealAOE->Duration = MontageLength;
+				HealAOE->DrawDebugSphere = false;
+				HealAOE->IgnoreInstigator = false;
+				HealAOE->TriggerOnBeginPlay = true;
+
+				HealAOE->OnAOEOverlapActor.AddDynamic(this, &AEnemyMage::OnHealTick);
+				HealAOE->FinishSpawning(SpawnTransform);
+
+			}
+		}
+	}
+}
+
+void AEnemyMage::HealEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (HealAOE)
+	{
+		HealAOE->Destroy();
+	}
+
+	if (OnHealOverTimeEndCallback)
+	{
+		OnHealOverTimeEndCallback();
+		OnHealOverTimeEndCallback = nullptr;
+	}
+
+	OnHealOverTimeEnd.Broadcast();
+}
+
+void AEnemyMage::OnHealTick(AActor* Actor)
+{
+	if (Actor == this)
+	{
+		Heal_Implementation(DamageSystem->MaxHealth * 0.075);
+	}
+}
+
 void AEnemyMage::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+AEnemyMage::AEnemyMage()
+{
+
+}
+
+void AEnemyMage::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (HealAOE)
+	{
+		HealAOE->OnAOEOverlapActor.RemoveDynamic(this, &AEnemyMage::OnHealTick);
+	}
+	GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
+	Super::EndPlay(EndPlayReason);
 }

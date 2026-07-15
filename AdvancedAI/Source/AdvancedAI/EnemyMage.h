@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "EnemyBase.h"
+#include "AOE_Heal.h"
 #include "EnemyMage.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealOverTimeEnd);
 
 UCLASS()
 class ADVANCEDAI_API AEnemyMage : public AEnemyBase
@@ -17,6 +20,9 @@ class ADVANCEDAI_API AEnemyMage : public AEnemyBase
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> FireMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> HealMontage;
+
 	//----------------------------------------------------------------------
 	// Private — Animation Callbacks
 	//----------------------------------------------------------------------
@@ -26,6 +32,7 @@ class ADVANCEDAI_API AEnemyMage : public AEnemyBase
 	UFUNCTION()
 	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 
+	UPROPERTY()
 	TObjectPtr<AActor> CachedAttackTarget;
 
 	//----------------------------------------------------------------------
@@ -53,7 +60,21 @@ class ADVANCEDAI_API AEnemyMage : public AEnemyBase
 	UPROPERTY()
 	FVector CachedTeleportLocation;
 
+	//----------------------------------------------------------------------
+	// Private — Heal
+	//----------------------------------------------------------------------
+
+	UFUNCTION()
+	void HealEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnHealTick(AActor* Actor);
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AActor> ActorToSpawn;
 	
+	UPROPERTY()
+	TObjectPtr<AAOE_Heal> HealAOE;
 
 protected:
 	//----------------------------------------------------------------------
@@ -61,6 +82,10 @@ protected:
 	//----------------------------------------------------------------------
 
 	virtual void BeginPlay() override;
+
+	AEnemyMage();
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
 	//----------------------------------------------------------------------
@@ -74,4 +99,12 @@ public:
 	UFUNCTION()
 	void Teleport(FVector Location);
 	TFunction<void()> OnTeleportEndCallback;
+
+	UFUNCTION()
+	void HealOverTime();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnHealOverTimeEnd OnHealOverTimeEnd;
+
+	TFunction<void()> OnHealOverTimeEndCallback;
 };

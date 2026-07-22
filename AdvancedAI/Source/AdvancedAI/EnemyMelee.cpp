@@ -263,8 +263,38 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 
 	if (NotifyName == FName("Jump"))
 	{
+		const FVector PredictedLocation = CalculateFutureActorLocation(CachedAttackTarget, 1.0f);
+		const FVector EndPos(PredictedLocation.X, PredictedLocation.Y, PredictedLocation.Z);
+
 		FVector LaunchVelocity;
-		UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), { CachedAttackTarget->GetActorLocation().X, CachedAttackTarget->GetActorLocation().Y, CachedAttackTarget->GetActorLocation().Z + 100.f});
+		UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), EndPos);
+
+		UKismetSystemLibrary::DrawDebugSphere(GetWorld(), EndPos, 100.f, 12, FLinearColor::White, 2.0f);
+
 		LaunchCharacter(LaunchVelocity, true, true);
+
+		LandedDelegate.AddDynamic(this, &AEnemyMelee::OnLand);
 	}
+}
+
+void AEnemyMelee::OnLand(const FHitResult& Hit)
+{
+	LandedDelegate.RemoveDynamic(this, &AEnemyMelee::OnLand);
+
+	GetCharacterMovement()->StopMovementImmediately();
+}
+
+FVector AEnemyMelee::CalculateFutureActorLocation(AActor* Actor, float Time)
+{
+	// l = v + t + currentLocation
+
+	if (!Actor)
+	{
+		return FVector::ZeroVector;
+	}
+	
+	const FVector Velocity = Actor->GetVelocity();
+	const FVector HorizontalVelocity(Velocity.X, Velocity.Y, 0.0f);
+
+	return Actor->GetActorLocation() + (HorizontalVelocity * Time);
 }

@@ -85,6 +85,11 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 
 	UPROPERTY()
 	TObjectPtr<AActor> CachedAttackTarget;
+
+	UFUNCTION()
+	void OnLand(const FHitResult& Hit);
+
+	FVector CalculateFutureActorLocation(AActor* Actor, float Time);
 public:
 	// ----------------------------------------------------------------------
 	// Public — Lifecycle

@@ -117,4 +117,5 @@ public:
 	virtual void UnequipWeapon_Implementation() override;
 	virtual bool  TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser) override;
 	virtual void Attack_Implementation(AActor* AttackTarget) override;
+	virtual void  GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
 };

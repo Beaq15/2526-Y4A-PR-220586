@@ -4,6 +4,7 @@
 #include "EnemyMelee.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 //----------------------------------------------------------------------
 // Lifecycle
@@ -25,6 +26,12 @@ void AEnemyMelee::Attack_Implementation(AActor* AttackTarget)
 	Super::Attack_Implementation(AttackTarget);
 
 	LongRangeAttack(AttackTarget);
+}
+
+void AEnemyMelee::GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius)
+{
+	AttackRadius = 400.f;
+	DefendRadius = 400.f;
 }
 
 void AEnemyMelee::ShortRangeAttack(AActor* AttackTarget)
@@ -256,6 +263,8 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 
 	if (NotifyName == FName("Jump"))
 	{
-		LaunchCharacter(FVector(0.0f, 0.0f, 500.f), false, true);
+		FVector LaunchVelocity;
+		UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), { CachedAttackTarget->GetActorLocation().X, CachedAttackTarget->GetActorLocation().Y, CachedAttackTarget->GetActorLocation().Z + 100.f});
+		LaunchCharacter(LaunchVelocity, true, true);
 	}
 }

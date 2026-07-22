@@ -1,7 +1,7 @@
 #include "BTT_MeleeAttack.h"
 #include "AIC_Enemy_Base.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "EnemyBase.h"
+#include "EnemyMelee.h"
 
 UBTT_MeleeAttack::UBTT_MeleeAttack()
 {
@@ -12,7 +12,7 @@ UBTT_MeleeAttack::UBTT_MeleeAttack()
 EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     AAIC_Enemy_Base* AIController = Cast<AAIC_Enemy_Base>(OwnerComp.GetAIOwner());
-    AEnemyBase* ControllerPawn = Cast<AEnemyBase>(AIController->GetPawn());
+    AEnemyMelee* ControllerPawn = Cast<AEnemyMelee>(AIController->GetPawn());
     UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
     if (!AIController || !ControllerPawn || !BB) return EBTNodeResult::Failed;
 
@@ -41,7 +41,20 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
     else if (RequestResult == EPathFollowingRequestResult::AlreadyAtGoal)
     {
         AIController->SetFocus(AttackTarget);
-        IEnemyInterface::Execute_Attack(ControllerPawn, AttackTarget);
+
+        switch (AttackName)
+        {
+        case EMelee_Attacks::ShortRangeAttack:
+            ControllerPawn->ShortRangeAttack(AttackTarget);
+            break;
+        case EMelee_Attacks::LongRangeAttack:
+            ControllerPawn->LongRangeAttack(AttackTarget);
+            break;
+        default:
+            IEnemyInterface::Execute_Attack(ControllerPawn, AttackTarget);
+            break;
+        }
+
 
         AIController->OnAttackEndDelegate.BindLambda([this]()
             {

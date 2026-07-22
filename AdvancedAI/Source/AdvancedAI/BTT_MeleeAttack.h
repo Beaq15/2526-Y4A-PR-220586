@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
 #include "Navigation/PathFollowingComponent.h"
+#include "EnemyMelee.h"
 #include "BTT_MeleeAttack.generated.h"
 
 class AEnemyBase;
@@ -15,6 +16,9 @@ UCLASS()
 class ADVANCEDAI_API UBTT_MeleeAttack : public UBTTaskNode
 {
 	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	EMelee_Attacks AttackName;
 	
 	UPROPERTY(EditAnywhere, Category = "Keys")
 	FBlackboardKeySelector AttackTargetKey;

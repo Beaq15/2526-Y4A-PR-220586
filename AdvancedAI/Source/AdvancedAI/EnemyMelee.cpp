@@ -30,7 +30,7 @@ void AEnemyMelee::Attack_Implementation(AActor* AttackTarget)
 
 void AEnemyMelee::GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius)
 {
-	AttackRadius = 400.f;
+	AttackRadius = 200.f;
 	DefendRadius = 400.f;
 }
 

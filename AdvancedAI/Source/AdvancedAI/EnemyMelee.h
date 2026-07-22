@@ -16,6 +16,14 @@ enum class EBlockingState : uint8
 	BlockedSuccessfully
 };
 
+UENUM(BlueprintType)
+enum class EMelee_Attacks : uint8
+{
+	Default,
+	ShortRangeAttack,
+	LongRangeAttack
+};
+
 UCLASS()
 class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 {

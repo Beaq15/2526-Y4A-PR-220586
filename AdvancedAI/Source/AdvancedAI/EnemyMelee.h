@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "EnemyBase.h"
 #include "Components/TimelineComponent.h"
+#include "AOE_Heal.h"
 #include "EnemyMelee.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlockEnd);
@@ -108,6 +109,17 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	void ChaseAttackTarget(AActor* AttackTarget);
 	void ChaseAttackTargetLoop();
 
+	void StopSpinning();
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AActor> ActorToSpawn;
+
+	UPROPERTY()
+	TObjectPtr<AAOE_Heal> HealAOE;
+
+	UFUNCTION()
+	void AOEDamageActor(AActor* Actor);
+
 	//----------------------------------------------------------------------
 	// Private — Spin Timeline
 	//----------------------------------------------------------------------
@@ -125,6 +137,7 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	void HandleSpinTimeLineUpdate(float Value);
 
 	FRotator SpinStartRotation;
+
 public:
 	// ----------------------------------------------------------------------
 	// Public — Lifecycle

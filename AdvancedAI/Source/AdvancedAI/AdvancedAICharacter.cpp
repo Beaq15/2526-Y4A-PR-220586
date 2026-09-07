@@ -361,8 +361,6 @@ void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupt
 
 void AAdvancedAICharacter::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser)
 {
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
-		DisableInput(PC);
 
 	if (!HitReactionMontage) return;
 	
@@ -370,10 +368,6 @@ void AAdvancedAICharacter::OnHitResponse_Event(EDamageResponse DamageResponse, A
 	if (!AnimInstance) return;
 		
 	AnimInstance->Montage_Play(HitReactionMontage, 1.0f);
-
-	FOnMontageEnded EndDelegate;
-	EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
-	AnimInstance->Montage_SetEndDelegate(EndDelegate, HitReactionMontage);
 }
 
 void AAdvancedAICharacter::OnDeath_Event()

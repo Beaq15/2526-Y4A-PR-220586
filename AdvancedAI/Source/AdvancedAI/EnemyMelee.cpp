@@ -33,6 +33,8 @@ void AEnemyMelee::BeginPlay()
 
 	DamageSystem->OnBlocked.AddDynamic(this, &AEnemyMelee::OnBlocked);
 
+	SpinStartRotation = GetMesh()->GetRelativeRotation();
+
 	if (!SpinCurve)
 	{
 		SpinCurve = NewObject<UCurveFloat>(this, TEXT("SpinCurve"));
@@ -108,7 +110,7 @@ void AEnemyMelee::LongRangeAttack(AActor* AttackTarget)
 
 	CachedAttackTarget = AttackTarget;
 
-	DamageSystem->isInterruptible = false;
+	DamageSystem->isInterruptible = true;
 
 	if (SwordJumpAttackMontage)
 	{
@@ -233,6 +235,8 @@ void AEnemyMelee::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 	IEnemyInterface::Execute_AttackEnd(this, CachedAttackTarget);
 
 	DamageSystem->isInterruptible = true;
+
+	StopSpinning();
 }
 
 void AEnemyMelee::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
@@ -359,6 +363,22 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 		}
 
 	}
+
+	if (NotifyName == FName("AOESlash"))
+	{
+		const FTransform SpawnTransform(GetActorRotation(), GetActorLocation());
+
+		HealAOE = GetWorld()->SpawnActorDeferred<AAOE_Heal>(ActorToSpawn, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+
+		if (HealAOE)
+		{
+			HealAOE->Radius = 300.0f;
+			HealAOE->DrawDebugSphere = false;
+			HealAOE->IgnoreInstigator = true;
+			HealAOE->OnAOEOverlapActor.AddDynamic(this, &AEnemyMelee::AOEDamageActor);
+			HealAOE->Trigger();
+		}
+	}
 }
 
 void AEnemyMelee::OnLand(const FHitResult& Hit)
@@ -398,4 +418,24 @@ void AEnemyMelee::ChaseAttackTargetLoop()
 {
 	if (bAttacking)
 		ChaseAttackTarget(CachedAttackTarget);
+}
+
+void AEnemyMelee::StopSpinning()
+{
+	SpinTimeline->Stop();
+
+	GetMesh()->SetRelativeRotation(SpinStartRotation);
+}
+
+void AEnemyMelee::AOEDamageActor(AActor* Actor)
+{
+	if (Actor == CachedAttackTarget)
+	{
+		FDamageInfo DamageInfo;
+		DamageInfo.Amount = 3.f;
+		DamageInfo.DamageType = EDamageType::Melee;
+		DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+
+		IDamageableInterface::Execute_TakeDamage(Actor, DamageInfo, this);
+	}
 }

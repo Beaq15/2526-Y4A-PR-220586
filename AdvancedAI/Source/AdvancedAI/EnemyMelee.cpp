@@ -5,16 +5,60 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "AIController.h"
 
 //----------------------------------------------------------------------
 // Lifecycle
 //----------------------------------------------------------------------
+
+void AEnemyMelee::HandleSpinTimeLineUpdate(float Value)
+{
+	const float StartYaw = SpinStartRotation.Yaw;
+	const float TargetYaw = StartYaw + (360.f * NumberOfSpins);
+
+	const float NewYaw = FMath::Lerp(StartYaw, TargetYaw, Value);
+
+	const FRotator NewMeshRotation(
+		SpinStartRotation.Pitch,
+		NewYaw,
+		SpinStartRotation.Roll
+	);
+
+	GetMesh()->SetRelativeRotation(NewMeshRotation);
+}
 
 void AEnemyMelee::BeginPlay()
 {
 	Super::BeginPlay();
 
 	DamageSystem->OnBlocked.AddDynamic(this, &AEnemyMelee::OnBlocked);
+
+	if (!SpinCurve)
+	{
+		SpinCurve = NewObject<UCurveFloat>(this, TEXT("SpinCurve"));
+
+		FKeyHandle Key0 = SpinCurve->FloatCurve.AddKey(0.0f, 0.0f);
+		FKeyHandle Key1 = SpinCurve->FloatCurve.AddKey(4.0f, 1.0f);
+
+		SpinCurve->FloatCurve.SetKeyInterpMode(Key0, RCIM_Linear);
+		SpinCurve->FloatCurve.SetKeyInterpMode(Key1, RCIM_Linear);
+	}
+
+	if (SpinCurve)
+	{
+		FOnTimelineFloat UpdateDelegate;
+		UpdateDelegate.BindUFunction(this, FName("HandleSpinTimeLineUpdate"));
+		SpinTimeline->AddInterpFloat(SpinCurve, UpdateDelegate, FName("SpinSAlpha"));
+	}
+}
+
+AEnemyMelee::AEnemyMelee()
+{
+	SpinTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("SpinTimeline"));
+	SpinTimeline->SetTimelineLength(4.0f);
+	SpinTimeline->SetTimelineLengthMode(TL_TimelineLength);
+	SpinTimeline->SetLooping(false);
+	SpinTimeline->SetTickGroup(TG_PrePhysics);
 }
 
 //----------------------------------------------------------------------
@@ -25,7 +69,7 @@ void AEnemyMelee::Attack_Implementation(AActor* AttackTarget)
 {
 	Super::Attack_Implementation(AttackTarget);
 
-	LongRangeAttack(AttackTarget);
+	//ShortRangeAttack(AttackTarget);
 }
 
 void AEnemyMelee::GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius)
@@ -36,6 +80,8 @@ void AEnemyMelee::GetIdealRange_Implementation(float& AttackRadius, float& Defen
 
 void AEnemyMelee::ShortRangeAttack(AActor* AttackTarget)
 {
+	Super::Attack_Implementation(AttackTarget);
+
 	CachedAttackTarget = AttackTarget;
 
 	DamageSystem->isInterruptible = false;
@@ -58,6 +104,8 @@ void AEnemyMelee::ShortRangeAttack(AActor* AttackTarget)
 
 void AEnemyMelee::LongRangeAttack(AActor* AttackTarget)
 {
+	Super::Attack_Implementation(AttackTarget);
+
 	CachedAttackTarget = AttackTarget;
 
 	DamageSystem->isInterruptible = false;
@@ -74,6 +122,30 @@ void AEnemyMelee::LongRangeAttack(AActor* AttackTarget)
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordJumpAttackMontage);
+		}
+	}
+}
+
+void AEnemyMelee::SpinningAttack(AActor* AttackTarget)
+{
+	Super::Attack_Implementation(AttackTarget);
+
+	CachedAttackTarget = AttackTarget;
+
+	DamageSystem->isInterruptible = false;
+
+	if (SpinningAttackMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(SpinningAttackMontage, 1.0f);
+
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, SpinningAttackMontage);
 		}
 	}
 }
@@ -275,6 +347,18 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 
 		LandedDelegate.AddDynamic(this, &AEnemyMelee::OnLand);
 	}
+
+	if (NotifyName == FName("Spin"))
+	{
+		SpinStartRotation = GetMesh()->GetRelativeRotation();
+
+		if (SpinTimeline && SpinCurve)
+		{
+			SpinTimeline->PlayFromStart();
+			ChaseAttackTarget(CachedAttackTarget);
+		}
+
+	}
 }
 
 void AEnemyMelee::OnLand(const FHitResult& Hit)
@@ -297,4 +381,21 @@ FVector AEnemyMelee::CalculateFutureActorLocation(AActor* Actor, float Time)
 	const FVector HorizontalVelocity(Velocity.X, Velocity.Y, 0.0f);
 
 	return Actor->GetActorLocation() + (HorizontalVelocity * Time);
+}
+
+void AEnemyMelee::ChaseAttackTarget(AActor* AttackTarget)
+{
+	if (AAIController* AIController = Cast<AAIController>(GetController()))
+	{
+		if (AttackTarget)
+			AIController->MoveToActor(AttackTarget, 200.f);
+
+		GetWorldTimerManager().SetTimer(ChaseAttackTimer, this, &AEnemyMelee::ChaseAttackTargetLoop, 0.1f, false);
+	}
+}
+
+void AEnemyMelee::ChaseAttackTargetLoop()
+{
+	if (bAttacking)
+		ChaseAttackTarget(CachedAttackTarget);
 }

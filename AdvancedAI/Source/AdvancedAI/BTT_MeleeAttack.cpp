@@ -50,6 +50,9 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
         case EMelee_Attacks::LongRangeAttack:
             ControllerPawn->LongRangeAttack(AttackTarget);
             break;
+        case EMelee_Attacks::SpinningAttack:
+            ControllerPawn->SpinningAttack(AttackTarget);
+            break;
         default:
             IEnemyInterface::Execute_Attack(ControllerPawn, AttackTarget);
             break;
@@ -98,5 +101,22 @@ void UBTT_MeleeAttack::OnMoveCompleted(FAIRequestID RequestID, EPathFollowingRes
                 FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
             }
         });
-    IEnemyInterface::Execute_Attack(CachedEnemy, CachedTarget);
+
+    AEnemyMelee* MeleeEnemy = Cast<AEnemyMelee>(CachedEnemy);
+
+    switch (AttackName)
+    {
+    case EMelee_Attacks::ShortRangeAttack:
+        if (MeleeEnemy) MeleeEnemy->ShortRangeAttack(CachedTarget);
+        break;
+    case EMelee_Attacks::LongRangeAttack:
+        if (MeleeEnemy) MeleeEnemy->LongRangeAttack(CachedTarget);
+        break;
+    case EMelee_Attacks::SpinningAttack:
+        if (MeleeEnemy) MeleeEnemy->SpinningAttack(CachedTarget);
+        break;
+    default:
+        IEnemyInterface::Execute_Attack(CachedEnemy, CachedTarget);
+        break;
+    }
 }

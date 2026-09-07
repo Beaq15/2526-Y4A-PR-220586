@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EnemyBase.h"
+#include "Components/TimelineComponent.h"
 #include "EnemyMelee.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlockEnd);
@@ -21,7 +22,8 @@ enum class EMelee_Attacks : uint8
 {
 	Default,
 	ShortRangeAttack,
-	LongRangeAttack
+	LongRangeAttack,
+	SpinningAttack
 };
 
 UCLASS()
@@ -50,6 +52,9 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> SwordJumpAttackMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SpinningAttackMontage;
 
 	// ----------------------------------------------------------------------
 	// Private — State
@@ -90,6 +95,7 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	float BlockChance = 0.5f;
 
 	FTimerHandle HoldBlockTimer;
+	FTimerHandle ChaseAttackTimer;
 
 	UPROPERTY()
 	TObjectPtr<AActor> CachedAttackTarget;
@@ -98,12 +104,34 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	void OnLand(const FHitResult& Hit);
 
 	FVector CalculateFutureActorLocation(AActor* Actor, float Time);
+
+	void ChaseAttackTarget(AActor* AttackTarget);
+	void ChaseAttackTargetLoop();
+
+	//----------------------------------------------------------------------
+	// Private — Spin Timeline
+	//----------------------------------------------------------------------
+
+	UPROPERTY()
+	TObjectPtr<UTimelineComponent> SpinTimeline;
+
+	UPROPERTY()
+	TObjectPtr<UCurveFloat> SpinCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Timeline")
+	float NumberOfSpins = 12.f;
+
+	UFUNCTION()
+	void HandleSpinTimeLineUpdate(float Value);
+
+	FRotator SpinStartRotation;
 public:
 	// ----------------------------------------------------------------------
 	// Public — Lifecycle
 	//----------------------------------------------------------------------
 
 	virtual void BeginPlay() override;
+	AEnemyMelee();
 
 	//----------------------------------------------------------------------
 	// Public — Delegates
@@ -120,7 +148,7 @@ public:
 	
 	void ShortRangeAttack(AActor* AttackTarget);
 	void LongRangeAttack(AActor* AttackTarget);
-
+	void SpinningAttack(AActor* AttackTarget);
 
 	//----------------------------------------------------------------------
 	// Public — IEnemyInterface

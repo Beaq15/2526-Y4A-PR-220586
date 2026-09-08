@@ -368,15 +368,16 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 	{
 		const FTransform SpawnTransform(GetActorRotation(), GetActorLocation());
 
-		HealAOE = GetWorld()->SpawnActorDeferred<AAOE_Heal>(ActorToSpawn, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+		AOE = GetWorld()->SpawnActorDeferred<AAOE_Base>(ActorToSpawn, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
-		if (HealAOE)
+		if (AOE)
 		{
-			HealAOE->Radius = 300.0f;
-			HealAOE->DrawDebugSphere = false;
-			HealAOE->IgnoreInstigator = true;
-			HealAOE->OnAOEOverlapActor.AddDynamic(this, &AEnemyMelee::AOEDamageActor);
-			HealAOE->Trigger();
+			AOE->Radius = 300.0f;
+			AOE->DrawDebugSphere = false;
+			AOE->IgnoreInstigator = true;
+			AOE->OnAOEOverlapActor.AddDynamic(this, &AEnemyMelee::AOEDamageActor);
+			AOE->FinishSpawning(SpawnTransform);
+			AOE->Trigger();
 		}
 	}
 }

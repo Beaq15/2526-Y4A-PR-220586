@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "EnemyBase.h"
 #include "Components/TimelineComponent.h"
-#include "AOE_Heal.h"
+#include "AOE_Base.h"
 #include "EnemyMelee.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlockEnd);
@@ -115,7 +115,7 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	TSubclassOf<AActor> ActorToSpawn;
 
 	UPROPERTY()
-	TObjectPtr<AAOE_Heal> HealAOE;
+	TObjectPtr<AAOE_Base> AOE;
 
 	UFUNCTION()
 	void AOEDamageActor(AActor* Actor);

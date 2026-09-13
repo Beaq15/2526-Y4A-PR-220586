@@ -25,7 +25,7 @@ public class AITeamComms : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core","CoreUObject", "Engine", "AIModule", "GameplayTasks", "GameplayTags", "UnrealEd"
+				"Core","CoreUObject", "Engine", "AIModule", "GameplayTasks", "GameplayTags"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

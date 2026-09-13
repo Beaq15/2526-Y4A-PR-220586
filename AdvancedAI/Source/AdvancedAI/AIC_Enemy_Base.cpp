@@ -21,8 +21,8 @@ AAIC_Enemy_Base::AAIC_Enemy_Base()
 
     // Sight
     SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-    SightConfig->SightRadius = 1500.f;
-    SightConfig->LoseSightRadius = 2000.f;
+    SightConfig->SightRadius = 3000.f;
+    SightConfig->LoseSightRadius = 4000.f;
     SightConfig->PeripheralVisionAngleDegrees = 60.f;
     SightConfig->SetMaxAge(20.f);
     SightConfig->DetectionByAffiliation.bDetectEnemies = true;

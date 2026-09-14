@@ -308,7 +308,12 @@ void AAIC_Enemy_Base::HandleForgotActor(AActor* Actor)
 void AAIC_Enemy_Base::SetStateAsPassive()
 {
     if (UBlackboardComponent* BB = GetBlackboardComponent())
+    {
         BB->SetValueAsInt(StateKeyName, (int32)EAIState::Passive);
+        BB->ClearValue(AttackTargetKeyName);
+    }
+
+    AttackTargetActor = nullptr;
 }
 
 void AAIC_Enemy_Base::SetStateAsDead()

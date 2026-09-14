@@ -20,6 +20,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	float GetPercent() const;
 
+	UFUNCTION(BlueprintPure)
+	ESlateVisibility GetHealthBarVisibility() const;
+
 	UPROPERTY(BlueprintReadWrite)
 	TScriptInterface<IDamageableInterface> DamageableActor;
 

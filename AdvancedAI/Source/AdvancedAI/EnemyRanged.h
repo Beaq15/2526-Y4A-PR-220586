@@ -34,6 +34,8 @@ class ADVANCEDAI_API AEnemyRanged : public AEnemyBase
 	UPROPERTY()
 	TObjectPtr<AActor> CachedAttackTarget;
 
+	float CalculateHitChance(AActor* Target) const;
+
 protected:
 
 	//----------------------------------------------------------------------

@@ -3,6 +3,7 @@
 
 #include "BTT_FocusTarget.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "EnemyBase.h"
 #include "AIController.h"
 
 UBTT_FocusTarget::UBTT_FocusTarget()
@@ -21,7 +22,9 @@ EBTNodeResult::Type UBTT_FocusTarget::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	AActor* Target = Cast<AActor>(BB->GetValueAsObject(FocusTargetKey.SelectedKeyName));
 
 	if (IsValid(Target))
+	{
 		AIController->SetFocus(Target);
+	}
 	else
 	{
 		const FVector Location = BB->GetValueAsVector(FocusTargetKey.SelectedKeyName);

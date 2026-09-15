@@ -163,6 +163,14 @@ protected:
 	void OnDeath_Event();
 
 	UFUNCTION()
+	void CleanupAfterDeath();
+
+	FTimerHandle DeathCleanupTimerHandle;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Death")
+	TSubclassOf<AActor> HealingActorClass;
+
+	UFUNCTION()
 	void OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser);
 
 	//----------------------------------------------------------------------

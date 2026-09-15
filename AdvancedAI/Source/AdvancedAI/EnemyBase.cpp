@@ -81,6 +81,13 @@ void AEnemyBase::OnFactReceived(FSharedFact Fact)
 
 void AEnemyBase::OnDeath_Event()
 {
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->StopMovementImmediately();
+		MoveComp->DisableMovement();
+		MoveComp->SetComponentTickEnabled(false);
+	}
+
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
@@ -89,6 +96,35 @@ void AEnemyBase::OnDeath_Event()
 	AICEnemyBase->SetStateAsDead();
 
 	AICEnemyBase->BrainComponent->StopLogic("Dead");
+
+	GetWorldTimerManager().SetTimer(DeathCleanupTimerHandle, this, &AEnemyBase::CleanupAfterDeath, 2.0f, false);
+}
+
+void AEnemyBase::CleanupAfterDeath()
+{
+	TArray<AActor*> AttachedActors;
+	GetAttachedActors(AttachedActors);
+
+	for (AActor* Attached : AttachedActors)
+	{
+		if (IsValid(Attached))
+			Attached->Destroy();
+	}
+
+	if (HealingActorClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		GetWorld()->SpawnActor<AActor>(
+			HealingActorClass,
+			FVector(GetActorLocation().X, GetActorLocation().Y, 145.0f),
+			FRotator::ZeroRotator,
+			SpawnParams
+		);
+	}
+
+	Destroy();
 }
 
 void AEnemyBase::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser)

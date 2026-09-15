@@ -64,6 +64,7 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 
 	// Tokens
 	DamageSystem->AttackTokensCount = 1;
+	
 }
 
 void AAdvancedAICharacter::BeginPlay()
@@ -84,6 +85,9 @@ void AAdvancedAICharacter::BeginPlay()
 	FOnTimelineFloat UpdateDelegate;
 	UpdateDelegate.BindUFunction(this, FName("OnAimTimeLineUpdate"));
 	AimTimeline.AddInterpFloat(LinearCurve, UpdateDelegate);
+
+	DamageSystem->MaxHealth = 300.f;
+	DamageSystem->Health = 300.f;
 }
 
 void AAdvancedAICharacter::Tick(float DeltaTime)

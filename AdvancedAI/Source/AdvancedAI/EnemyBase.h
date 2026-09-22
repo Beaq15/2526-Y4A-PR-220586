@@ -132,7 +132,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<AAIC_Enemy_Base> AICEnemyBase;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TObjectPtr<AActor> WeaponActor;
 
 	UPROPERTY()

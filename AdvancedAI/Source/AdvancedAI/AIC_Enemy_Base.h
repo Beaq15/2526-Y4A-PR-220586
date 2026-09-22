@@ -27,6 +27,8 @@ class ADVANCEDAI_API AAIC_Enemy_Base : public ADetourCrowdAIController
 {
 	GENERATED_BODY()
 
+protected:
+
 	//----------------------------------------------------------------------
 	// Private — Blackboard Key Names
 	//----------------------------------------------------------------------
@@ -106,7 +108,7 @@ public:
 	void SetStateAsFrozen();
 
 	UFUNCTION()
-	void SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnownAttackTarget);
+	virtual void SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnownAttackTarget);
 
 	UFUNCTION()
 	void SetStateAsInvestigating(FVector Location);

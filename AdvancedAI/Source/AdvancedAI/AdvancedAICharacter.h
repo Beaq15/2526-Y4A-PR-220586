@@ -148,6 +148,9 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	UPROPERTY()
+	TObjectPtr<UWidgetPlayerHUD> PlayerHUDWidget;
+
 protected:
 	//----------------------------------------------------------------------
 	// Protected — Lifecycle Overrides
@@ -267,8 +270,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UWidgetPlayerHUD> PlayerHUDWidgetClass;
 
-	UPROPERTY()
-	TObjectPtr<UWidgetPlayerHUD> PlayerHUDWidget;
+	
 
 	UFUNCTION()
 	void DisplayHUD();

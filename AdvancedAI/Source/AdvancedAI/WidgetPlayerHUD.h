@@ -7,6 +7,7 @@
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "DamageableInterface.h"
+#include "Components/VerticalBox.h"
 #include "WidgetPlayerHUD.generated.h"
 
 /**
@@ -23,6 +24,8 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> ProgressBar_148;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UVerticalBox> VerticalBox;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<ACharacter> Player;

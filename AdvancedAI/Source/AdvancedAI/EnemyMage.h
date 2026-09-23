@@ -23,6 +23,9 @@ class ADVANCEDAI_API AEnemyMage : public AEnemyBase
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> HealMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> GroundSmashMontage;
+
 	//----------------------------------------------------------------------
 	// Private — Animation Callbacks
 	//----------------------------------------------------------------------
@@ -107,4 +110,6 @@ public:
 	FOnHealOverTimeEnd OnHealOverTimeEnd;
 
 	TFunction<void()> OnHealOverTimeEndCallback;
+
+	void GroundSmashAttack(AActor* AttackTarget);
 };

@@ -5,7 +5,8 @@
 #include "DamageableInterface.h"
 #include "Perception/AISense_Damage.h"
 #include "Kismet/KismetSystemLibrary.h"
-
+#include "EnemyInterface.h"
+#include "GameFramework/Character.h"
 
 //----------------------------------------------------------------------
 // Lifecycle
@@ -125,6 +126,53 @@ AActor* UAttackSystem::DamageFirstNonTeamMember(FDamageInfo DamageInfo, TArray<F
 	return nullptr;
 }
 
+void UAttackSystem::GroundSmash(FAttackInfo AttackInfo, float Radius)
+{
+	//IEnemyInterface::Execute_Attack(GetOwner(), AttackInfo.AttackTarget);
+
+	CachedAttackInfo = AttackInfo;
+	CachedRadius = Radius;
+
+	if (AttackInfo.Montage)
+	{
+		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()))
+		{
+			if (UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance())
+			{
+				AnimInstance->Montage_Play(AttackInfo.Montage, 1.0f);
+
+				AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &UAttackSystem::OnMontageNotifyBegin);
+
+
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &UAttackSystem::OnAttackMontageEnd);
+				AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackInfo.Montage);
+			}
+		}
+	}
+
+	IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
+}
+
+void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
+{
+
+	if (NotifyName == FName("Smash"))
+	{
+		FDamageInfo DamageInfo;
+		DamageInfo.Amount = 25.f;
+		DamageInfo.DamageType = EDamageType::Explosion;
+		AOEDamage(CachedAttackInfo.AttackTarget, CachedRadius, DamageInfo);
+	}
+}
+
+void UAttackSystem::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	IEnemyInterface::Execute_AttackEnd(GetOwner(), CachedAttackInfo.AttackTarget);
+
+	IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), true);
+}
+
 //----------------------------------------------------------------------
 // Callbacks
 //----------------------------------------------------------------------
@@ -143,3 +191,30 @@ void UAttackSystem::OnProjectileHit(AActor* OtherActor, FHitResult Hit)
 	OnAttackEnd.Broadcast();
 }
 
+void UAttackSystem::AOEDamage(AActor* AttackTarget, float Radius, FDamageInfo DamageInfo)
+{
+	CachedAttackTarget = AttackTarget;
+	CachedDamageInfo = DamageInfo;
+
+	const FTransform SpawnTransform(GetOwner()->GetActorRotation(), GetOwner()->GetActorLocation());
+
+	AOE = GetWorld()->SpawnActorDeferred<AAOE_Base>(ActorToSpawn, SpawnTransform, Cast<APawn>(GetOwner()), Cast<APawn>(GetOwner()), ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+
+	if (AOE)
+	{
+		AOE->Radius = Radius;
+		AOE->DrawDebugSphere = false;
+		AOE->IgnoreInstigator = true;
+		AOE->OnAOEOverlapActor.AddDynamic(this, &UAttackSystem::AOEDamageActor);
+		AOE->FinishSpawning(SpawnTransform);
+		AOE->Trigger();
+	}
+}
+
+void UAttackSystem::AOEDamageActor(AActor* Actor)
+{
+	if (Actor == CachedAttackTarget)
+	{
+		IDamageableInterface::Execute_TakeDamage(Actor, CachedDamageInfo, GetOwner());
+	}
+}

@@ -66,7 +66,7 @@ protected:
 	void HandleSensedSound(FVector Location);
 	void HandleSensedDamage(AActor* Actor);
 	void HandleForgotActor(AActor* Actor);
-	void HandleLostSight(AActor* Actor);
+	virtual void HandleLostSight(AActor* Actor);
 
 	//----------------------------------------------------------------------
 	// Private — Internal Helpers

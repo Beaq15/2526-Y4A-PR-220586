@@ -57,6 +57,9 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> SpinningAttackMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> GroundSmashMontage;
+
 	// ----------------------------------------------------------------------
 	// Private — State
 	//----------------------------------------------------------------------
@@ -162,6 +165,7 @@ public:
 	void ShortRangeAttack(AActor* AttackTarget);
 	void LongRangeAttack(AActor* AttackTarget);
 	void SpinningAttack(AActor* AttackTarget);
+	void GroundSmashAttack(AActor* AttackTarget);
 
 	//----------------------------------------------------------------------
 	// Public — IEnemyInterface
@@ -170,6 +174,5 @@ public:
 	virtual void EquipWeapon_Implementation()   override;
 	virtual void UnequipWeapon_Implementation() override;
 	virtual bool  TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser) override;
-	virtual void Attack_Implementation(AActor* AttackTarget) override;
 	virtual void  GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
 };

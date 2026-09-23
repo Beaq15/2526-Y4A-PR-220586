@@ -37,3 +37,12 @@ void AAIC_Enemy_Boss::SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnow
 		}
 	}
 }
+
+void AAIC_Enemy_Boss::HandleLostSight(AActor* Actor)
+{
+
+}
+
+void AAIC_Enemy_Boss::AttackCombo1(AActor* AttackTarget)
+{
+}

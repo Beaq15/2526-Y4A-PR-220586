@@ -548,3 +548,8 @@ void AAdvancedAICharacter::ReturnAttackToken_Implementation(int32 Amount)
 	DamageSystem->ReturnAttackToken(Amount);
 }
 
+void AAdvancedAICharacter::SetIsInterruptable_Implementation(bool Value)
+{
+	DamageSystem->isInterruptible = Value;
+}
+

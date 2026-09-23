@@ -67,13 +67,6 @@ AEnemyMelee::AEnemyMelee()
 // Combat API
 //----------------------------------------------------------------------
 
-void AEnemyMelee::Attack_Implementation(AActor* AttackTarget)
-{
-	Super::Attack_Implementation(AttackTarget);
-
-	//ShortRangeAttack(AttackTarget);
-}
-
 void AEnemyMelee::GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius)
 {
 	AttackRadius = 200.f;
@@ -439,4 +432,18 @@ void AEnemyMelee::AOEDamageActor(AActor* Actor)
 
 		IDamageableInterface::Execute_TakeDamage(Actor, DamageInfo, this);
 	}
+}
+
+void AEnemyMelee::GroundSmashAttack(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 25.f;
+	DamageInfo.DamageType = EDamageType::Explosion;
+
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.DamageInfo = DamageInfo;
+	AttackInfo.Montage = GroundSmashMontage;
+
+	AttackSystem->GroundSmash(AttackInfo, 300.f);
 }

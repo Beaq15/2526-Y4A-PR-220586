@@ -100,4 +100,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void ReturnAttackToken(int32 Amount);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void SetIsInterruptable(bool Value);
 };

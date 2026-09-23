@@ -37,22 +37,24 @@ void AEnemyMage::GetIdealRange_Implementation(float& AttackRadius, float& Defend
 
 void AEnemyMage::Attack_Implementation(AActor* AttackTarget)
 {
-	Super::Attack_Implementation(AttackTarget);
-	CachedAttackTarget = AttackTarget;
+	GroundSmashAttack(AttackTarget);
+	///*Super::Attack_Implementation(AttackTarget);
+	//CachedAttackTarget = AttackTarget;
 
-	if (FireMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(FireMontage, 1.0f);
-			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMage::OnMontageNotifyBegin);
+	//if (FireMontage)
+	//{
+	//	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	//	if (AnimInstance)
+	//	{
+	//		AnimInstance->Montage_Play(FireMontage, 1.0f);
+	//		AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMage::OnMontageNotifyBegin);
 
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyMage::OnAttackMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, FireMontage);
-		}
-	}
+	//		FOnMontageEnded EndDelegate;
+	//		EndDelegate.BindUObject(this, &AEnemyMage::OnAttackMontageEnd);
+	//		AnimInstance->Montage_SetEndDelegate(EndDelegate, FireMontage);
+	//	}
+	//}
+	//*/
 }
 
 //----------------------------------------------------------------------
@@ -189,6 +191,20 @@ void AEnemyMage::HealOverTime()
 			}
 		}
 	}
+}
+
+void AEnemyMage::GroundSmashAttack(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 25.f;
+	DamageInfo.DamageType = EDamageType::Explosion;
+
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.DamageInfo = DamageInfo;
+	AttackInfo.Montage = GroundSmashMontage;
+
+	AttackSystem->GroundSmash(AttackInfo, 300.f);
 }
 
 void AEnemyMage::HealEnded(UAnimMontage* Montage, bool bInterrupted)

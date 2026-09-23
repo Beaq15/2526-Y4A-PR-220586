@@ -18,4 +18,9 @@ public:
 	virtual void SetStateAsAttacking(AActor* AttackTarget, bool UseLastKnownAttackTarget) override;
 
 	bool bHasDoneOnce = false;
+
+	// Override to do nothing
+	virtual void HandleLostSight(AActor* Actor) override;
+
+	void AttackCombo1(AActor* AttackTarget);
 };

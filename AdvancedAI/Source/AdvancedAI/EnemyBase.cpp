@@ -256,3 +256,8 @@ void AEnemyBase::ReturnAttackToken_Implementation(int32 Amount)
 {
 	DamageSystem->ReturnAttackToken(Amount);
 }
+
+void AEnemyBase::SetIsInterruptable_Implementation(bool Value)
+{
+	DamageSystem->isInterruptible = Value;
+}

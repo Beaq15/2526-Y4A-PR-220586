@@ -93,6 +93,8 @@ public:
 	void LongRange(FAttackInfo AttackInfo, float Radius, float Length);
 	void Spinning(FAttackInfo AttackInfo, float Radius);
 
+	void BasicMageSpell(FAttackInfo AttackInfo);
+
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
 

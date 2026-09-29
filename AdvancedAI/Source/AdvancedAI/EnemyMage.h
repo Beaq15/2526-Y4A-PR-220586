@@ -26,15 +26,6 @@ class ADVANCEDAI_API AEnemyMage : public AEnemyBase
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> GroundSmashMontage;
 
-	//----------------------------------------------------------------------
-	// Private — Animation Callbacks
-	//----------------------------------------------------------------------
-	UFUNCTION()
-	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
-
-	UFUNCTION()
-	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
-
 	UPROPERTY()
 	TObjectPtr<AActor> CachedAttackTarget;
 

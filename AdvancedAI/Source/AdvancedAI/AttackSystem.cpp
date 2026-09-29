@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 //----------------------------------------------------------------------
 // Lifecycle
@@ -213,8 +214,6 @@ void UAttackSystem::Spinning(FAttackInfo AttackInfo, float Radius)
 
 	if (AttackInfo.Montage)
 	{
-		IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
-
 		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()))
 		{
 			if (UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance())
@@ -229,6 +228,31 @@ void UAttackSystem::Spinning(FAttackInfo AttackInfo, float Radius)
 			}
 		}
 	}
+		IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
+}
+
+void UAttackSystem::BasicMageSpell(FAttackInfo AttackInfo)
+{
+	CachedAttackInfo = AttackInfo;
+
+
+	if (AttackInfo.Montage)
+	{
+		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()))
+		{
+			if (UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance())
+			{
+				AnimInstance->Montage_Play(AttackInfo.Montage, 1.0f);
+
+				AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &UAttackSystem::OnMontageNotifyBegin);
+
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &UAttackSystem::OnAttackMontageEnd);
+				AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackInfo.Montage);
+			}
+		}
+	}
+	IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
 }
 
 void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
@@ -277,6 +301,18 @@ void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPoint
 	if (NotifyName == FName("AOESlash"))
 	{
 		AOEDamage(CachedAttackInfo.AttackTarget, CachedRadius, CachedDamageInfo);
+	}
+
+	if (NotifyName == "Fire")
+	{
+		ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+		FVector SocketLocation = OwnerCharacter->GetMesh()->GetSocketLocation(FName("RightHand"));
+		FVector SpawnLocation = SocketLocation + OwnerCharacter->GetActorForwardVector() * 50.f;
+
+		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, CachedAttackTarget->GetActorLocation());
+		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector::OneVector);
+
+		MagicSpell(SpawnTransform, CachedAttackInfo.AttackTarget, CachedAttackInfo.DamageInfo);
 	}
 }
 

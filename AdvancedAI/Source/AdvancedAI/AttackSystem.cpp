@@ -309,7 +309,7 @@ void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPoint
 		FVector SocketLocation = OwnerCharacter->GetMesh()->GetSocketLocation(FName("RightHand"));
 		FVector SpawnLocation = SocketLocation + OwnerCharacter->GetActorForwardVector() * 50.f;
 
-		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, CachedAttackTarget->GetActorLocation());
+		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, CachedAttackInfo.AttackTarget->GetActorLocation());
 		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector::OneVector);
 
 		MagicSpell(SpawnTransform, CachedAttackInfo.AttackTarget, CachedAttackInfo.DamageInfo);

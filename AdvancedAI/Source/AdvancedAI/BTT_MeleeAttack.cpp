@@ -53,6 +53,9 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
         case EMelee_Attacks::SpinningAttack:
             ControllerPawn->SpinningAttack(AttackTarget);
             break;
+        case EMelee_Attacks::GroundSmashAttack:
+            ControllerPawn->GroundSmashAttack(AttackTarget);
+            break;
         default:
             IEnemyInterface::Execute_Attack(ControllerPawn, AttackTarget);
             break;
@@ -114,6 +117,9 @@ void UBTT_MeleeAttack::OnMoveCompleted(FAIRequestID RequestID, EPathFollowingRes
         break;
     case EMelee_Attacks::SpinningAttack:
         if (MeleeEnemy) MeleeEnemy->SpinningAttack(CachedTarget);
+        break;
+    case EMelee_Attacks::GroundSmashAttack:
+        if (MeleeEnemy) MeleeEnemy->GroundSmashAttack(CachedTarget);
         break;
     default:
         IEnemyInterface::Execute_Attack(CachedEnemy, CachedTarget);

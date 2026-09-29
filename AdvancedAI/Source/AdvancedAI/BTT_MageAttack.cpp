@@ -3,7 +3,6 @@
 
 #include "BTT_MageAttack.h"
 #include "AIC_Enemy_Base.h"
-#include "EnemyMage.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UBTT_MageAttack::UBTT_MageAttack()
@@ -28,18 +27,47 @@ EBTNodeResult::Type UBTT_MageAttack::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 	AIController->SetFocus(AttackTarget);
 
 	AEnemyMage* Mage = Cast<AEnemyMage>(ControllerPawn);
+	if (!Mage) return EBTNodeResult::Failed;
 
-	Mage->OnTeleportEndCallback = [this, &OwnerComp, AIController, ControllerPawn, AttackTarget]()
+	CachedOwnerComp = &OwnerComp;
+
+	auto RunAttack = [this, Mage, AttackTarget]()
 		{
-			AIController->OnAttackEndDelegate.BindLambda([this, &OwnerComp]()
-				{
-					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-				});
-
-			IEnemyInterface::Execute_Attack(ControllerPawn, AttackTarget);
+			switch (AttackName)
+			{
+			case EMage_Attacks::GroundSmashAttack:
+				Mage->GroundSmashAttack(AttackTarget);
+				break;
+			case EMage_Attacks::BasicAttack:
+				IEnemyInterface::Execute_Attack(Mage, AttackTarget);
+				break;
+			default:
+				IEnemyInterface::Execute_Attack(Mage, AttackTarget);
+				break;
+			}
 		};
 
-	Mage->Teleport(BB->GetValueAsVector(TeleportLocationKey.SelectedKeyName));
+	AIController->OnAttackEndDelegate.BindLambda([this]()
+		{
+			if (CachedOwnerComp)
+			{
+				FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
+			}
+		});
+
+	if (bShouldTeleport)
+	{
+		Mage->OnTeleportEndCallback = [RunAttack]()
+			{
+				RunAttack();
+			};
+
+		Mage->Teleport(BB->GetValueAsVector(TeleportLocationKey.SelectedKeyName));
+	}
+	else
+	{
+		RunAttack();
+	}
 
 	return EBTNodeResult::InProgress;
 }

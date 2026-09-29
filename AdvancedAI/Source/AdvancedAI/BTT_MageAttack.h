@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
+#include "EnemyMage.h"
 #include "BTT_MageAttack.generated.h"
 
 /**
@@ -14,6 +15,9 @@ class ADVANCEDAI_API UBTT_MageAttack : public UBTTaskNode
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	EMage_Attacks AttackName;
+
 	UPROPERTY(EditAnywhere, Category = "Keys")
 	FBlackboardKeySelector AttackTargetKey;
 
@@ -22,6 +26,11 @@ class ADVANCEDAI_API UBTT_MageAttack : public UBTTaskNode
 
 	UPROPERTY(EditAnywhere)
 	int32 TokensNeeded;
+
+	UPROPERTY(EditAnywhere)
+	bool bShouldTeleport = true;
+
+	UBehaviorTreeComponent* CachedOwnerComp = nullptr;
 
 public:
 	UBTT_MageAttack();

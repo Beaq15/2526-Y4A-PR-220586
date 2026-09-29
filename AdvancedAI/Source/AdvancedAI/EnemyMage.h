@@ -9,6 +9,14 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealOverTimeEnd);
 
+UENUM(BlueprintType)
+enum class EMage_Attacks : uint8
+{
+	Default,
+	BasicAttack,
+	GroundSmashAttack
+};
+
 UCLASS()
 class ADVANCEDAI_API AEnemyMage : public AEnemyBase
 {

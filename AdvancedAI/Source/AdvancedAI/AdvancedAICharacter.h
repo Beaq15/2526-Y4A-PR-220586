@@ -131,8 +131,9 @@ public:
 	//----------------------------------------------------------------------
 	// Public — Team
 	//----------------------------------------------------------------------
-
-	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(0); }
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 TeamId = 0;
+	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(TeamId); }
 
 	//----------------------------------------------------------------------
 	// Public — State (read-only)
@@ -199,6 +200,9 @@ protected:
 
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
+
+	UFUNCTION()
+	void OnNotifyEndReceived(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload);
 
 	UFUNCTION()
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
@@ -271,6 +275,10 @@ protected:
 	TSubclassOf<UWidgetPlayerHUD> PlayerHUDWidgetClass;
 
 	
+	bool isWithingResumeComboWindow = false;
+	bool canResumeCombo = false;
+
+	void PerformMeleeAttack();
 
 	UFUNCTION()
 	void DisplayHUD();
@@ -288,5 +296,6 @@ protected:
 	virtual bool ReserveAttackToken_Implementation(int32 Amount) override;
 	virtual void ReturnAttackToken_Implementation(int32 Amount) override;
 	virtual void SetIsInterruptable_Implementation(bool Value) override;
+	virtual int GetTeamNumber_Implementation() override { return FGenericTeamId(TeamId); }
 };
 

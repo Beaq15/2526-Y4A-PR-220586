@@ -198,4 +198,5 @@ protected:
 	virtual bool ReserveAttackToken_Implementation(int32 Amount) override;
 	virtual void ReturnAttackToken_Implementation(int32 Amount) override;
 	virtual void SetIsInterruptable_Implementation(bool Value) override;
+	virtual int GetTeamNumber_Implementation() override { return FGenericTeamId(TeamId); }
 };

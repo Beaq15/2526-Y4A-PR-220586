@@ -27,6 +27,8 @@ class ADVANCEDAI_API UAttackSystem : public UActorComponent
 {
 	GENERATED_BODY()
 
+public:
+
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AProjectileBase> ProjectileClass;
 
@@ -36,7 +38,7 @@ class ADVANCEDAI_API UAttackSystem : public UActorComponent
 	void OnProjectileHit(AActor* OtherActor, FHitResult Hit);
 
 	UFUNCTION()
-	void AOEDamage(AActor* AttackTarget, float Radius, FDamageInfo DamageInfo);
+	void AOEDamage(float Radius, FDamageInfo DamageInfo);
 
 	UPROPERTY()
 	TObjectPtr<AAOE_Base> AOE;
@@ -52,9 +54,6 @@ class ADVANCEDAI_API UAttackSystem : public UActorComponent
 	void OnLand(const FHitResult& Hit);
 
 	UPROPERTY()
-	TObjectPtr<AActor> CachedAttackTarget;
-
-	UPROPERTY()
 	FDamageInfo CachedDamageInfo;
 
 	UPROPERTY()
@@ -68,7 +67,6 @@ class ADVANCEDAI_API UAttackSystem : public UActorComponent
 
 	UFUNCTION()
 	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
-public:	
 	//----------------------------------------------------------------------
 	// Public — Lifecycle
 	//----------------------------------------------------------------------

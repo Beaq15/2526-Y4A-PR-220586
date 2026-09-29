@@ -103,4 +103,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void SetIsInterruptable(bool Value);
+
+	UFUNCTION(BlueprintNativeEvent)
+	int GetTeamNumber();
 };

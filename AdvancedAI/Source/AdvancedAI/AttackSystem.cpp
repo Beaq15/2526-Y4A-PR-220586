@@ -260,7 +260,7 @@ void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPoint
 
 	if (NotifyName == FName("Smash"))
 	{
-		AOEDamage(CachedAttackInfo.AttackTarget, CachedRadius, CachedDamageInfo);
+		AOEDamage(CachedRadius, CachedDamageInfo);
 	}
 
 	if (NotifyName == FName("Slash"))
@@ -300,7 +300,7 @@ void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPoint
 
 	if (NotifyName == FName("AOESlash"))
 	{
-		AOEDamage(CachedAttackInfo.AttackTarget, CachedRadius, CachedDamageInfo);
+		AOEDamage(CachedRadius, CachedDamageInfo);
 	}
 
 	if (NotifyName == "Fire")
@@ -341,9 +341,8 @@ void UAttackSystem::OnProjectileHit(AActor* OtherActor, FHitResult Hit)
 	OnAttackEnd.Broadcast();
 }
 
-void UAttackSystem::AOEDamage(AActor* AttackTarget, float Radius, FDamageInfo DamageInfo)
+void UAttackSystem::AOEDamage(float Radius, FDamageInfo DamageInfo)
 {
-	CachedAttackTarget = AttackTarget;
 	CachedDamageInfo = DamageInfo;
 
 	const FTransform SpawnTransform(GetOwner()->GetActorRotation(), GetOwner()->GetActorLocation());
@@ -363,10 +362,8 @@ void UAttackSystem::AOEDamage(AActor* AttackTarget, float Radius, FDamageInfo Da
 
 void UAttackSystem::AOEDamageActor(AActor* Actor)
 {
-	if (Actor == CachedAttackTarget)
-	{
+	if (IDamageableInterface::Execute_GetTeamNumber(Actor) != IDamageableInterface::Execute_GetTeamNumber(GetOwner()))
 		IDamageableInterface::Execute_TakeDamage(Actor, CachedDamageInfo, GetOwner());
-	}
 }
 
 FVector UAttackSystem::CalculateFutureActorLocation(AActor* Actor, float Time)

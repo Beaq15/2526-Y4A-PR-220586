@@ -130,7 +130,7 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 		EnhancedInputComponent->BindAction(ChangeStateAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::ChangeStance);
 		EnhancedInputComponent->BindAction(MakeNoiseAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::MakeSomeNoise);
-		EnhancedInputComponent->BindAction(DoDamageAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::MeleeAttack);
+		EnhancedInputComponent->BindAction(DoDamageAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::MeleeAttack);
 
 		//EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::MagicStance);
 		//EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AAdvancedAICharacter::UnarmedStance);
@@ -213,16 +213,37 @@ void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 
 void AAdvancedAICharacter::MeleeAttack(const FInputActionValue& Value)
 {
-	if (Stance != EPlayerStance::Melee || bAttacking) return;
+	if (Stance != EPlayerStance::Melee) return;
+
+	if (!bAttacking)
+	{
+		PerformMeleeAttack();
+	}
+	else if (isWithingResumeComboWindow)
+	{
+		canResumeCombo = true;
+	}
+}
+
+void AAdvancedAICharacter::PerformMeleeAttack()
+{
 	bAttacking = true;
 
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	AnimInstance->Montage_Play(SwordSlashMontage, 1.0f);
-	AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+	if (!isWithingResumeComboWindow)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		AnimInstance->Montage_Play(SwordSlashMontage, 1.0f);
+		AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+		AnimInstance->OnPlayMontageNotifyEnd.AddDynamic(this, &AAdvancedAICharacter::OnNotifyEndReceived);
 
-	FOnMontageEnded EndDelegate;
-	EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
-	AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordSlashMontage);
+		FOnMontageEnded EndDelegate;
+		EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordSlashMontage);
+	}
+	else
+	{
+		canResumeCombo = true;
+	}
 }
 
 void AAdvancedAICharacter::MagicStance()
@@ -320,6 +341,20 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		}
 	}
 
+	if (NotifyName == FName("AOESlash"))
+	{
+		FDamageInfo DamageInfo;
+		DamageInfo.Amount = 30.f;
+		DamageInfo.DamageType = EDamageType::Explosion;
+		AttackSystem->AOEDamage(200.0f, DamageInfo);
+	}
+
+	if (NotifyName == "ResumeComboWindow")
+	{
+		isWithingResumeComboWindow = true;
+		canResumeCombo = false;
+	}
+
 	if (NotifyName == FName("HoldSword"))
 	{
 		if (!WeaponClass) return;
@@ -352,6 +387,17 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 	}
 }
 
+void AAdvancedAICharacter::OnNotifyEndReceived(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
+{
+	if (NotifyName == "ResumeComboWindow")
+	{
+		isWithingResumeComboWindow = false;
+
+		if (!canResumeCombo)
+			StopAnimMontage(SwordSlashMontage);
+	}
+}
+
 void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	bCanMove = true;
@@ -360,6 +406,7 @@ void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupt
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		EnableInput(PC);
 
+	isWithingResumeComboWindow = false;
 }
 
 void AAdvancedAICharacter::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser)

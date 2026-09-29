@@ -11,16 +11,17 @@ AHealingActor::AHealingActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	MeshComp->SetupAttachment(RootComponent);
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
-	CollisionComp->SetupAttachment(RootComponent);
+	RootComponent = CollisionComp;
 	CollisionComp->SetSphereRadius(75.f);
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	MeshComp->SetupAttachment(RootComponent);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 }
 
 // Called when the game starts or when spawned

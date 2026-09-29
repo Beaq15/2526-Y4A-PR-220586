@@ -18,7 +18,6 @@ float UWidgetHealthBar::GetPercent() const
 
 ESlateVisibility UWidgetHealthBar::GetHealthBarVisibility() const
 {
-
 	if (!DamageableActor)
 		return ESlateVisibility::Collapsed;
 

@@ -37,24 +37,22 @@ void AEnemyMage::GetIdealRange_Implementation(float& AttackRadius, float& Defend
 
 void AEnemyMage::Attack_Implementation(AActor* AttackTarget)
 {
-	GroundSmashAttack(AttackTarget);
-	///*Super::Attack_Implementation(AttackTarget);
-	//CachedAttackTarget = AttackTarget;
+	Super::Attack_Implementation(AttackTarget);
+	CachedAttackTarget = AttackTarget;
 
-	//if (FireMontage)
-	//{
-	//	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	//	if (AnimInstance)
-	//	{
-	//		AnimInstance->Montage_Play(FireMontage, 1.0f);
-	//		AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMage::OnMontageNotifyBegin);
+	if (FireMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(FireMontage, 1.0f);
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMage::OnMontageNotifyBegin);
 
-	//		FOnMontageEnded EndDelegate;
-	//		EndDelegate.BindUObject(this, &AEnemyMage::OnAttackMontageEnd);
-	//		AnimInstance->Montage_SetEndDelegate(EndDelegate, FireMontage);
-	//	}
-	//}
-	//*/
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyMage::OnAttackMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, FireMontage);
+		}
+	}
 }
 
 //----------------------------------------------------------------------

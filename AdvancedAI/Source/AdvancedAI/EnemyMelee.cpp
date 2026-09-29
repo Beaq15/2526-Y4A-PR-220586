@@ -11,56 +11,16 @@
 // Lifecycle
 //----------------------------------------------------------------------
 
-void AEnemyMelee::HandleSpinTimeLineUpdate(float Value)
-{
-	const float StartYaw = SpinStartRotation.Yaw;
-	const float TargetYaw = StartYaw + (360.f * NumberOfSpins);
-
-	const float NewYaw = FMath::Lerp(StartYaw, TargetYaw, Value);
-
-	const FRotator NewMeshRotation(
-		SpinStartRotation.Pitch,
-		NewYaw,
-		SpinStartRotation.Roll
-	);
-
-	GetMesh()->SetRelativeRotation(NewMeshRotation);
-}
-
 void AEnemyMelee::BeginPlay()
 {
 	Super::BeginPlay();
 
 	DamageSystem->OnBlocked.AddDynamic(this, &AEnemyMelee::OnBlocked);
-
-	SpinStartRotation = GetMesh()->GetRelativeRotation();
-
-	if (!SpinCurve)
-	{
-		SpinCurve = NewObject<UCurveFloat>(this, TEXT("SpinCurve"));
-
-		FKeyHandle Key0 = SpinCurve->FloatCurve.AddKey(0.0f, 0.0f);
-		FKeyHandle Key1 = SpinCurve->FloatCurve.AddKey(4.0f, 1.0f);
-
-		SpinCurve->FloatCurve.SetKeyInterpMode(Key0, RCIM_Linear);
-		SpinCurve->FloatCurve.SetKeyInterpMode(Key1, RCIM_Linear);
-	}
-
-	if (SpinCurve)
-	{
-		FOnTimelineFloat UpdateDelegate;
-		UpdateDelegate.BindUFunction(this, FName("HandleSpinTimeLineUpdate"));
-		SpinTimeline->AddInterpFloat(SpinCurve, UpdateDelegate, FName("SpinSAlpha"));
-	}
 }
 
 AEnemyMelee::AEnemyMelee()
 {
-	SpinTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("SpinTimeline"));
-	SpinTimeline->SetTimelineLength(4.0f);
-	SpinTimeline->SetTimelineLengthMode(TL_TimelineLength);
-	SpinTimeline->SetLooping(false);
-	SpinTimeline->SetTickGroup(TG_PrePhysics);
+
 }
 
 //----------------------------------------------------------------------
@@ -73,76 +33,48 @@ void AEnemyMelee::GetIdealRange_Implementation(float& AttackRadius, float& Defen
 	DefendRadius = 400.f;
 }
 
-void AEnemyMelee::ShortRangeAttack(AActor* AttackTarget)
+void AEnemyMelee::Attack_Implementation(AActor* AttackTarget)
 {
 	Super::Attack_Implementation(AttackTarget);
+}
 
-	CachedAttackTarget = AttackTarget;
+void AEnemyMelee::ShortRangeAttack(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 10.f;
+	DamageInfo.DamageType = EDamageType::Melee;
 
-	DamageSystem->isInterruptible = false;
-
-	if (AttackMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(AttackMontage, 1.0f);
-
-			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackMontage);
-		}
-	}
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.DamageInfo = DamageInfo;
+	AttackInfo.Montage = AttackMontage;
+	AttackSystem->ShortRange(AttackInfo, 20.f, 200.f);
 }
 
 void AEnemyMelee::LongRangeAttack(AActor* AttackTarget)
 {
-	Super::Attack_Implementation(AttackTarget);
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 10.f;
+	DamageInfo.DamageType = EDamageType::Melee;
 
-	CachedAttackTarget = AttackTarget;
-
-	DamageSystem->isInterruptible = true;
-
-	if (SwordJumpAttackMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(SwordJumpAttackMontage, 1.0f);
-
-			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordJumpAttackMontage);
-		}
-	}
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.DamageInfo = DamageInfo;
+	AttackInfo.Montage = SwordJumpAttackMontage;
+	AttackSystem->LongRange(AttackInfo, 20.f, 200.f);
 }
 
 void AEnemyMelee::SpinningAttack(AActor* AttackTarget)
 {
-	Super::Attack_Implementation(AttackTarget);
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 10.f;
+	DamageInfo.DamageType = EDamageType::Melee;
 
-	CachedAttackTarget = AttackTarget;
-
-	DamageSystem->isInterruptible = false;
-
-	if (SpinningAttackMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(SpinningAttackMontage, 1.0f);
-
-			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyMelee::OnAttackMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, SpinningAttackMontage);
-		}
-	}
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.DamageInfo = DamageInfo;
+	AttackInfo.Montage = SpinningAttackMontage;
+	AttackSystem->Spinning(AttackInfo, 300.f);
 }
 
 void AEnemyMelee::StartBlock()
@@ -228,8 +160,6 @@ void AEnemyMelee::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 	IEnemyInterface::Execute_AttackEnd(this, CachedAttackTarget);
 
 	DamageSystem->isInterruptible = true;
-
-	StopSpinning();
 }
 
 void AEnemyMelee::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
@@ -302,61 +232,6 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AEnemyMelee::OnMontageNotifyBegin);
 	}
 
-	if (NotifyName == FName("Slash"))
-	{
-		FVector Start = GetActorLocation();
-		FVector End = GetActorForwardVector() * 200.f + GetActorLocation();
-
-		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
-		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
-
-		TArray<AActor*> ActorsToIgnore;
-		ActorsToIgnore.Add(this);
-
-		TArray <FHitResult> OutHits;
-
-		bool bHit = UKismetSystemLibrary::SphereTraceMultiForObjects(GetWorld(), Start, End, 20.f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHits, true);
-
-		if (bHit)
-		{
-			FDamageInfo DamageInfo;
-			DamageInfo.Amount = 10.f;
-			DamageInfo.DamageType = EDamageType::Melee;
-			DamageInfo.DamageResponse = EDamageResponse::HitReaction;
-			DamageInfo.bCanBeBlocked = true;
-			DamageInfo.bCanBeParried = true;
-			
-			AttackSystem->DamageAllNonTeamMembers(DamageInfo, OutHits);
-		}
-	}
-
-	if (NotifyName == FName("Jump"))
-	{
-		const FVector PredictedLocation = CalculateFutureActorLocation(CachedAttackTarget, 1.0f);
-		const FVector EndPos(PredictedLocation.X, PredictedLocation.Y, PredictedLocation.Z);
-
-		FVector LaunchVelocity;
-		UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetActorLocation(), EndPos);
-
-		UKismetSystemLibrary::DrawDebugSphere(GetWorld(), EndPos, 100.f, 12, FLinearColor::White, 2.0f);
-
-		LaunchCharacter(LaunchVelocity, true, true);
-
-		LandedDelegate.AddDynamic(this, &AEnemyMelee::OnLand);
-	}
-
-	if (NotifyName == FName("Spin"))
-	{
-		SpinStartRotation = GetMesh()->GetRelativeRotation();
-
-		if (SpinTimeline && SpinCurve)
-		{
-			SpinTimeline->PlayFromStart();
-			ChaseAttackTarget(CachedAttackTarget);
-		}
-
-	}
-
 	if (NotifyName == FName("AOESlash"))
 	{
 		const FTransform SpawnTransform(GetActorRotation(), GetActorLocation());
@@ -373,52 +248,6 @@ void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNo
 			AOE->Trigger();
 		}
 	}
-}
-
-void AEnemyMelee::OnLand(const FHitResult& Hit)
-{
-	LandedDelegate.RemoveDynamic(this, &AEnemyMelee::OnLand);
-
-	GetCharacterMovement()->StopMovementImmediately();
-}
-
-FVector AEnemyMelee::CalculateFutureActorLocation(AActor* Actor, float Time)
-{
-	// l = v + t + currentLocation
-
-	if (!Actor)
-	{
-		return FVector::ZeroVector;
-	}
-	
-	const FVector Velocity = Actor->GetVelocity();
-	const FVector HorizontalVelocity(Velocity.X, Velocity.Y, 0.0f);
-
-	return Actor->GetActorLocation() + (HorizontalVelocity * Time);
-}
-
-void AEnemyMelee::ChaseAttackTarget(AActor* AttackTarget)
-{
-	if (AAIController* AIController = Cast<AAIController>(GetController()))
-	{
-		if (AttackTarget)
-			AIController->MoveToActor(AttackTarget, 200.f);
-
-		GetWorldTimerManager().SetTimer(ChaseAttackTimer, this, &AEnemyMelee::ChaseAttackTargetLoop, 0.1f, false);
-	}
-}
-
-void AEnemyMelee::ChaseAttackTargetLoop()
-{
-	if (bAttacking)
-		ChaseAttackTarget(CachedAttackTarget);
-}
-
-void AEnemyMelee::StopSpinning()
-{
-	SpinTimeline->Stop();
-
-	GetMesh()->SetRelativeRotation(SpinStartRotation);
 }
 
 void AEnemyMelee::AOEDamageActor(AActor* Actor)

@@ -24,7 +24,8 @@ enum class EMelee_Attacks : uint8
 	Default,
 	ShortRangeAttack,
 	LongRangeAttack,
-	SpinningAttack
+	SpinningAttack,
+	GroundSmashAttack
 };
 
 UCLASS()
@@ -90,6 +91,9 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	// Private — Block Helpers
 	//----------------------------------------------------------------------
 
+	UPROPERTY()
+	TObjectPtr<AActor> CachedAttackTarget;
+
 	void EndBlock();
 	void TryToBlock();
 	UFUNCTION()
@@ -99,20 +103,6 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 	float BlockChance = 0.5f;
 
 	FTimerHandle HoldBlockTimer;
-	FTimerHandle ChaseAttackTimer;
-
-	UPROPERTY()
-	TObjectPtr<AActor> CachedAttackTarget;
-
-	UFUNCTION()
-	void OnLand(const FHitResult& Hit);
-
-	FVector CalculateFutureActorLocation(AActor* Actor, float Time);
-
-	void ChaseAttackTarget(AActor* AttackTarget);
-	void ChaseAttackTargetLoop();
-
-	void StopSpinning();
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AActor> ActorToSpawn;
@@ -122,24 +112,6 @@ class ADVANCEDAI_API AEnemyMelee : public AEnemyBase
 
 	UFUNCTION()
 	void AOEDamageActor(AActor* Actor);
-
-	//----------------------------------------------------------------------
-	// Private — Spin Timeline
-	//----------------------------------------------------------------------
-
-	UPROPERTY()
-	TObjectPtr<UTimelineComponent> SpinTimeline;
-
-	UPROPERTY()
-	TObjectPtr<UCurveFloat> SpinCurve;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Timeline")
-	float NumberOfSpins = 12.f;
-
-	UFUNCTION()
-	void HandleSpinTimeLineUpdate(float Value);
-
-	FRotator SpinStartRotation;
 
 public:
 	// ----------------------------------------------------------------------
@@ -175,4 +147,5 @@ public:
 	virtual void UnequipWeapon_Implementation() override;
 	virtual bool  TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser) override;
 	virtual void  GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
+	virtual void Attack_Implementation(AActor* AttackTarget) override;
 };

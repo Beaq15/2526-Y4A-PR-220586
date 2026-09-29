@@ -118,7 +118,7 @@ void AEnemyBase::CleanupAfterDeath()
 
 		GetWorld()->SpawnActor<AActor>(
 			HealingActorClass,
-			FVector(GetActorLocation().X, GetActorLocation().Y, 145.0f),
+			FVector(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z - 50.f),
 			FRotator::ZeroRotator,
 			SpawnParams
 		);

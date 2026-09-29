@@ -17,8 +17,8 @@ struct FAttackInfo
 {
 	GENERATED_BODY()
 
-	AActor* AttackTarget;
-	UAnimMontage* Montage;
+	AActor* AttackTarget = nullptr;
+	UAnimMontage* Montage = nullptr;
 	FDamageInfo DamageInfo;
 };
 
@@ -47,6 +47,10 @@ class ADVANCEDAI_API UAttackSystem : public UActorComponent
 	UFUNCTION()
 	void AOEDamageActor(AActor* Actor);
 
+	FVector CalculateFutureActorLocation(AActor* Actor, float Time);
+
+	void OnLand(const FHitResult& Hit);
+
 	UPROPERTY()
 	TObjectPtr<AActor> CachedAttackTarget;
 
@@ -58,6 +62,9 @@ class ADVANCEDAI_API UAttackSystem : public UActorComponent
 
 	UPROPERTY()
 	float CachedRadius;
+
+	UPROPERTY()
+	float CachedLength;
 
 	UFUNCTION()
 	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
@@ -82,6 +89,9 @@ public:
 	AActor* DamageFirstNonTeamMember(FDamageInfo DamageInfo, TArray<FHitResult> Hits);
 
 	void GroundSmash(FAttackInfo AttackInfo, float Radius);
+	void ShortRange(FAttackInfo AttackInfo, float Radius, float Length);
+	void LongRange(FAttackInfo AttackInfo, float Radius, float Length);
+	void Spinning(FAttackInfo AttackInfo, float Radius);
 
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);

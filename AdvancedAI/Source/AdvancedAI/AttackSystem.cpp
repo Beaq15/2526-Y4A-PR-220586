@@ -7,6 +7,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "EnemyInterface.h"
 #include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 //----------------------------------------------------------------------
 // Lifecycle
@@ -128,8 +130,6 @@ AActor* UAttackSystem::DamageFirstNonTeamMember(FDamageInfo DamageInfo, TArray<F
 
 void UAttackSystem::GroundSmash(FAttackInfo AttackInfo, float Radius)
 {
-	//IEnemyInterface::Execute_Attack(GetOwner(), AttackInfo.AttackTarget);
-
 	CachedAttackInfo = AttackInfo;
 	CachedRadius = Radius;
 
@@ -154,15 +154,129 @@ void UAttackSystem::GroundSmash(FAttackInfo AttackInfo, float Radius)
 	IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
 }
 
+void UAttackSystem::ShortRange(FAttackInfo AttackInfo, float Radius, float Length)
+{
+	CachedAttackInfo = AttackInfo;
+	CachedRadius = Radius;
+	CachedLength = Length;
+
+	if (AttackInfo.Montage)
+	{
+		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()))
+		{
+			if (UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance())
+			{
+				AnimInstance->Montage_Play(AttackInfo.Montage, 1.0f);
+
+				AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &UAttackSystem::OnMontageNotifyBegin);
+
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &UAttackSystem::OnAttackMontageEnd);
+				AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackInfo.Montage);
+			}
+		}
+	}
+
+	IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
+}
+
+void UAttackSystem::LongRange(FAttackInfo AttackInfo, float Radius, float Length)
+{
+	CachedAttackInfo = AttackInfo;
+	CachedRadius = Radius;
+	CachedLength = Length;
+
+	if (AttackInfo.Montage)
+	{
+		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()))
+		{
+			if (UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance())
+			{
+				AnimInstance->Montage_Play(AttackInfo.Montage, 1.0f);
+
+				AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &UAttackSystem::OnMontageNotifyBegin);
+
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &UAttackSystem::OnAttackMontageEnd);
+				AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackInfo.Montage);
+			}
+		}
+	}
+
+	IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
+}
+
+void UAttackSystem::Spinning(FAttackInfo AttackInfo, float Radius)
+{
+	CachedAttackInfo = AttackInfo;
+	CachedRadius = Radius;
+
+	if (AttackInfo.Montage)
+	{
+		IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
+
+		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()))
+		{
+			if (UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance())
+			{
+				AnimInstance->Montage_Play(AttackInfo.Montage, 1.0f);
+
+				AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &UAttackSystem::OnMontageNotifyBegin);
+
+				FOnMontageEnded EndDelegate;
+				EndDelegate.BindUObject(this, &UAttackSystem::OnAttackMontageEnd);
+				AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackInfo.Montage);
+			}
+		}
+	}
+}
+
 void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
 {
 
 	if (NotifyName == FName("Smash"))
 	{
-		FDamageInfo DamageInfo;
-		DamageInfo.Amount = 25.f;
-		DamageInfo.DamageType = EDamageType::Explosion;
-		AOEDamage(CachedAttackInfo.AttackTarget, CachedRadius, DamageInfo);
+		AOEDamage(CachedAttackInfo.AttackTarget, CachedRadius, CachedDamageInfo);
+	}
+
+	if (NotifyName == FName("Slash"))
+	{
+		FVector Start = GetOwner()->GetActorLocation();
+		FVector End = GetOwner()->GetActorForwardVector() * CachedLength + GetOwner()->GetActorLocation();
+
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+		ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+
+		TArray<AActor*> ActorsToIgnore;
+		ActorsToIgnore.Add(GetOwner());
+
+		TArray <FHitResult> OutHits;
+
+		bool bHit = UKismetSystemLibrary::SphereTraceMultiForObjects(GetWorld(), Start, End, CachedRadius, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, OutHits, true);
+
+		if (bHit)
+			DamageAllNonTeamMembers(CachedAttackInfo.DamageInfo, OutHits);
+	}
+
+	if (NotifyName == FName("Jump"))
+	{
+		const FVector PredictedLocation = CalculateFutureActorLocation(CachedAttackInfo.AttackTarget, 1.0f);
+		const FVector EndPos(PredictedLocation.X, PredictedLocation.Y, PredictedLocation.Z);
+
+		FVector LaunchVelocity;
+		UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetOwner()->GetActorLocation(), EndPos);
+
+		UKismetSystemLibrary::DrawDebugSphere(GetWorld(), EndPos, 100.f, 12, FLinearColor::White, 2.0f);
+
+		ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+		OwnerCharacter->LaunchCharacter(LaunchVelocity, true, true);
+
+		OwnerCharacter->LandedDelegate.AddDynamic(this, &UAttackSystem::OnLand);
+	}
+
+	if (NotifyName == FName("AOESlash"))
+	{
+		AOEDamage(CachedAttackInfo.AttackTarget, CachedRadius, CachedDamageInfo);
 	}
 }
 
@@ -217,4 +331,27 @@ void UAttackSystem::AOEDamageActor(AActor* Actor)
 	{
 		IDamageableInterface::Execute_TakeDamage(Actor, CachedDamageInfo, GetOwner());
 	}
+}
+
+FVector UAttackSystem::CalculateFutureActorLocation(AActor* Actor, float Time)
+{
+	// l = v + t + currentLocation
+
+	if (!Actor)
+	{
+		return FVector::ZeroVector;
+	}
+
+	const FVector Velocity = Actor->GetVelocity();
+	const FVector HorizontalVelocity(Velocity.X, Velocity.Y, 0.0f);
+
+	return Actor->GetActorLocation() + (HorizontalVelocity * Time);
+}
+
+void UAttackSystem::OnLand(const FHitResult& Hit)
+{
+	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	OwnerCharacter->LandedDelegate.RemoveDynamic(this, &UAttackSystem::OnLand);
+
+	OwnerCharacter->GetCharacterMovement()->StopMovementImmediately();
 }

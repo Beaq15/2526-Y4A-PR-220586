@@ -10,6 +10,14 @@
 /**
  * 
  */
+
+UENUM(BlueprintType)
+enum class EBoss_Attacks : uint8
+{
+	Default,
+	Combo1
+};
+
 UCLASS()
 class ADVANCEDAI_API AEnemyBoss : public AEnemyBase
 {
@@ -25,4 +33,10 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TObjectPtr<UWidgetBossHealthBar> HealthBarWidget;
+
+	//----------------------------------------------------------------------
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> AxeComboMontage1;
+
+	void AttackCombo1(AActor* AttackTarget);
 };

@@ -48,6 +48,7 @@ void AEnemyBase::BeginPlay()
 	DamageSystem->OnDeath.AddUniqueDynamic(this, &AEnemyBase::OnDeath_Event);
 	DamageSystem->OnDamageResponse.AddUniqueDynamic(this, &AEnemyBase::OnHitResponse_Event);
 	KnowledgeComponent->OnFactAdded.AddUniqueDynamic(this, &AEnemyBase::OnFactReceived);
+	DamageSystem->OnBlocked.AddDynamic(this, &AEnemyBase::OnBlocked);
 }
 
 void AEnemyBase::Tick(float DeltaTime)
@@ -152,6 +153,55 @@ void AEnemyBase::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* Dam
 	}
 }
 
+void AEnemyBase::StartBlock()
+{
+	GetWorldTimerManager().ClearTimer(HoldBlockTimer);
+	HoldBlockTimer.Invalidate();
+
+	GetCharacterMovement()->StopMovementImmediately();
+	DamageSystem->isBlocking = true;
+
+	GetWorldTimerManager().SetTimer(HoldBlockTimer, this, &AEnemyBase::EndBlock, 2.0f, false);
+}
+
+void AEnemyBase::TryToBlock()
+{
+	if (FMath::FRand() <= BlockChance)
+		StartBlock();
+}
+
+void AEnemyBase::EndBlock()
+{
+	DamageSystem->isBlocking = false;
+
+	OnBlockEnd.Broadcast();
+}
+
+void AEnemyBase::OnBlocked(bool bCanBeParried, AActor* DamageCauser)
+{
+
+	GetWorldTimerManager().ClearTimer(HoldBlockTimer);
+	HoldBlockTimer.Invalidate();
+
+	if (SwordBlockHitMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(SwordBlockHitMontage, 1.0f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyBase::OnBlockHitMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordBlockHitMontage);
+		}
+	}
+}
+
+void AEnemyBase::OnBlockHitMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	EndBlock();
+}
+
 //----------------------------------------------------------------------
 // IEnemyInterface
 //----------------------------------------------------------------------
@@ -244,6 +294,9 @@ float AEnemyBase::Heal_Implementation(float Amount)
 
 bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
+	if (DamageInfo.bCanBeBlocked)
+		TryToBlock();
+
 	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
 }
 

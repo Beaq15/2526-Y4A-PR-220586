@@ -235,7 +235,6 @@ void UAttackSystem::BasicMageSpell(FAttackInfo AttackInfo)
 {
 	CachedAttackInfo = AttackInfo;
 
-
 	if (AttackInfo.Montage)
 	{
 		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()))

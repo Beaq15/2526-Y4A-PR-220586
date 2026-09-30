@@ -81,3 +81,19 @@ void AEnemyBoss::UnequipWeapon_Implementation()
 			OnDropWeaponEnd.Broadcast();
 		});
 }
+
+void AEnemyBoss::AttackCombo1(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 20.0f;
+	DamageInfo.DamageType = EDamageType::Melee;
+	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+	DamageInfo.bCanBeBlocked = true;
+
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.Montage = AxeComboMontage1;
+	AttackInfo.DamageInfo = DamageInfo;
+
+	AttackSystem->ShortRange(AttackInfo, 40.0f, 250.f);
+}

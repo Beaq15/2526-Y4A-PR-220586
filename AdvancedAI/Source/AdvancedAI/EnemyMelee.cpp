@@ -14,8 +14,6 @@
 void AEnemyMelee::BeginPlay()
 {
 	Super::BeginPlay();
-
-	DamageSystem->OnBlocked.AddDynamic(this, &AEnemyMelee::OnBlocked);
 }
 
 AEnemyMelee::AEnemyMelee()
@@ -77,31 +75,6 @@ void AEnemyMelee::SpinningAttack(AActor* AttackTarget)
 	AttackSystem->Spinning(AttackInfo, 300.f);
 }
 
-void AEnemyMelee::StartBlock()
-{
-	GetWorldTimerManager().ClearTimer(HoldBlockTimer);
-	HoldBlockTimer.Invalidate();
-
-	GetCharacterMovement()->StopMovementImmediately();
-	DamageSystem->isBlocking = true;
-	BlockingState = EBlockingState::Blocking;
-
-	GetWorldTimerManager().SetTimer(HoldBlockTimer, this, &AEnemyMelee::EndBlock, 2.0f, false);
-}
-
-void AEnemyMelee::TryToBlock()
-{
-	if (FMath::FRand() <= BlockChance)
-		StartBlock();
-}
-
-void AEnemyMelee::EndBlock()
-{
-	DamageSystem->isBlocking = false;
-	BlockingState = EBlockingState::None;
-
-	OnBlockEnd.Broadcast();
-}
 
 //----------------------------------------------------------------------
 // IEnemyInterface
@@ -143,14 +116,6 @@ void AEnemyMelee::UnequipWeapon_Implementation()
 	}
 }
 
-bool AEnemyMelee::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
-{
-	if (DamageInfo.bCanBeBlocked)
-		TryToBlock();
-
-	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
-}
-
 //----------------------------------------------------------------------
 // Animation Callbacks
 //----------------------------------------------------------------------
@@ -171,32 +136,6 @@ void AEnemyMelee::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted
 {
 	bIsWieldingWeapon = false;
 	OnDropWeaponEnd.Broadcast();
-}
-
-void AEnemyMelee::OnBlocked(bool bCanBeParried, AActor* DamageCauser)
-{
-	BlockingState = EBlockingState::BlockedSuccessfully;
-
-	GetWorldTimerManager().ClearTimer(HoldBlockTimer);
-	HoldBlockTimer.Invalidate();
-
-	if (SwordBlockHitMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->Montage_Play(SwordBlockHitMontage, 1.0f);
-
-			FOnMontageEnded EndDelegate;
-			EndDelegate.BindUObject(this, &AEnemyMelee::OnBlockHitMontageEnd);
-			AnimInstance->Montage_SetEndDelegate(EndDelegate, SwordBlockHitMontage);
-		}
-	}
-}
-
-void AEnemyMelee::OnBlockHitMontageEnd(UAnimMontage* Montage, bool bInterrupted)
-{
-	EndBlock();
 }
 
 void AEnemyMelee::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)

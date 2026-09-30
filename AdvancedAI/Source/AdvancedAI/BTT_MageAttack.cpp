@@ -8,6 +8,7 @@
 UBTT_MageAttack::UBTT_MageAttack()
 {
 	NodeName = "Mage Attack";
+	bCreateNodeInstance = true;
 }
 
 EBTNodeResult::Type UBTT_MageAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

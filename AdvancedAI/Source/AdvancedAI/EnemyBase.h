@@ -21,6 +21,8 @@ class AAIC_Enemy_Base;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAttackEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponEquippedEnd);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponUnequipedEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBlockEnd);
+
 
 UCLASS()
 class ADVANCEDAI_API AEnemyBase : public ACharacter, public IEnemyInterface, public IDamageableInterface, public IGenericTeamAgentInterface
@@ -59,6 +61,9 @@ public:
 	UPROPERTY(VisibleANywhere, BlueprintReadOnly, Category = "Combat")
 	bool bIsStrafing = false;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnBlockEnd OnBlockEnd;
+
 	UPROPERTY()
 	EAIState State = EAIState::Passive;
 
@@ -82,6 +87,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	uint8 TeamId = 1;
 	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId(TeamId); }
+
+	void StartBlock();
+	void EndBlock();
+	void TryToBlock();
+	UFUNCTION()
+	void OnBlocked(bool bCanBeParried, AActor* DamageCauser);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SwordBlockHitMontage;
+
+	UFUNCTION()
+	void OnBlockHitMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float BlockChance = 0.5f;
+
+	FTimerHandle HoldBlockTimer;
 
 protected:
 	//----------------------------------------------------------------------

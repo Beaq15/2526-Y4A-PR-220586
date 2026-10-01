@@ -81,6 +81,10 @@ class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterfac
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> SwordBlockAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> TeleportAction;
+
+
 	//----------------------------------------------------------------------
 	// Private — State
 	//----------------------------------------------------------------------
@@ -282,6 +286,50 @@ protected:
 
 	UFUNCTION()
 	void DisplayHUD();
+
+	//----------------------------------------------------------------------
+	// Protected — Teleport
+	//----------------------------------------------------------------------
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teleport")
+	float TeleportDistance = 800.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teleport")
+	float TeleportSpeed = 6000.f; 
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teleport")
+	float TeleportCooldown = 0.5f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	TObjectPtr<UParticleSystem> P_GideonBurde;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	TObjectPtr<UParticleSystem> P_GideonMeteor;
+
+	UPROPERTY()
+	TObjectPtr<UParticleSystemComponent> TeleportBodyEffect;
+
+	UPROPERTY()
+	TObjectPtr<UParticleSystemComponent> TeleportTrailEffect;
+
+	FVector TeleportDestination = FVector::ZeroVector;
+
+	ECollisionResponse SavedPawnResponse = ECR_Block;
+
+	UFUNCTION()
+	void Teleport(const FInputActionValue& Value);
+
+	bool bIsTeleporting = false;
+	bool bCanTeleport = true;
+
+	UFUNCTION()
+	void TeleportEnd();
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	FTimerHandle TeleportMoveTimerHandle;
+	FTimerHandle TeleportCooldownHandle;
+
 	
 	//----------------------------------------------------------------------
 	// Protected — IDamageableInterface

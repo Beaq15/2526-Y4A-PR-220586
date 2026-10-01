@@ -16,6 +16,7 @@
 #include "DrawDebugHelpers.h"
 #include "Components/PawnNoiseEmitterComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Particles/ParticleSystemComponent.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -137,6 +138,8 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 		EnhancedInputComponent->BindAction(SwordBlockAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::StartBlock);
 		EnhancedInputComponent->BindAction(SwordBlockAction, ETriggerEvent::Completed, this, &AAdvancedAICharacter::EndBlock);
+
+		EnhancedInputComponent->BindAction(TeleportAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::Teleport);
 	}
 	else
 	{
@@ -150,7 +153,7 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 void AAdvancedAICharacter::Move(const FInputActionValue& Value)
 {
-	if (!bCanMove || !Controller)
+	if (!bCanMove || !Controller || bIsTeleporting)
 		return;
 	
 	const FVector2D MovementVector = Value.Get<FVector2D>();
@@ -177,6 +180,7 @@ void AAdvancedAICharacter::Look(const FInputActionValue& Value)
 
 void AAdvancedAICharacter::ChangeStance(const FInputActionValue& Value)
 {
+	if (bIsTeleporting) return;
 	bPressed = !bPressed;
 
 	if (bPressed)
@@ -193,6 +197,7 @@ void AAdvancedAICharacter::MakeSomeNoise(const FInputActionValue& Value)
 
 void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 {
+	if (bIsTeleporting) return;
 	if (Stance != EPlayerStance::Magic || bAttacking) return;
 
 	bCanMove = false;
@@ -214,6 +219,7 @@ void AAdvancedAICharacter::DoDamage(const FInputActionValue& Value)
 void AAdvancedAICharacter::MeleeAttack(const FInputActionValue& Value)
 {
 	if (Stance != EPlayerStance::Melee) return;
+	if (bIsTeleporting) return;
 
 	if (!bAttacking)
 	{
@@ -422,6 +428,11 @@ void AAdvancedAICharacter::OnHitResponse_Event(EDamageResponse DamageResponse, A
 
 void AAdvancedAICharacter::OnDeath_Event()
 {
+	if (bIsTeleporting)
+	{
+		GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
+		TeleportEnd();
+	}
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
@@ -481,6 +492,7 @@ void AAdvancedAICharacter::UnequipWeapon()
 
 void AAdvancedAICharacter::StartBlock(const FInputActionValue& Value)
 {
+	if (bIsTeleporting) return;
 	if (Stance != EPlayerStance::Melee || DamageSystem->isBlocking) return;
 
 	DamageSystem->isBlocking = true;
@@ -564,6 +576,8 @@ float AAdvancedAICharacter::Heal_Implementation(float Amount)
 
 bool AAdvancedAICharacter::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
+	if (bIsTeleporting) return false;
+
 	if (DamageSystem->isBlocking && DamageCauser)
 	{
 		FVector ToDamageCauser = (DamageCauser->GetActorLocation() - GetActorLocation()).GetSafeNormal();
@@ -600,3 +614,96 @@ void AAdvancedAICharacter::SetIsInterruptable_Implementation(bool Value)
 	DamageSystem->isInterruptible = Value;
 }
 
+//----------------------------------------------------------------------
+// Private — Teleport
+//----------------------------------------------------------------------
+
+void AAdvancedAICharacter::Teleport(const FInputActionValue& Value)
+{
+	if (bIsTeleporting || !bCanTeleport || DamageSystem->isDead || DamageSystem->isBlocking || bAttacking) return;
+
+	FVector Direction = GetLastMovementInputVector();
+	Direction.Z = 0.f;
+	if (!Direction.Normalize())
+	{
+		Direction = FRotator(0.f, GetControlRotation().Yaw, 0.f).Vector();
+	}
+
+	const FVector Start = GetActorLocation();
+	FVector End = Start + Direction * TeleportDistance;
+
+	const UCapsuleComponent* Capsule = GetCapsuleComponent();
+	const FCollisionShape Shape = FCollisionShape::MakeCapsule(
+		Capsule->GetScaledCapsuleRadius(), Capsule->GetScaledCapsuleHalfHeight());
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(PlayerTeleport), false, this);
+	FHitResult Hit;
+	if (GetWorld()->SweepSingleByChannel(Hit, Start, End, FQuat::Identity, ECC_Pawn, Shape, Params))
+	{
+		End = Hit.Location - Direction * 10.f;
+	}
+
+	if (FVector::DistSquared(Start, End) < FMath::Square(100.f)) return;
+
+	bIsTeleporting = true;
+	bCanTeleport = false;
+	TeleportDestination = End;
+
+	GetMesh()->SetVisibility(false, true);
+	SavedPawnResponse = Capsule->GetCollisionResponseToChannel(ECC_Pawn);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+
+	TeleportBodyEffect = UGameplayStatics::SpawnEmitterAttached(
+		P_GideonBurde, GetMesh(), FName("Spine1"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
+
+	TeleportTrailEffect = UGameplayStatics::SpawnEmitterAttached(
+		P_GideonMeteor, GetMesh(), FName("Spine1"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
+
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		if (HitReactionMontage)
+			AnimInstance->Montage_Stop(0.1f, HitReactionMontage);
+	}
+
+	GetWorldTimerManager().SetTimer(TeleportMoveTimerHandle, [this]()
+		{
+			const FVector Current = GetActorLocation();
+			const float Remaining = FVector::Dist(Current, TeleportDestination);
+			const float Step = TeleportSpeed * GetWorld()->GetDeltaSeconds();
+
+			if (Remaining <= Step)
+			{
+				SetActorLocation(TeleportDestination, false, nullptr, ETeleportType::TeleportPhysics);
+				GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
+				TeleportEnd();
+				return;
+			}
+
+			const FVector Dir = (TeleportDestination - Current).GetSafeNormal();
+			SetActorLocation(Current + Dir * Step, false, nullptr, ETeleportType::TeleportPhysics);
+		}, 0.016f, true);
+}
+
+void AAdvancedAICharacter::TeleportEnd()
+{
+	GetMesh()->SetVisibility(true, true);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, SavedPawnResponse);
+	GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+	bIsTeleporting = false;
+
+	GetWorldTimerManager().SetTimer(TeleportCooldownHandle, [this]() { bCanTeleport = true; }, TeleportCooldown, false);
+
+	if (TeleportBodyEffect.Get()) { TeleportBodyEffect->DestroyComponent(); TeleportBodyEffect = nullptr; }
+	if (TeleportTrailEffect.Get()) { TeleportTrailEffect->DestroyComponent(); TeleportTrailEffect = nullptr; }
+}
+
+
+void AAdvancedAICharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
+	GetWorldTimerManager().ClearTimer(TeleportCooldownHandle);
+	Super::EndPlay(EndPlayReason);
+}

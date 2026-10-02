@@ -67,6 +67,9 @@ public:
 
 	UFUNCTION()
 	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnProjectileImpact_Event(AActor* OtherActor, FHitResult Hit);
 	//----------------------------------------------------------------------
 	// Public — Lifecycle
 	//----------------------------------------------------------------------
@@ -86,10 +89,8 @@ public:
 	TArray<AActor*> DamageAllNonTeamMembers(FDamageInfo DamageInfo, TArray<FHitResult> Hits);
 	AActor* DamageFirstNonTeamMember(FDamageInfo DamageInfo, TArray<FHitResult> Hits);
 
-	void GroundSmash(FAttackInfo AttackInfo, float Radius);
-	void ShortRange(FAttackInfo AttackInfo, float Radius, float Length);
-	void LongRange(FAttackInfo AttackInfo, float Radius, float Length);
-	void Spinning(FAttackInfo AttackInfo, float Radius);
+	void AroundAttack(FAttackInfo AttackInfo, float Radius);
+	void RangeAttack(FAttackInfo AttackInfo, float Radius, float Length);
 
 	void BasicMageSpell(FAttackInfo AttackInfo);
 

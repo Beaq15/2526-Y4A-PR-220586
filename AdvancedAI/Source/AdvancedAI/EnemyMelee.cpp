@@ -46,7 +46,7 @@ void AEnemyMelee::ShortRangeAttack(AActor* AttackTarget)
 	AttackInfo.AttackTarget = AttackTarget;
 	AttackInfo.DamageInfo = DamageInfo;
 	AttackInfo.Montage = AttackMontage;
-	AttackSystem->ShortRange(AttackInfo, 20.f, 200.f);
+	AttackSystem->RangeAttack(AttackInfo, 20.f, 200.f);
 }
 
 void AEnemyMelee::LongRangeAttack(AActor* AttackTarget)
@@ -59,7 +59,7 @@ void AEnemyMelee::LongRangeAttack(AActor* AttackTarget)
 	AttackInfo.AttackTarget = AttackTarget;
 	AttackInfo.DamageInfo = DamageInfo;
 	AttackInfo.Montage = SwordJumpAttackMontage;
-	AttackSystem->LongRange(AttackInfo, 20.f, 200.f);
+	AttackSystem->RangeAttack(AttackInfo, 20.f, 200.f);
 }
 
 void AEnemyMelee::SpinningAttack(AActor* AttackTarget)
@@ -72,7 +72,7 @@ void AEnemyMelee::SpinningAttack(AActor* AttackTarget)
 	AttackInfo.AttackTarget = AttackTarget;
 	AttackInfo.DamageInfo = DamageInfo;
 	AttackInfo.Montage = SpinningAttackMontage;
-	AttackSystem->Spinning(AttackInfo, 300.f);
+	AttackSystem->AroundAttack(AttackInfo, 300.f);
 }
 
 
@@ -213,5 +213,5 @@ void AEnemyMelee::GroundSmashAttack(AActor* AttackTarget)
 	AttackInfo.DamageInfo = DamageInfo;
 	AttackInfo.Montage = GroundSmashMontage;
 
-	AttackSystem->GroundSmash(AttackInfo, 300.f);
+	AttackSystem->AroundAttack(AttackInfo, 300.f);
 }

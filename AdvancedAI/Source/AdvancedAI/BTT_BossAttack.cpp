@@ -43,5 +43,11 @@ void UBTT_BossAttack::AttackBasedOnName(AEnemyBoss* BossRef)
 	case EBoss_Attacks::Combo1:
 		BossRef->AttackCombo1(AttackTarget);
 		break;
+	case EBoss_Attacks::Combo2:
+		BossRef->AttackCombo2(AttackTarget);
+		break;
+	case EBoss_Attacks::ThrowAxe:
+		BossRef->ThrowAxe(AttackTarget);
+		break;
 	}
 }

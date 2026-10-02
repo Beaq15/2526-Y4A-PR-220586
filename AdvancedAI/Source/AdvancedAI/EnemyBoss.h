@@ -14,8 +14,9 @@
 UENUM(BlueprintType)
 enum class EBoss_Attacks : uint8
 {
-	Default,
-	Combo1
+	Combo1,
+	Combo2,
+	ThrowAxe
 };
 
 UCLASS()
@@ -31,6 +32,8 @@ public:
 	virtual void EquipWeapon_Implementation()   override;
 	virtual void UnequipWeapon_Implementation() override;
 
+	void ThrowAxe(AActor* AttackTarget);
+
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TObjectPtr<UWidgetBossHealthBar> HealthBarWidget;
 
@@ -38,7 +41,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AxeComboMontage1;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> AxeComboMontage2;
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> ThrowAxeMontage;
+
 	void AttackCombo1(AActor* AttackTarget);
+	void AttackCombo2(AActor* AttackTarget);
 
 	UFUNCTION()
 	void Teleport(FVector Location, AActor* AttackTarget);

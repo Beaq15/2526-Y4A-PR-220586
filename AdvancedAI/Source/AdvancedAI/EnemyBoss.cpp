@@ -85,6 +85,20 @@ void AEnemyBoss::UnequipWeapon_Implementation()
 		});
 }
 
+void AEnemyBoss::ThrowAxe(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 20.0f;
+	DamageInfo.DamageType = EDamageType::Melee;
+	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+	DamageInfo.bCanBeBlocked = true;
+
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.Montage = ThrowAxeMontage;
+	AttackSystem->RangeAttack(AttackInfo, 40.0f, 220.f);
+}
+
 void AEnemyBoss::AttackCombo1(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
@@ -98,22 +112,29 @@ void AEnemyBoss::AttackCombo1(AActor* AttackTarget)
 	AttackInfo.Montage = AxeComboMontage1;
 	AttackInfo.DamageInfo = DamageInfo;
 
-	AttackSystem->ShortRange(AttackInfo, 40.0f, 250.f);
+	AttackSystem->RangeAttack(AttackInfo, 40.0f, 220.f);
+}
+
+void AEnemyBoss::AttackCombo2(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 15.0f;
+	DamageInfo.DamageType = EDamageType::Melee;
+	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+	DamageInfo.bCanBeBlocked = true;
+
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.Montage = AxeComboMontage2;
+	AttackInfo.DamageInfo = DamageInfo;
+
+	AttackSystem->RangeAttack(AttackInfo, 40.0f, 220.f);
 }
 
 void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)
 {
 	GetMesh()->SetVisibility(false, true);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
-
-	const FName SocketName(TEXT("Spine_01"));
-
-	UE_LOG(LogTemp, Warning, TEXT("[BossTP] Mesh=%s | Socket '%s' exists=%d | BodyFX=%s | TrailFX=%s"),
-		*GetNameSafe(GetMesh()->GetSkeletalMeshAsset()),
-		*SocketName.ToString(),
-		GetMesh()->DoesSocketExist(SocketName),
-		*GetNameSafe(P_GideonBurde),
-		*GetNameSafe(P_GideonMeteor));
 
 	TeleportBodyEffect = UGameplayStatics::SpawnEmitterAttached(
 		P_GideonBurde, GetMesh(), FName("Spine_01"), FVector::ZeroVector, FRotator::ZeroRotator, FVector(1.25f), EAttachLocation::KeepRelativeOffset, false);
@@ -132,27 +153,6 @@ void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)
 	}
 
 	CachedTeleportLocation = Location;
-
-	auto LogFX = [this](const TCHAR* Label, UParticleSystemComponent* FX)
-		{
-			if (!FX)
-			{
-				UE_LOG(LogTemp, Error, TEXT("[BossTP] %s: spawn returned NULL"), Label);
-				return;
-			}
-			UE_LOG(LogTemp, Warning, TEXT("[BossTP] %s: loc=%s | actorLoc=%s | visible=%d | active=%d | scale=%s | template=%s"),
-				Label,
-				*FX->GetComponentLocation().ToString(),
-				*GetActorLocation().ToString(),
-				FX->IsVisible(),
-				FX->IsActive(),
-				*FX->GetComponentScale().ToString(),
-				*GetNameSafe(FX->Template));
-			DrawDebugSphere(GetWorld(), FX->GetComponentLocation(), 40.f, 12, FColor::Red, false, 3.f);
-		};
-
-	LogFX(TEXT("Body"), TeleportBodyEffect);
-	LogFX(TEXT("Trail"), TeleportTrailEffect);
 
 	GetWorldTimerManager().SetTimer(TeleportMoveTimerHandle, [this]()
 		{

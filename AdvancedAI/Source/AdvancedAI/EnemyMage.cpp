@@ -168,7 +168,7 @@ void AEnemyMage::GroundSmashAttack(AActor* AttackTarget)
 	AttackInfo.DamageInfo = DamageInfo;
 	AttackInfo.Montage = GroundSmashMontage;
 
-	AttackSystem->GroundSmash(AttackInfo, 300.f);
+	AttackSystem->AroundAttack(AttackInfo, 300.f);
 }
 
 void AEnemyMage::HealEnded(UAnimMontage* Montage, bool bInterrupted)

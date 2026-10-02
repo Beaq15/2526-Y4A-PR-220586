@@ -105,6 +105,9 @@ public:
 
 	FTimerHandle HoldBlockTimer;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TObjectPtr<AActor> WeaponActor;
+
 protected:
 	//----------------------------------------------------------------------
 	// Protected — Lifecycle
@@ -154,8 +157,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<AAIC_Enemy_Base> AICEnemyBase;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TObjectPtr<AActor> WeaponActor;
+	
 
 	UPROPERTY()
 	TObjectPtr<AActor> CachedDamageCauser;

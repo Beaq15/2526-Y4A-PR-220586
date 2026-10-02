@@ -10,7 +10,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-
+#include "EnemyBase.h"
+#include "AIC_Enemy_Base.h"
+#include "DamageableInterface.h" 
 //----------------------------------------------------------------------
 // Lifecycle
 //----------------------------------------------------------------------
@@ -129,7 +131,7 @@ AActor* UAttackSystem::DamageFirstNonTeamMember(FDamageInfo DamageInfo, TArray<F
 	return nullptr;
 }
 
-void UAttackSystem::GroundSmash(FAttackInfo AttackInfo, float Radius)
+void UAttackSystem::AroundAttack(FAttackInfo AttackInfo, float Radius)
 {
 	CachedAttackInfo = AttackInfo;
 	CachedRadius = Radius;
@@ -155,7 +157,7 @@ void UAttackSystem::GroundSmash(FAttackInfo AttackInfo, float Radius)
 	IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
 }
 
-void UAttackSystem::ShortRange(FAttackInfo AttackInfo, float Radius, float Length)
+void UAttackSystem::RangeAttack(FAttackInfo AttackInfo, float Radius, float Length)
 {
 	CachedAttackInfo = AttackInfo;
 	CachedRadius = Radius;
@@ -179,56 +181,6 @@ void UAttackSystem::ShortRange(FAttackInfo AttackInfo, float Radius, float Lengt
 	}
 
 	IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
-}
-
-void UAttackSystem::LongRange(FAttackInfo AttackInfo, float Radius, float Length)
-{
-	CachedAttackInfo = AttackInfo;
-	CachedRadius = Radius;
-	CachedLength = Length;
-
-	if (AttackInfo.Montage)
-	{
-		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()))
-		{
-			if (UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance())
-			{
-				AnimInstance->Montage_Play(AttackInfo.Montage, 1.0f);
-
-				AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &UAttackSystem::OnMontageNotifyBegin);
-
-				FOnMontageEnded EndDelegate;
-				EndDelegate.BindUObject(this, &UAttackSystem::OnAttackMontageEnd);
-				AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackInfo.Montage);
-			}
-		}
-	}
-
-	IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
-}
-
-void UAttackSystem::Spinning(FAttackInfo AttackInfo, float Radius)
-{
-	CachedAttackInfo = AttackInfo;
-	CachedRadius = Radius;
-
-	if (AttackInfo.Montage)
-	{
-		if (ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner()))
-		{
-			if (UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance())
-			{
-				AnimInstance->Montage_Play(AttackInfo.Montage, 1.0f);
-
-				AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &UAttackSystem::OnMontageNotifyBegin);
-
-				FOnMontageEnded EndDelegate;
-				EndDelegate.BindUObject(this, &UAttackSystem::OnAttackMontageEnd);
-				AnimInstance->Montage_SetEndDelegate(EndDelegate, AttackInfo.Montage);
-			}
-		}
-	}
-		IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), false);
 }
 
 void UAttackSystem::BasicMageSpell(FAttackInfo AttackInfo)
@@ -313,6 +265,69 @@ void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPoint
 
 		MagicSpell(SpawnTransform, CachedAttackInfo.AttackTarget, CachedAttackInfo.DamageInfo);
 	}
+
+	if (NotifyName == "Throw")
+	{
+		
+		if (!ProjectileClass) return;
+
+		AEnemyBase* Enemy = Cast<AEnemyBase>(GetOwner());
+		if (!Enemy) return;
+		
+		if (Enemy->WeaponActor)
+		{
+			Enemy->WeaponActor->SetActorHiddenInGame(true);
+		}
+
+		USkeletalMeshComponent* EnemyMesh = Enemy->GetMesh();
+		if (!EnemyMesh) return;
+
+		const FVector SpawnLocation = EnemyMesh->GetSocketLocation(FName("hand_r"));
+
+		AActor* TargetActor = nullptr;
+		if (AAIC_Enemy_Base* AIC = Cast<AAIC_Enemy_Base>(Enemy->GetController()))
+		{
+			TargetActor = AIC->AttackTargetActor;
+		}
+
+		FRotator SpawnRotation = Enemy->GetActorRotation();
+		if (TargetActor)
+		{
+			SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, TargetActor->GetActorLocation());
+		}
+
+
+		const FTransform SpawnTransform(SpawnRotation, SpawnLocation);
+
+		AProjectileBase* Axe = GetWorld()->SpawnActorDeferred<AProjectileBase>(ProjectileClass, SpawnTransform, Enemy, Enemy, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+
+		if (Axe)
+		{
+			Axe->Speed = 4000.f;
+			Axe->Gravity = 0.f;
+			Axe->Target = TargetActor;
+			Axe->bIsHoming = true;
+
+			Axe->OnProjectileImpact.AddUniqueDynamic(this, &UAttackSystem::OnProjectileImpact_Event);
+
+			Axe->FinishSpawning(SpawnTransform);
+		}
+	}
+}
+
+void UAttackSystem::OnProjectileImpact_Event(AActor* OtherActor, FHitResult Hit)
+{
+	if (!OtherActor || OtherActor == GetOwner()) return;
+
+	if (!OtherActor->Implements<UDamageableInterface>()) return;
+
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 20.f;
+	DamageInfo.DamageType = EDamageType::Projectile;
+	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+	DamageInfo.bCanBeBlocked = true;
+
+	IDamageableInterface::Execute_TakeDamage(OtherActor, DamageInfo, GetOwner());
 }
 
 void UAttackSystem::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
@@ -320,6 +335,14 @@ void UAttackSystem::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 	IEnemyInterface::Execute_AttackEnd(GetOwner(), CachedAttackInfo.AttackTarget);
 
 	IDamageableInterface::Execute_SetIsInterruptable(GetOwner(), true);
+
+	AEnemyBase* Enemy = Cast<AEnemyBase>(GetOwner());
+	if (!Enemy) return;
+
+	if (Enemy->WeaponActor)
+	{
+		Enemy->WeaponActor->SetActorHiddenInGame(false);
+	}
 }
 
 //----------------------------------------------------------------------

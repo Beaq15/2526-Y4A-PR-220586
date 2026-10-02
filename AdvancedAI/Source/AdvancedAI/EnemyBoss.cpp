@@ -3,6 +3,9 @@
 
 #include "EnemyBoss.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 
 AEnemyBoss::AEnemyBoss()
 {
@@ -96,4 +99,67 @@ void AEnemyBoss::AttackCombo1(AActor* AttackTarget)
 	AttackInfo.DamageInfo = DamageInfo;
 
 	AttackSystem->ShortRange(AttackInfo, 40.0f, 250.f);
+}
+
+void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)
+{
+	GetMesh()->SetVisibility(false, true);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+
+	TeleportBodyEffect = UGameplayStatics::SpawnEmitterAttached(
+		P_GideonBurde, GetMesh(), FName("Spine_01"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
+
+	TeleportTrailEffect = UGameplayStatics::SpawnEmitterAttached(
+		P_GideonMeteor, GetMesh(), FName("Spine_01"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance)
+		AnimInstance->StopAllMontages(0.25f);
+
+	if (AttackTarget)
+	{
+		const FVector ToBoss = (GetActorLocation() - AttackTarget->GetActorLocation()).GetSafeNormal();
+		Location = AttackTarget->GetActorLocation() + ToBoss * 150.f;
+	}
+
+	CachedTeleportLocation = Location;
+
+	GetWorldTimerManager().SetTimer(TeleportMoveTimerHandle, [this]()
+		{
+			float Distance = FVector::Dist(GetActorLocation(), CachedTeleportLocation);
+
+			if (Distance <= 50.f)
+			{
+				GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
+				TeleportEnd();
+				UE_LOG(LogTemp, Warning, TEXT("Dist %f"), Distance);
+				return;
+			}
+			UE_LOG(LogTemp, Warning, TEXT("Dist %f"), Distance);
+
+			FVector Direction = (CachedTeleportLocation - GetActorLocation()).GetSafeNormal();
+			FVector NewLocation = GetActorLocation() + Direction * 80.f;
+			SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
+		}, 0.016f, true);
+}
+
+void AEnemyBoss::TeleportEnd()
+{
+	GetMesh()->SetVisibility(true, true);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+
+	if (OnTeleportEndCallback)
+	{
+		OnTeleportEndCallback();
+		OnTeleportEndCallback = nullptr;
+	}
+
+	if (TeleportBodyEffect.Get()) { TeleportBodyEffect->DestroyComponent(); TeleportBodyEffect = nullptr; }
+	if (TeleportTrailEffect.Get()) { TeleportTrailEffect->DestroyComponent(); TeleportTrailEffect = nullptr; }
+}
+
+void AEnemyBoss::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
+	Super::EndPlay(EndPlayReason);
 }

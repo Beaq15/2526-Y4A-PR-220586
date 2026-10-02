@@ -4,6 +4,7 @@
 #include "BTD_HasPatrolRoute.h"
 #include "AIController.h"
 #include "EnemyInterface.h"
+#include "PatrolRoute.h"
 
 UBTD_HasPatrolRoute::UBTD_HasPatrolRoute()
 {

@@ -657,10 +657,10 @@ void AAdvancedAICharacter::Teleport(const FInputActionValue& Value)
 	GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
 	TeleportBodyEffect = UGameplayStatics::SpawnEmitterAttached(
-		P_GideonBurde, GetMesh(), FName("Spine1"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
+		P_GideonBurde, GetMesh(), FName("Spine_01"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
 
 	TeleportTrailEffect = UGameplayStatics::SpawnEmitterAttached(
-		P_GideonMeteor, GetMesh(), FName("Spine1"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
+		P_GideonMeteor, GetMesh(), FName("Spine_01"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
 
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{

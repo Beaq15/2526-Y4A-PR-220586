@@ -39,4 +39,34 @@ public:
 	TObjectPtr<UAnimMontage> AxeComboMontage1;
 
 	void AttackCombo1(AActor* AttackTarget);
+
+	UFUNCTION()
+	void Teleport(FVector Location, AActor* AttackTarget);
+
+	UFUNCTION()
+	void TeleportEnd();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	TObjectPtr<UParticleSystem> P_GideonBurde;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	TObjectPtr<UParticleSystem> P_GideonMeteor;
+
+	UPROPERTY()
+	TObjectPtr<UParticleSystemComponent> TeleportBodyEffect;
+
+	UPROPERTY()
+	TObjectPtr<UParticleSystemComponent> TeleportTrailEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teleport")
+	float TeleportAcceptanceRadius = 150.f;
+
+	FTimerHandle TeleportMoveTimerHandle;
+
+	UPROPERTY()
+	FVector CachedTeleportLocation;
+
+	TFunction<void()> OnTeleportEndCallback;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 };

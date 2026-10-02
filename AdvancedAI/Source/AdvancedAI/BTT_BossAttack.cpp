@@ -25,7 +25,7 @@ EBTNodeResult::Type UBTT_BossAttack::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 
 	AIController->OnAttackEndDelegate.BindLambda([this]()
 		{
-			if (CachedOwnerComp)
+			if (CachedOwnerComp)   
 			{
 				FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
 			}
@@ -48,6 +48,9 @@ void UBTT_BossAttack::AttackBasedOnName(AEnemyBoss* BossRef)
 		break;
 	case EBoss_Attacks::ThrowAxe:
 		BossRef->ThrowAxe(AttackTarget);
+		break;
+	case EBoss_Attacks::QuickAttack:
+		BossRef->QuickAttack(AttackTarget);
 		break;
 	}
 }

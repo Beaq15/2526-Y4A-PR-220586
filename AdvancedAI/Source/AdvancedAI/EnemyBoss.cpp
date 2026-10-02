@@ -99,6 +99,20 @@ void AEnemyBoss::ThrowAxe(AActor* AttackTarget)
 	AttackSystem->RangeAttack(AttackInfo, 40.0f, 220.f);
 }
 
+void AEnemyBoss::QuickAttack(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 20.0f;
+	DamageInfo.DamageType = EDamageType::Melee;
+	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+	DamageInfo.bCanBeBlocked = true;
+
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.Montage = QuickAttackMontage;
+	AttackSystem->RangeAttack(AttackInfo, 40.0f, 220.f);
+}
+
 void AEnemyBoss::AttackCombo1(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;

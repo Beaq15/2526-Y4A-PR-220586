@@ -16,7 +16,8 @@ enum class EBoss_Attacks : uint8
 {
 	Combo1,
 	Combo2,
-	ThrowAxe
+	ThrowAxe,
+	QuickAttack
 };
 
 UCLASS()
@@ -34,6 +35,8 @@ public:
 
 	void ThrowAxe(AActor* AttackTarget);
 
+	void QuickAttack(AActor* AttackTarget);
+
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TObjectPtr<UWidgetBossHealthBar> HealthBarWidget;
 
@@ -43,8 +46,13 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> AxeComboMontage2;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> ThrowAxeMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> QuickAttackMontage;
+
 
 	void AttackCombo1(AActor* AttackTarget);
 	void AttackCombo2(AActor* AttackTarget);

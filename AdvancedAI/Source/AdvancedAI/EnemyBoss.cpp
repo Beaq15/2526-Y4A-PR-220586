@@ -106,11 +106,20 @@ void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)
 	GetMesh()->SetVisibility(false, true);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 
+	const FName SocketName(TEXT("Spine_01"));
+
+	UE_LOG(LogTemp, Warning, TEXT("[BossTP] Mesh=%s | Socket '%s' exists=%d | BodyFX=%s | TrailFX=%s"),
+		*GetNameSafe(GetMesh()->GetSkeletalMeshAsset()),
+		*SocketName.ToString(),
+		GetMesh()->DoesSocketExist(SocketName),
+		*GetNameSafe(P_GideonBurde),
+		*GetNameSafe(P_GideonMeteor));
+
 	TeleportBodyEffect = UGameplayStatics::SpawnEmitterAttached(
-		P_GideonBurde, GetMesh(), FName("Spine_01"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
+		P_GideonBurde, GetMesh(), FName("Spine_01"), FVector::ZeroVector, FRotator::ZeroRotator, FVector(1.25f), EAttachLocation::KeepRelativeOffset, false);
 
 	TeleportTrailEffect = UGameplayStatics::SpawnEmitterAttached(
-		P_GideonMeteor, GetMesh(), FName("Spine_01"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector, EAttachLocation::KeepRelativeOffset, false);
+		P_GideonMeteor, GetMesh(), FName("Spine_01"), FVector::ZeroVector, FRotator::ZeroRotator, FVector(1.25f), EAttachLocation::KeepRelativeOffset, false);
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance)
@@ -124,6 +133,27 @@ void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)
 
 	CachedTeleportLocation = Location;
 
+	auto LogFX = [this](const TCHAR* Label, UParticleSystemComponent* FX)
+		{
+			if (!FX)
+			{
+				UE_LOG(LogTemp, Error, TEXT("[BossTP] %s: spawn returned NULL"), Label);
+				return;
+			}
+			UE_LOG(LogTemp, Warning, TEXT("[BossTP] %s: loc=%s | actorLoc=%s | visible=%d | active=%d | scale=%s | template=%s"),
+				Label,
+				*FX->GetComponentLocation().ToString(),
+				*GetActorLocation().ToString(),
+				FX->IsVisible(),
+				FX->IsActive(),
+				*FX->GetComponentScale().ToString(),
+				*GetNameSafe(FX->Template));
+			DrawDebugSphere(GetWorld(), FX->GetComponentLocation(), 40.f, 12, FColor::Red, false, 3.f);
+		};
+
+	LogFX(TEXT("Body"), TeleportBodyEffect);
+	LogFX(TEXT("Trail"), TeleportTrailEffect);
+
 	GetWorldTimerManager().SetTimer(TeleportMoveTimerHandle, [this]()
 		{
 			float Distance = FVector::Dist(GetActorLocation(), CachedTeleportLocation);
@@ -132,10 +162,8 @@ void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)
 			{
 				GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
 				TeleportEnd();
-				UE_LOG(LogTemp, Warning, TEXT("Dist %f"), Distance);
 				return;
 			}
-			UE_LOG(LogTemp, Warning, TEXT("Dist %f"), Distance);
 
 			FVector Direction = (CachedTeleportLocation - GetActorLocation()).GetSafeNormal();
 			FVector NewLocation = GetActorLocation() + Direction * 80.f;

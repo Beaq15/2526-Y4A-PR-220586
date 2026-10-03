@@ -235,15 +235,22 @@ void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPoint
 
 	if (NotifyName == FName("Jump"))
 	{
+		AActor* Target = CachedAttackInfo.AttackTarget;
+		ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+		if (!Target || !OwnerCharacter) return;
+
 		const FVector PredictedLocation = CalculateFutureActorLocation(CachedAttackInfo.AttackTarget, 1.0f);
 		const FVector EndPos(PredictedLocation.X, PredictedLocation.Y, PredictedLocation.Z);
 
+		const float Distance = Target->GetDistanceTo(OwnerCharacter);
+		const float Alpha = FMath::Clamp(FMath::GetRangePct(400.f, 800.f, Distance), 0.f, 1.f);
+		const float ArcParam = FMath::Lerp(0.5f, 0.94f, Alpha);
+
 		FVector LaunchVelocity;
-		UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetOwner()->GetActorLocation(), EndPos);
+		UGameplayStatics::SuggestProjectileVelocity_CustomArc(this, LaunchVelocity, GetOwner()->GetActorLocation(), EndPos, 0.f, ArcParam);
 
 		UKismetSystemLibrary::DrawDebugSphere(GetWorld(), EndPos, 100.f, 12, FLinearColor::White, 2.0f);
 
-		ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
 		OwnerCharacter->LaunchCharacter(LaunchVelocity, true, true);
 
 		OwnerCharacter->LandedDelegate.AddDynamic(this, &UAttackSystem::OnLand);
@@ -303,7 +310,7 @@ void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPoint
 
 		if (Axe)
 		{
-			Axe->Speed = 4000.f;
+			Axe->Speed = 3500.f;
 			Axe->Gravity = 0.f;
 			Axe->Target = TargetActor;
 			Axe->bIsHoming = true;

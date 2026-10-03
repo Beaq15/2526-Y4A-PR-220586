@@ -101,7 +101,7 @@ public:
 	void OnBlockHitMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
-	float BlockChance = 0.5f;
+	float BlockChance = 0.25f;
 
 	FTimerHandle HoldBlockTimer;
 

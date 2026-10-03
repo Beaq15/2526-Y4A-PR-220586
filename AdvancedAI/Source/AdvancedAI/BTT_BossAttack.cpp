@@ -52,5 +52,8 @@ void UBTT_BossAttack::AttackBasedOnName(AEnemyBoss* BossRef)
 	case EBoss_Attacks::QuickAttack:
 		BossRef->QuickAttack(AttackTarget);
 		break;
+	case EBoss_Attacks::JumpAttack:
+		BossRef->JumpAttack(AttackTarget);
+		break;
 	}
 }

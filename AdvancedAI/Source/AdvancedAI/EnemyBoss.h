@@ -17,7 +17,8 @@ enum class EBoss_Attacks : uint8
 	Combo1,
 	Combo2,
 	ThrowAxe,
-	QuickAttack
+	QuickAttack,
+	JumpAttack
 };
 
 UCLASS()
@@ -53,9 +54,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> QuickAttackMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> JumpAttackMontage;
+
 
 	void AttackCombo1(AActor* AttackTarget);
 	void AttackCombo2(AActor* AttackTarget);
+	void JumpAttack(AActor* AttackTarget);
 
 	UFUNCTION()
 	void Teleport(FVector Location, AActor* AttackTarget);

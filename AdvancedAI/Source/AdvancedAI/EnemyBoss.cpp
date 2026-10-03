@@ -145,6 +145,22 @@ void AEnemyBoss::AttackCombo2(AActor* AttackTarget)
 	AttackSystem->RangeAttack(AttackInfo, 40.0f, 220.f);
 }
 
+void AEnemyBoss::JumpAttack(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 15.0f;
+	DamageInfo.DamageType = EDamageType::Melee;
+	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+	DamageInfo.bCanBeBlocked = false;
+
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.Montage = JumpAttackMontage;
+	AttackInfo.DamageInfo = DamageInfo;
+
+	AttackSystem->RangeAttack(AttackInfo,300.0f, 220.f);
+}
+
 void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)
 {
 	GetMesh()->SetVisibility(false, true);

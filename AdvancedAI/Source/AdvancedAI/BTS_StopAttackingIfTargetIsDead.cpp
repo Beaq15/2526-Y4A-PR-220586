@@ -15,6 +15,8 @@ UBTS_StopAttackingIfTargetIsDead::UBTS_StopAttackingIfTargetIsDead()
 
 void UBTS_StopAttackingIfTargetIsDead::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
+	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
+
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 
 	AActor* Target = Cast<AActor>(BB->GetValueAsObject(AttackTargetKey.SelectedKeyName));

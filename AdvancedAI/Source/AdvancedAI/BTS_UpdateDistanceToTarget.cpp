@@ -14,9 +14,15 @@ UBTS_UpdateDistanceToTarget::UBTS_UpdateDistanceToTarget()
 
 void UBTS_UpdateDistanceToTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	APawn* Pawn = OwnerComp.GetAIOwner()->GetPawn();
+	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
+
+	AAIController* AIC = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+	if (!AIC || !BB) return;
+
+	APawn* Pawn = AIC->GetPawn();
 	AActor* Target = Cast<AActor>(BB->GetValueAsObject(AttackTargetKey.SelectedKeyName));
+	if (!IsValid(Pawn) || !IsValid(Target)) return;
 
 	const float Distance = FVector::Distance(Pawn->GetActorLocation(), Target->GetActorLocation());
 

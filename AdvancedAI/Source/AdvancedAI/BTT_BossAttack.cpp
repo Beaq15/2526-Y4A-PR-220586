@@ -55,5 +55,8 @@ void UBTT_BossAttack::AttackBasedOnName(AEnemyBoss* BossRef)
 	case EBoss_Attacks::JumpAttack:
 		BossRef->JumpAttack(AttackTarget);
 		break;
+	case EBoss_Attacks::GroundSmashAttack:
+		BossRef->GroundSmashAttack(AttackTarget);
+		break;
 	}
 }

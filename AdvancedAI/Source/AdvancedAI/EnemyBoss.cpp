@@ -161,6 +161,22 @@ void AEnemyBoss::JumpAttack(AActor* AttackTarget)
 	AttackSystem->RangeAttack(AttackInfo,300.0f, 220.f);
 }
 
+void AEnemyBoss::GroundSmashAttack(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 25.0f;
+	DamageInfo.DamageType = EDamageType::Melee;
+	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
+	DamageInfo.bCanBeBlocked = false;
+
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.Montage = GroundSmashAttackMontage;
+	AttackInfo.DamageInfo = DamageInfo;
+
+	AttackSystem->AroundAttack(AttackInfo, 1100.0f);
+}
+
 void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)
 {
 	GetMesh()->SetVisibility(false, true);

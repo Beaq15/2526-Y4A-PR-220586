@@ -37,7 +37,7 @@ void UAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 // Attack API
 //----------------------------------------------------------------------
 
-void UAttackSystem::MagicSpell(FTransform SpawnTransform, AActor* TargetActor, FDamageInfo DamageInfo)
+void UAttackSystem::MagicSpell(FTransform SpawnTransform, AActor* TargetActor, FDamageInfo DamageInfo, float Speed)
 {
 	if (!ProjectileClass) return;
 
@@ -45,16 +45,22 @@ void UAttackSystem::MagicSpell(FTransform SpawnTransform, AActor* TargetActor, F
 	SpawnParams.Owner = GetOwner();
 	SpawnParams.Instigator = Cast<APawn>(GetOwner());
 
-	AProjectileBase* Projectile = GetWorld()->SpawnActor<AProjectileBase>(ProjectileClass, SpawnTransform, SpawnParams);
+	AProjectileBase* Projectile = GetWorld()->SpawnActorDeferred<AProjectileBase>(
+		ProjectileClass,
+		SpawnTransform,
+		GetOwner(),
+		Cast<APawn>(GetOwner()),
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 	if (!Projectile) return;
 
-	Projectile->BoxCollision->IgnoreActorWhenMoving(GetOwner(), true);
-	Projectile->Speed = 1000.f;
+	Projectile->Speed = Speed;
 	Projectile->Target = TargetActor;
 
 	DamageInfoRef = DamageInfo;
 
 	Projectile->OnProjectileImpact.AddDynamic(this, &UAttackSystem::OnProjectileHit);
+
+	Projectile->FinishSpawning(SpawnTransform);
 }
 
 void UAttackSystem::FireBullet(FVector TraceStart, FVector TraceEnd, FDamageInfo DamageInfo)
@@ -270,7 +276,7 @@ void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPoint
 		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, CachedAttackInfo.AttackTarget->GetActorLocation());
 		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector::OneVector);
 
-		MagicSpell(SpawnTransform, CachedAttackInfo.AttackTarget, CachedAttackInfo.DamageInfo);
+		MagicSpell(SpawnTransform, CachedAttackInfo.AttackTarget, CachedAttackInfo.DamageInfo, 1000.0f);
 	}
 
 	if (NotifyName == "Throw")

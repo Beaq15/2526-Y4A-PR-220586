@@ -84,7 +84,7 @@ public:
 	// Public — Attack API
 	//----------------------------------------------------------------------
 
-	void MagicSpell(FTransform SpawnTransform, AActor* TargetActor, FDamageInfo DamageInfo);
+	void MagicSpell(FTransform SpawnTransform, AActor* TargetActor, FDamageInfo DamageInfo, float Speed);
 	void FireBullet(FVector TraceStart, FVector TraceEnd, FDamageInfo DamageInfo);
 	TArray<AActor*> DamageAllNonTeamMembers(FDamageInfo DamageInfo, TArray<FHitResult> Hits);
 	AActor* DamageFirstNonTeamMember(FDamageInfo DamageInfo, TArray<FHitResult> Hits);

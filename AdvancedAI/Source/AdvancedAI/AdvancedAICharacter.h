@@ -34,7 +34,6 @@ enum class EPlayerStance : uint8
 };
 
 
-
 UCLASS(config=Game)
 class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterface, public IDamageableInterface
 {
@@ -182,6 +181,7 @@ protected:
 	void MagicStance();
 	void UnarmedStance();
 	void MeleeStance();
+	void ExitMagicStance();
 
 	//----------------------------------------------------------------------
 	// Protected — Animation Callbacks

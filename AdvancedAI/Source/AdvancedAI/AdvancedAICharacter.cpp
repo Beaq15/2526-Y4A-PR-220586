@@ -88,6 +88,8 @@ void AAdvancedAICharacter::BeginPlay()
 	FOnTimelineFloat UpdateDelegate;
 	UpdateDelegate.BindUFunction(this, FName("OnAimTimeLineUpdate"));
 	AimTimeline.AddInterpFloat(LinearCurve, UpdateDelegate);
+
+	Stance = EPlayerStance::Unarmed;
 }
 
 void AAdvancedAICharacter::Tick(float DeltaTime)
@@ -132,9 +134,11 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(ChangeStateAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::ChangeStance);
 		EnhancedInputComponent->BindAction(MakeNoiseAction, ETriggerEvent::Triggered, this, &AAdvancedAICharacter::MakeSomeNoise);
 		EnhancedInputComponent->BindAction(DoDamageAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::MeleeAttack);
+		EnhancedInputComponent->BindAction(DoDamageAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::DoDamage);
 
-		//EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::MagicStance);
+		EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::MagicStance);
 		//EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AAdvancedAICharacter::UnarmedStance);
+		EnhancedInputComponent->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AAdvancedAICharacter::ExitMagicStance);
 
 		EnhancedInputComponent->BindAction(SwordBlockAction, ETriggerEvent::Started, this, &AAdvancedAICharacter::StartBlock);
 		EnhancedInputComponent->BindAction(SwordBlockAction, ETriggerEvent::Completed, this, &AAdvancedAICharacter::EndBlock);
@@ -146,6 +150,7 @@ void AAdvancedAICharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
 }
+
 
 //----------------------------------------------------------------------
 // Input Handlers
@@ -180,13 +185,18 @@ void AAdvancedAICharacter::Look(const FInputActionValue& Value)
 
 void AAdvancedAICharacter::ChangeStance(const FInputActionValue& Value)
 {
-	if (bIsTeleporting) return;
+	if (bIsTeleporting || Stance == EPlayerStance::Magic) return;
 	bPressed = !bPressed;
 
 	if (bPressed)
+	{
 		EquipWeapon();
+	}
 	else
+	{
 		UnequipWeapon();
+		//UnarmedStance();
+	}
 }
 
 void AAdvancedAICharacter::MakeSomeNoise(const FInputActionValue& Value)
@@ -254,6 +264,8 @@ void AAdvancedAICharacter::PerformMeleeAttack()
 
 void AAdvancedAICharacter::MagicStance()
 {
+	if (bIsTeleporting || bPressed || Stance != EPlayerStance::Unarmed) return;
+
 	Stance = EPlayerStance::Magic;
 
 	GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -269,6 +281,8 @@ void AAdvancedAICharacter::MagicStance()
 
 void AAdvancedAICharacter::UnarmedStance()
 {
+	if (bIsTeleporting) return;
+
 	Stance = EPlayerStance::Unarmed;
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -288,6 +302,12 @@ void AAdvancedAICharacter::MeleeStance()
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->MaxWalkSpeed = MeleeWalkSpeed;
+}
+
+void AAdvancedAICharacter::ExitMagicStance()
+{
+	if (Stance != EPlayerStance::Magic) return;
+	UnarmedStance();
 }
 
 //----------------------------------------------------------------------
@@ -317,7 +337,7 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(SpawnLocation, TargetPoint);
 		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector::OneVector);
 
-		AttackSystem->MagicSpell(SpawnTransform, nullptr, DamageInfo);
+		AttackSystem->MagicSpell(SpawnTransform, nullptr, DamageInfo, 2000.0f);
 
 	}
 	if (NotifyName == FName("Slash"))
@@ -525,12 +545,16 @@ void AAdvancedAICharacter::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bI
 {
 	if (!bInterrupted)
 		MeleeStance();
+	else
+		UnarmedStance();
 }
 
 void AAdvancedAICharacter::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (!bInterrupted)
 		UnarmedStance();
+	else
+		MeleeStance();
 }
 
 void AAdvancedAICharacter::OnShieldBlockMontageEnd(UAnimMontage* Montage, bool bInterrupted)

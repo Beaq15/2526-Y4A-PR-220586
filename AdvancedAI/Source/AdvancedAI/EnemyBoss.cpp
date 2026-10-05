@@ -89,8 +89,6 @@ void AEnemyBoss::ThrowAxe(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 20.0f;
-	DamageInfo.DamageType = EDamageType::Melee;
-	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 	DamageInfo.bCanBeBlocked = true;
 
 	FAttackInfo AttackInfo;
@@ -103,8 +101,6 @@ void AEnemyBoss::QuickAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 20.0f;
-	DamageInfo.DamageType = EDamageType::Melee;
-	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 	DamageInfo.bCanBeBlocked = true;
 
 	FAttackInfo AttackInfo;
@@ -117,8 +113,6 @@ void AEnemyBoss::AttackCombo1(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 20.0f;
-	DamageInfo.DamageType = EDamageType::Melee;
-	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 	DamageInfo.bCanBeBlocked = true;
 
 	FAttackInfo AttackInfo;
@@ -133,8 +127,6 @@ void AEnemyBoss::AttackCombo2(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 15.0f;
-	DamageInfo.DamageType = EDamageType::Melee;
-	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 	DamageInfo.bCanBeBlocked = true;
 
 	FAttackInfo AttackInfo;
@@ -149,8 +141,6 @@ void AEnemyBoss::JumpAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 15.0f;
-	DamageInfo.DamageType = EDamageType::Melee;
-	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 	DamageInfo.bCanBeBlocked = false;
 
 	FAttackInfo AttackInfo;
@@ -165,8 +155,6 @@ void AEnemyBoss::GroundSmashAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 25.0f;
-	DamageInfo.DamageType = EDamageType::Melee;
-	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 	DamageInfo.bCanBeBlocked = false;
 
 	FAttackInfo AttackInfo;

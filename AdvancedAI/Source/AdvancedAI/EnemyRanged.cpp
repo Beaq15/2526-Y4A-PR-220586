@@ -112,8 +112,6 @@ void AEnemyRanged::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointN
 
 		FDamageInfo DamageInfo;
 		DamageInfo.Amount = 5.f;
-		DamageInfo.DamageType = EDamageType::Projectile;
-		DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 		DamageInfo.bCanBeBlocked = true;
 
 		AttackSystem->FireBullet(Start, End, DamageInfo);

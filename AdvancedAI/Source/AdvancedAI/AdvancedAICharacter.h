@@ -200,7 +200,7 @@ protected:
 	void EndBlock(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void OnBlocked(bool bCanBeParried, AActor* DamageCauser);
+	void OnBlocked(AActor* DamageCauser);
 
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
@@ -212,7 +212,7 @@ protected:
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	UFUNCTION()
-	void OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser);
+	void OnHitResponse_Event(AActor* DamageCauser);
 
 	UFUNCTION()
 	void OnDeath_Event();

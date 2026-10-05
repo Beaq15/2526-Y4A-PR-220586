@@ -57,10 +57,10 @@ float UDamageSystem::Heal(float Amount)
 
 bool UDamageSystem::TakeDamage(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
-	switch (CanBeDamaged(DamageInfo.bShouldDamageInvincible, DamageInfo.bCanBeBlocked))
+	switch (CanBeDamaged(DamageInfo.bCanBeBlocked))
 	{
 	case EDamageResult::BlockDamage:
-		OnBlocked.Broadcast(DamageInfo.bCanBeParried, DamageCauser);
+		OnBlocked.Broadcast(DamageCauser);
 		return false;
 		break;
 	case EDamageResult::DoDamage:
@@ -70,8 +70,8 @@ bool UDamageSystem::TakeDamage(const FDamageInfo& DamageInfo, AActor* DamageCaus
 			isDead = true;
 			OnDeath.Broadcast();
 		}
-		else if (isInterruptible || DamageInfo.bShouldForceInterrupt)
-			OnDamageResponse.Broadcast(DamageInfo.DamageResponse, DamageCauser);
+		else if (isInterruptible)
+			OnDamageResponse.Broadcast( DamageCauser);
 		return true;
 			break;
 	case EDamageResult::NoDamage:

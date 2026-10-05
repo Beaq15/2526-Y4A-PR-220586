@@ -128,7 +128,7 @@ void AEnemyBase::CleanupAfterDeath()
 	Destroy();
 }
 
-void AEnemyBase::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser)
+void AEnemyBase::OnHitResponse_Event(AActor* DamageCauser)
 {
 	GetCharacterMovement()->StopMovementImmediately();
 	GetCharacterMovement()->DisableMovement();
@@ -177,7 +177,7 @@ void AEnemyBase::EndBlock()
 	OnBlockEnd.Broadcast();
 }
 
-void AEnemyBase::OnBlocked(bool bCanBeParried, AActor* DamageCauser)
+void AEnemyBase::OnBlocked(AActor* DamageCauser)
 {
 
 	GetWorldTimerManager().ClearTimer(HoldBlockTimer);

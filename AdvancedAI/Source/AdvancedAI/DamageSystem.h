@@ -7,9 +7,9 @@
 #include "DamageableInterface.h"
 #include "DamageSystem.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBlocked, bool, bCanBeParried, AActor*, DamageCauser);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlocked, AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamageResponse, EDamageResponse, DamageResponse, AActor*, DamageCauser);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageResponse, AActor*, DamageCauser);
 
 UCLASS(ClassGroup = (Combat), meta = (BlueprintSpawnableComponent))
 class ADVANCEDAI_API UDamageSystem : public UActorComponent
@@ -74,9 +74,9 @@ public:
 	// Public — API
 	//----------------------------------------------------------------------
 
-	FORCEINLINE EDamageResult CanBeDamaged(bool bShouldDamageInvincible, bool bCanBeBlocked) const
+	FORCEINLINE EDamageResult CanBeDamaged(bool bCanBeBlocked) const
 	{
-		if (!isDead && (!isInvincible || bShouldDamageInvincible))
+		if (!isDead && !isInvincible)
 		{
 			if (isBlocking && bCanBeBlocked)
 				return EDamageResult::BlockDamage;

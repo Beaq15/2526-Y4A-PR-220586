@@ -40,7 +40,6 @@ void AEnemyMelee::ShortRangeAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 10.f;
-	DamageInfo.DamageType = EDamageType::Melee;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -53,7 +52,6 @@ void AEnemyMelee::LongRangeAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 10.f;
-	DamageInfo.DamageType = EDamageType::Melee;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -66,7 +64,6 @@ void AEnemyMelee::SpinningAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 10.f;
-	DamageInfo.DamageType = EDamageType::Melee;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -195,8 +192,6 @@ void AEnemyMelee::AOEDamageActor(AActor* Actor)
 	{
 		FDamageInfo DamageInfo;
 		DamageInfo.Amount = 3.f;
-		DamageInfo.DamageType = EDamageType::Melee;
-		DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 
 		IDamageableInterface::Execute_TakeDamage(Actor, DamageInfo, this);
 	}
@@ -206,7 +201,6 @@ void AEnemyMelee::GroundSmashAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 25.f;
-	DamageInfo.DamageType = EDamageType::Explosion;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;

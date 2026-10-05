@@ -39,8 +39,6 @@ void AEnemyMage::Attack_Implementation(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 20.f;
-	DamageInfo.DamageType = EDamageType::Explosion;
-	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 	DamageInfo.bCanBeBlocked = true;
 
 	FAttackInfo AttackInfo;
@@ -161,7 +159,6 @@ void AEnemyMage::GroundSmashAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 25.f;
-	DamageInfo.DamageType = EDamageType::Explosion;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;

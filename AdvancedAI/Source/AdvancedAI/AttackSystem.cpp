@@ -12,7 +12,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "EnemyBase.h"
 #include "AIC_Enemy_Base.h"
-#include "DamageableInterface.h" 
 //----------------------------------------------------------------------
 // Lifecycle
 //----------------------------------------------------------------------
@@ -336,8 +335,6 @@ void UAttackSystem::OnProjectileImpact_Event(AActor* OtherActor, FHitResult Hit)
 
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 20.f;
-	DamageInfo.DamageType = EDamageType::Projectile;
-	DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 	DamageInfo.bCanBeBlocked = true;
 
 	IDamageableInterface::Execute_TakeDamage(OtherActor, DamageInfo, GetOwner());

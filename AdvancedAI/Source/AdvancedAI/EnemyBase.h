@@ -92,7 +92,7 @@ public:
 	void EndBlock();
 	void TryToBlock();
 	UFUNCTION()
-	void OnBlocked(bool bCanBeParried, AActor* DamageCauser);
+	void OnBlocked(AActor* DamageCauser);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> SwordBlockHitMontage;
@@ -195,7 +195,7 @@ protected:
 	TSubclassOf<AActor> HealingActorClass;
 
 	UFUNCTION()
-	void OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser);
+	void OnHitResponse_Event(AActor* DamageCauser);
 
 	//----------------------------------------------------------------------
 	// Protected — IEnemyInterface

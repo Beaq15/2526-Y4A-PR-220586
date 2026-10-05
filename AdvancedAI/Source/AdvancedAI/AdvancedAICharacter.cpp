@@ -320,8 +320,6 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 	{
 		FDamageInfo DamageInfo;
 		DamageInfo.Amount = 20.f;
-		DamageInfo.DamageType = EDamageType::Explosion;
-		DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 		DamageInfo.bCanBeBlocked = true;
 
 		FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("hand_l"));
@@ -359,8 +357,6 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		{
 			FDamageInfo DamageInfo;
 			DamageInfo.Amount = 20.f;
-			DamageInfo.DamageType = EDamageType::Melee;
-			DamageInfo.DamageResponse = EDamageResponse::HitReaction;
 			DamageInfo.bCanBeBlocked = true;
 
 			AttackSystem->DamageAllNonTeamMembers(DamageInfo, OutHits);
@@ -371,7 +367,6 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 	{
 		FDamageInfo DamageInfo;
 		DamageInfo.Amount = 30.f;
-		DamageInfo.DamageType = EDamageType::Explosion;
 		AttackSystem->AOEDamage(200.0f, DamageInfo);
 	}
 
@@ -435,9 +430,8 @@ void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupt
 	isWithingResumeComboWindow = false;
 }
 
-void AAdvancedAICharacter::OnHitResponse_Event(EDamageResponse DamageResponse, AActor* DamageCauser)
+void AAdvancedAICharacter::OnHitResponse_Event(AActor* DamageCauser)
 {
-
 	if (!HitReactionMontage) return;
 	
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -531,7 +525,7 @@ void AAdvancedAICharacter::EndBlock(const FInputActionValue& Value)
 	bCanMove = true;
 }
 
-void AAdvancedAICharacter::OnBlocked(bool bCanBeParried, AActor* DamageCauser)
+void AAdvancedAICharacter::OnBlocked(AActor* DamageCauser)
 {
 	if (SwordBlockHitMontage)
 	{

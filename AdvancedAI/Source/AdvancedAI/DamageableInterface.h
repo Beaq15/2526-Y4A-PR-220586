@@ -6,26 +6,6 @@
 #include "UObject/Interface.h"
 #include "DamageableInterface.generated.h"
 
-UENUM(BlueprintType)
-enum class EDamageType : uint8
-{
-	None,
-	Melee,
-	Projectile,
-	Explosion,
-	Environment
-};
-
-UENUM(BlueprintType)
-enum class EDamageResponse : uint8
-{
-	None,
-	HitReaction,
-	Stagger,
-	Stun,
-	KnockBack
-};
-
 USTRUCT(BlueprintType)
 struct FDamageInfo
 {
@@ -35,22 +15,7 @@ struct FDamageInfo
 	float Amount = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EDamageType DamageType = EDamageType::None;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EDamageResponse DamageResponse = EDamageResponse::None;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bShouldDamageInvincible = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanBeBlocked = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bCanBeParried = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bShouldForceInterrupt = false;
 };
 
 UENUM(BlueprintType)

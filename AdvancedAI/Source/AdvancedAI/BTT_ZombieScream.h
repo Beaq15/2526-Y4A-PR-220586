@@ -24,4 +24,7 @@ public:
 	TObjectPtr<UBehaviorTreeComponent> CachedOwnerComp;
 
 	FDelegateHandle ScreamFinishedHandle;
+
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector HasScreamedKey;
 };

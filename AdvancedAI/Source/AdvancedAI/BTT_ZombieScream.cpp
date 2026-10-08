@@ -3,6 +3,8 @@
 
 #include "BTT_ZombieScream.h"
 #include "AIC_Enemy_Base.h"
+#include "BehaviorTree/BlackboardComponent.h"
+
 UBTT_ZombieScream::UBTT_ZombieScream()
 {
 	NodeName = "ZombieScream";
@@ -21,6 +23,11 @@ EBTNodeResult::Type UBTT_ZombieScream::ExecuteTask(UBehaviorTreeComponent& Owner
 		{
 			if (CachedOwnerComp)
 			{
+				if (UBlackboardComponent* BB = CachedOwnerComp->GetBlackboardComponent())
+				{
+					BB->SetValueAsBool(HasScreamedKey.SelectedKeyName, true);
+				}
+
 				FinishLatentTask(*CachedOwnerComp, EBTNodeResult::Succeeded);
 				CachedOwnerComp = nullptr;
 			}

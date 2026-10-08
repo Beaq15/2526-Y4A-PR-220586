@@ -7,6 +7,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/GameplayStatics.h"
 #include "AIC_Enemy_Base.h"
+#include "Components/CapsuleComponent.h"
 
 //----------------------------------------------------------------------
 // Lifecycle
@@ -27,6 +28,9 @@ AEnemyBase::AEnemyBase()
 
 	KnowledgeComponent = CreateDefaultSubobject<UAIKnowledgeComponent>(TEXT("KnowledgeComponent"));
 	PerceptionToFactComponent = CreateDefaultSubobject<UAIPerceptionToFactComponent>(TEXT("PerceptionToFactComponent"));
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 }
 
 void AEnemyBase::BeginPlay()

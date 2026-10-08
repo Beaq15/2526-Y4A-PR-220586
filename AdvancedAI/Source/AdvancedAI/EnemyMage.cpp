@@ -158,7 +158,7 @@ void AEnemyMage::HealOverTime()
 void AEnemyMage::GroundSmashAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
-	DamageInfo.Amount = 25.f;
+	DamageInfo.Amount = 15.f;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;

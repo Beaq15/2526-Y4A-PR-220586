@@ -64,7 +64,7 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 	AttackSystem = CreateDefaultSubobject<UAttackSystem>(TEXT("AttackSystem"));
 
 	// Tokens
-	DamageSystem->AttackTokensCount = 2;
+	DamageSystem->AttackTokensCount = 5;
 	
 	DamageSystem->MaxHealth = 300.f;
 	DamageSystem->Health = 300.f;
@@ -356,7 +356,7 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		if (bHit)
 		{
 			FDamageInfo DamageInfo;
-			DamageInfo.Amount = 20.f;
+			DamageInfo.Amount = 10.f;
 			DamageInfo.bCanBeBlocked = true;
 
 			AttackSystem->DamageAllNonTeamMembers(DamageInfo, OutHits);
@@ -506,16 +506,17 @@ void AAdvancedAICharacter::UnequipWeapon()
 
 void AAdvancedAICharacter::StartBlock(const FInputActionValue& Value)
 {
-	if (bIsTeleporting) return;
-	if (Stance != EPlayerStance::Melee || DamageSystem->isBlocking) return;
-
-	DamageSystem->isBlocking = true;
-	bCanMove = false;
+	if (bIsTeleporting || DamageSystem->isBlocking) return;
+	if (Stance == EPlayerStance::Melee)
+	{
+		DamageSystem->isBlocking = true;
+		bCanMove = false;
 	
-	if (!SwordBlockMontage) return;
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (!SwordBlockMontage) return;
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
-	AnimInstance->Montage_Play(SwordBlockMontage, 1.0f);
+		AnimInstance->Montage_Play(SwordBlockMontage, 1.0f);
+	}
 }
 
 void AAdvancedAICharacter::EndBlock(const FInputActionValue& Value)

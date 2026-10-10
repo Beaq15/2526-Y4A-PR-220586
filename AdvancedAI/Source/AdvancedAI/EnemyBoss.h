@@ -88,6 +88,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Teleport")
 	float TeleportAcceptanceRadius = 150.f;
 
+	float TeleportStartTime = 0.f;
+
 	FTimerHandle TeleportMoveTimerHandle;
 
 	UPROPERTY()

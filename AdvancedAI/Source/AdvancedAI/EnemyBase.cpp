@@ -298,7 +298,7 @@ float AEnemyBase::Heal_Implementation(float Amount)
 
 bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
-	if (DamageInfo.bCanBeBlocked)
+	if (DamageInfo.bCanBeBlocked && SwordBlockHitMontage)
 		TryToBlock();
 
 	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);

@@ -94,6 +94,7 @@ void AEnemyBoss::ThrowAxe(AActor* AttackTarget)
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
 	AttackInfo.Montage = ThrowAxeMontage;
+	AttackInfo.DamageInfo = DamageInfo;
 	AttackSystem->RangeAttack(AttackInfo, 40.0f, 220.f);
 }
 
@@ -106,6 +107,7 @@ void AEnemyBoss::QuickAttack(AActor* AttackTarget)
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
 	AttackInfo.Montage = QuickAttackMontage;
+	AttackInfo.DamageInfo = DamageInfo;
 	AttackSystem->RangeAttack(AttackInfo, 40.0f, 220.f);
 }
 
@@ -188,20 +190,25 @@ void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)
 
 	CachedTeleportLocation = Location;
 
+	TeleportStartTime = GetWorld()->GetTimeSeconds();
+
 	GetWorldTimerManager().SetTimer(TeleportMoveTimerHandle, [this]()
 		{
-			float Distance = FVector::Dist(GetActorLocation(), CachedTeleportLocation);
+			const FVector Current = GetActorLocation();
+			FVector ToTarget = CachedTeleportLocation - Current;
+			ToTarget.Z = 0.f;
+			const float Dist2D = ToTarget.Size();
 
-			if (Distance <= 50.f)
+			const bool bTimedOut = GetWorld()->GetTimeSeconds() - TeleportStartTime > 2.f;
+			if (Dist2D <= 50.f || bTimedOut)
 			{
 				GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
 				TeleportEnd();
 				return;
 			}
 
-			FVector Direction = (CachedTeleportLocation - GetActorLocation()).GetSafeNormal();
-			FVector NewLocation = GetActorLocation() + Direction * 80.f;
-			SetActorLocation(NewLocation, false, nullptr, ETeleportType::TeleportPhysics);
+			const float Step = FMath::Min(Dist2D, 80.f);
+			SetActorLocation(Current + ToTarget.GetSafeNormal() * Step, false, nullptr, ETeleportType::TeleportPhysics);
 		}, 0.016f, true);
 }
 

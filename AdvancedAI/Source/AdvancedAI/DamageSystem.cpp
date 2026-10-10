@@ -57,6 +57,8 @@ float UDamageSystem::Heal(float Amount)
 
 bool UDamageSystem::TakeDamage(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[TakeDamage] %s Amount=%.1f Health=%.1f/%.1f isDead=%d isBlocking=%d isInterruptible=%d"),
+		*GetNameSafe(GetOwner()), DamageInfo.Amount, Health, MaxHealth, isDead, isBlocking, isInterruptible);
 	switch (CanBeDamaged(DamageInfo.bCanBeBlocked))
 	{
 	case EDamageResult::BlockDamage:

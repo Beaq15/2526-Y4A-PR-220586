@@ -66,8 +66,8 @@ AAdvancedAICharacter::AAdvancedAICharacter()
 	// Tokens
 	DamageSystem->AttackTokensCount = 5;
 	
-	DamageSystem->MaxHealth = 300.f;
-	DamageSystem->Health = 300.f;
+	DamageSystem->MaxHealth = 500.f;
+	DamageSystem->Health = 500.f;
 }
 
 void AAdvancedAICharacter::BeginPlay()
@@ -191,11 +191,12 @@ void AAdvancedAICharacter::ChangeStance(const FInputActionValue& Value)
 	if (bPressed)
 	{
 		EquipWeapon();
+		bShouldReactToHit = false;
 	}
 	else
 	{
 		UnequipWeapon();
-		//UnarmedStance();
+		bShouldReactToHit = false;
 	}
 }
 
@@ -336,10 +337,11 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector::OneVector);
 
 		AttackSystem->MagicSpell(SpawnTransform, nullptr, DamageInfo, 2000.0f);
-
 	}
+
 	if (NotifyName == FName("Slash"))
 	{
+
 		FVector Start = GetActorLocation();
 		FVector End = GetActorForwardVector() * 200.f + GetActorLocation();
 
@@ -349,7 +351,7 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		TArray<AActor*> ActorsToIgnore;
 		ActorsToIgnore.Add(this);
 
-		TArray <FHitResult> OutHits;
+		TArray<FHitResult> OutHits;
 
 		bool bHit = UKismetSystemLibrary::SphereTraceMultiForObjects(GetWorld(), Start, End, 20.f, ObjectTypes, false, ActorsToIgnore, EDrawDebugTrace::None, OutHits, true);
 
@@ -358,8 +360,6 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 			FDamageInfo DamageInfo;
 			DamageInfo.Amount = 10.f;
 			DamageInfo.bCanBeBlocked = true;
-
-			AttackSystem->DamageAllNonTeamMembers(DamageInfo, OutHits);
 		}
 	}
 
@@ -432,6 +432,7 @@ void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupt
 
 void AAdvancedAICharacter::OnHitResponse_Event(AActor* DamageCauser)
 {
+	if (!bShouldReactToHit) return;
 	if (!HitReactionMontage) return;
 	
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -542,6 +543,7 @@ void AAdvancedAICharacter::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bI
 		MeleeStance();
 	else
 		UnarmedStance();
+	bShouldReactToHit = true;
 }
 
 void AAdvancedAICharacter::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
@@ -550,6 +552,7 @@ void AAdvancedAICharacter::OnDropSwordMontageEnd(UAnimMontage* Montage, bool bIn
 		UnarmedStance();
 	else
 		MeleeStance();
+	bShouldReactToHit = true;
 }
 
 void AAdvancedAICharacter::OnShieldBlockMontageEnd(UAnimMontage* Montage, bool bInterrupted)

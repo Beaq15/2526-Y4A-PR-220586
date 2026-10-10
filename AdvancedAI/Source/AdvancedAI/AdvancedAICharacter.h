@@ -321,6 +321,7 @@ protected:
 
 	bool bIsTeleporting = false;
 	bool bCanTeleport = true;
+	bool bShouldReactToHit = true;
 
 	UFUNCTION()
 	void TeleportEnd();

@@ -7,8 +7,8 @@
 
 AEnemyZombie::AEnemyZombie()
 {
-	DamageSystem->MaxHealth = 100.f;
-	DamageSystem->Health = 100.f;
+	DamageSystem->MaxHealth = 30.f;
+	DamageSystem->Health = 30.f;
 
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -67,13 +67,6 @@ void AEnemyZombie::Tick(float DeltaTime)
 
 	float Curve = 1.f;
 	Anim->GetCurveValueWithDefault(TEXT("MoveSpeed"), 1.f, Curve);
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Green,
-			FString::Printf(TEXT("Velocity: %.1f  MaxWalkSpeed: %.1f"),
-				GetVelocity().Size2D(), GetCharacterMovement()->MaxWalkSpeed));
-	}
 
 	Movement->MaxWalkSpeed = 30.f * FMath::Clamp(Curve, 0.f, 1.f);
 }

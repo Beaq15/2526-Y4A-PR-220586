@@ -230,5 +230,90 @@ void AEnemyBoss::TeleportEnd()
 void AEnemyBoss::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
+	if (HealAOE)
+	{
+		HealAOE->OnAOEOverlapActor.RemoveDynamic(this, &AEnemyBoss::OnHealTick);
+	}
 	Super::EndPlay(EndPlayReason);
+}
+
+void AEnemyBoss::HealEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	UE_LOG(LogTemp, Warning, TEXT("HealEnded - interrupted: %d"), bInterrupted);
+	if (HealAOE)
+	{
+		HealAOE->Destroy();
+		HealAOE = nullptr;
+	}
+
+	if (OnHealOverTimeEndCallback)
+	{
+		OnHealOverTimeEndCallback();
+		OnHealOverTimeEndCallback = nullptr;
+	}
+
+	OnHealOverTimeEnd.Broadcast();
+}
+
+void AEnemyBoss::OnHealTick(AActor* Actor)
+{
+	if (Actor == this)
+	{
+		Heal_Implementation(DamageSystem->MaxHealth * 0.075);
+		HealthBarWidget->UpdateHealthPercentage(DamageSystem->MaxHealth, DamageSystem->Health);
+	}
+
+}
+
+void AEnemyBoss::HealOverTime()
+{
+	if (HealMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			const float MontageLength = AnimInstance->Montage_Play(HealMontage, 1.0f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyBoss::HealEnded);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, HealMontage);
+
+
+			FHitResult HitResult;
+			TArray<AActor*>ActorsToIgnore;
+			ActorsToIgnore.Add(this);
+
+			const FVector TraceStart = GetActorLocation();
+			const FVector TraceEnd = TraceStart + FVector(0.0f, 0.0f, -1000.0f);
+
+			const bool bHit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), TraceStart, TraceEnd, UEngineTypes::ConvertToTraceType(ECC_Visibility),
+				false, ActorsToIgnore, EDrawDebugTrace::None, HitResult, true);
+
+			FVector SpawnTransformLocation = TraceStart;
+
+			if (bHit)
+			{
+				SpawnTransformLocation = HitResult.ImpactPoint;
+			}
+			else
+				StopAnimMontage();
+
+			const FTransform SpawnTransform(GetActorRotation(), SpawnTransformLocation);
+
+			HealAOE = GetWorld()->SpawnActorDeferred<AAOE_Heal>(ActorToSpawn, SpawnTransform, this, this, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+
+			if (HealAOE)
+			{
+				HealAOE->SpawnInterval = 1.0f;
+				HealAOE->Duration = MontageLength;
+				HealAOE->DrawDebugSphere = false;
+				HealAOE->IgnoreInstigator = false;
+				HealAOE->TriggerOnBeginPlay = true;
+
+				HealAOE->OnAOEOverlapActor.AddDynamic(this, &AEnemyBoss::OnHealTick);
+				HealAOE->FinishSpawning(SpawnTransform);
+
+			}
+		}
+	}
 }

@@ -42,10 +42,10 @@ public:
 	// Public — State
 	//----------------------------------------------------------------------
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float Health = 100.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Health")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float MaxHealth = 100.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "State")

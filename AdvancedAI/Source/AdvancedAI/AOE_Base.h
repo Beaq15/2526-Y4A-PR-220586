@@ -17,7 +17,7 @@ public:
 	// Sets default values for this actor's properties
 	AAOE_Base();
 
-	void Trigger();
+	virtual void Trigger();
 	void SpawnAOESphere();
 	void DestroyActorByTimer();
 

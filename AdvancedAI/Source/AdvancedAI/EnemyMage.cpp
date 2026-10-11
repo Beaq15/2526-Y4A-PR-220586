@@ -173,6 +173,7 @@ void AEnemyMage::HealEnded(UAnimMontage* Montage, bool bInterrupted)
 	if (HealAOE)
 	{
 		HealAOE->Destroy();
+		HealAOE = nullptr;
 	}
 
 	if (OnHealOverTimeEndCallback)

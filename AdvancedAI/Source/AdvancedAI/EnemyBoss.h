@@ -5,11 +5,10 @@
 #include "CoreMinimal.h"
 #include "EnemyBase.h"
 #include "WidgetBossHealthBar.h"
+#include "AOE_Heal.h"
 #include "EnemyBoss.generated.h"
 
-/**
- * 
- */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBossHealOverTimeEnd);
 
 UENUM(BlueprintType)
 enum class EBoss_Attacks : uint8
@@ -61,6 +60,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> GroundSmashAttackMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> HealMontage;
+
 
 	void AttackCombo1(AActor* AttackTarget);
 	void AttackCombo2(AActor* AttackTarget);
@@ -98,4 +100,24 @@ public:
 	TFunction<void()> OnTeleportEndCallback;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UFUNCTION()
+	void HealOverTime();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnBossHealOverTimeEnd OnHealOverTimeEnd;
+
+	TFunction<void()> OnHealOverTimeEndCallback;
+
+	UFUNCTION()
+	void HealEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	UFUNCTION()
+	void OnHealTick(AActor* Actor);
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AActor> ActorToSpawn;
+
+	UPROPERTY()
+	TObjectPtr<AAOE_Heal> HealAOE;
 };

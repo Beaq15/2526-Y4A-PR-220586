@@ -14,7 +14,7 @@ class ADVANCEDAI_API AAOE_Heal : public AAOE_Base
 	
 public:	
 	AAOE_Heal();
-	void Trigger();
+	virtual void Trigger() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	TObjectPtr<UParticleSystem> P_HealAura;

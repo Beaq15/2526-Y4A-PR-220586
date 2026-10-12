@@ -278,6 +278,20 @@ void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPoint
 		MagicSpell(SpawnTransform, CachedAttackInfo.AttackTarget, CachedAttackInfo.DamageInfo, 1000.0f);
 	}
 
+	if (NotifyName == "FireBarrage")
+	{
+		ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+		FVector SocketLocation = OwnerCharacter->GetMesh()->GetSocketLocation(FName("RightHand"));
+		FVector SpawnLocation = SocketLocation + OwnerCharacter->GetActorForwardVector() * 50.f;
+
+		FVector ActorRandomLocation = CachedAttackInfo.AttackTarget->GetActorLocation() + FVector(0.f, FMath::FRandRange(-300.f, 300.f), 0.f);
+
+		FRotator SpawnRotation = UKismetMathLibrary::FindLookAtRotation(OwnerCharacter->GetActorLocation(), ActorRandomLocation);
+		FTransform SpawnTransform(SpawnRotation, SpawnLocation, FVector::OneVector);
+
+		MagicSpell(SpawnTransform, nullptr, CachedAttackInfo.DamageInfo, 1000.0f);
+	}
+
 	if (NotifyName == "Throw")
 	{
 		

@@ -14,7 +14,8 @@ enum class EMage_Attacks : uint8
 {
 	Default,
 	BasicAttack,
-	GroundSmashAttack
+	GroundSmashAttack,
+	BarrageAttack
 };
 
 UCLASS()
@@ -33,6 +34,9 @@ class ADVANCEDAI_API AEnemyMage : public AEnemyBase
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> GroundSmashMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> BarrageMontage;
 
 	UPROPERTY()
 	TObjectPtr<AActor> CachedAttackTarget;
@@ -96,7 +100,6 @@ public:
 
 	virtual float SetMovementSpeed_Implementation(EMovementSpeed Speed) override;
 	virtual void GetIdealRange_Implementation(float& AttackRadius, float& DefendRadius) override;
-	virtual void Attack_Implementation(AActor* AttackTarget) override;
 
 	UFUNCTION()
 	void Teleport(FVector Location);
@@ -110,5 +113,8 @@ public:
 
 	TFunction<void()> OnHealOverTimeEndCallback;
 
+	void BasicAttack(AActor* AttackTarget);
 	void GroundSmashAttack(AActor* AttackTarget);
+	void BarrageAttack(AActor* AttackTarget);
+
 };

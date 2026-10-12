@@ -40,10 +40,13 @@ EBTNodeResult::Type UBTT_MageAttack::ExecuteTask(UBehaviorTreeComponent& OwnerCo
 				Mage->GroundSmashAttack(AttackTarget);
 				break;
 			case EMage_Attacks::BasicAttack:
-				IEnemyInterface::Execute_Attack(Mage, AttackTarget);
+				Mage->BasicAttack(AttackTarget);
+				break;
+			case EMage_Attacks::BarrageAttack:
+				Mage->BarrageAttack(AttackTarget);
 				break;
 			default:
-				IEnemyInterface::Execute_Attack(Mage, AttackTarget);
+				Mage->BasicAttack(AttackTarget);
 				break;
 			}
 		};

@@ -35,19 +35,6 @@ void AEnemyMage::GetIdealRange_Implementation(float& AttackRadius, float& Defend
 	DefendRadius = 700.0f;
 }
 
-void AEnemyMage::Attack_Implementation(AActor* AttackTarget)
-{
-	FDamageInfo DamageInfo;
-	DamageInfo.Amount = 20.f;
-	DamageInfo.bCanBeBlocked = true;
-
-	FAttackInfo AttackInfo;
-	AttackInfo.AttackTarget = AttackTarget;
-	AttackInfo.DamageInfo = DamageInfo;
-	AttackInfo.Montage = FireMontage ;
-	AttackSystem->BasicMageSpell(AttackInfo);
-}
-
 //----------------------------------------------------------------------
 // Private — Teleport
 //----------------------------------------------------------------------
@@ -155,6 +142,19 @@ void AEnemyMage::HealOverTime()
 	}
 }
 
+void AEnemyMage::BasicAttack(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 20.f;
+	DamageInfo.bCanBeBlocked = true;
+
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.DamageInfo = DamageInfo;
+	AttackInfo.Montage = FireMontage;
+	AttackSystem->BasicMageSpell(AttackInfo);
+}
+
 void AEnemyMage::GroundSmashAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
@@ -166,6 +166,19 @@ void AEnemyMage::GroundSmashAttack(AActor* AttackTarget)
 	AttackInfo.Montage = GroundSmashMontage;
 
 	AttackSystem->AroundAttack(AttackInfo, 300.f);
+}
+
+void AEnemyMage::BarrageAttack(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 20.f;
+	DamageInfo.bCanBeBlocked = true;
+
+	FAttackInfo AttackInfo;
+	AttackInfo.AttackTarget = AttackTarget;
+	AttackInfo.DamageInfo = DamageInfo;
+	AttackInfo.Montage = BarrageMontage;
+	AttackSystem->BasicMageSpell(AttackInfo);
 }
 
 void AEnemyMage::HealEnded(UAnimMontage* Montage, bool bInterrupted)

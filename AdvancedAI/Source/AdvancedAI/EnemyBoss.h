@@ -63,11 +63,21 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> HealMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SpawnMinionsMontage;
+
 
 	void AttackCombo1(AActor* AttackTarget);
 	void AttackCombo2(AActor* AttackTarget);
 	void JumpAttack(AActor* AttackTarget);
 	void GroundSmashAttack(AActor* AttackTarget);
+
+	void SpawnMinions(const FVector& SpawnLocation);
+	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<TSubclassOf<AEnemyBase>> MinionClasses;
+
 
 	UFUNCTION()
 	void Teleport(FVector Location, AActor* AttackTarget);

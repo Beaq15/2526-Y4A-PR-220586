@@ -167,6 +167,45 @@ void AEnemyBoss::GroundSmashAttack(AActor* AttackTarget)
 	AttackSystem->AroundAttack(AttackInfo, 1100.0f);
 }
 
+void AEnemyBoss::SpawnMinions(const FVector& SpawnLocation)
+{
+	if (!MinionClasses.IsEmpty())
+	{
+		const TSubclassOf<AEnemyBase> MinionClass = MinionClasses[FMath::RandRange(0, MinionClasses.Num() - 1)];
+
+		if (MinionClass)
+		{
+			FActorSpawnParameters Params;
+			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+			AEnemyBase* Minion = GetWorld()->SpawnActor<AEnemyBase>(MinionClass, SpawnLocation + FVector(0.f, 0.f, 100.f), GetActorRotation(), Params);
+			if (Minion)
+			{
+				Minion->SpawnDefaultController();
+			}
+
+		}
+	}
+
+	if (SpawnMinionsMontage)
+	{
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			AnimInstance->Montage_Play(SpawnMinionsMontage, 1.0f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyBoss::OnAttackMontageEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, SpawnMinionsMontage);
+		}
+	}
+	DamageSystem->isInterruptible = false;
+}
+
+void AEnemyBoss::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	DamageSystem->isInterruptible = true;
+}
+
 void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)
 {
 	GetMesh()->SetVisibility(false, true);
@@ -317,3 +356,4 @@ void AEnemyBoss::HealOverTime()
 		}
 	}
 }
+

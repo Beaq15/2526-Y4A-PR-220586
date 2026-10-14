@@ -16,6 +16,8 @@ EBTNodeResult::Type UBTT_SummonMinions::ExecuteTask(UBehaviorTreeComponent& Owne
 	AEnemyBoss* Boss = Cast<AEnemyBoss>(OwnerComp.GetAIOwner()->GetPawn());
 	if (!Boss) return EBTNodeResult::Failed;
 
+	if (!Boss->CanSummonMinion()) return EBTNodeResult::Failed;
+
 	const FVector Location = OwnerComp.GetBlackboardComponent()->GetValueAsVector(SummonPointKey.SelectedKeyName);
 	Boss->SpawnMinions(Location);
 

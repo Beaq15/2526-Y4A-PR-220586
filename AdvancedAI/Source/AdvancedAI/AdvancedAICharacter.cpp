@@ -320,7 +320,7 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 	if (NotifyName == FName("Fire"))
 	{
 		FDamageInfo DamageInfo;
-		DamageInfo.Amount = 400.f;
+		DamageInfo.Amount = 50.f;
 		DamageInfo.bCanBeBlocked = true;
 
 		FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("hand_l"));

@@ -169,29 +169,28 @@ void AEnemyBoss::GroundSmashAttack(AActor* AttackTarget)
 
 void AEnemyBoss::SpawnMinions(const FVector& SpawnLocation)
 {
-	if (!MinionClasses.IsEmpty())
-	{
-		const TSubclassOf<AEnemyBase> MinionClass = MinionClasses[FMath::RandRange(0, MinionClasses.Num() - 1)];
-
-		if (MinionClass)
-		{
-			FActorSpawnParameters Params;
-			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-			AEnemyBase* Minion = GetWorld()->SpawnActor<AEnemyBase>(MinionClass, SpawnLocation + FVector(0.f, 0.f, 100.f), GetActorRotation(), Params);
-			if (Minion)
-			{
-				Minion->SpawnDefaultController();
-			}
-
-		}
-	}
+	CachedSpawnLocation = SpawnLocation;
 
 	if (SpawnMinionsMontage)
 	{
 		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 		{
 			AnimInstance->Montage_Play(SpawnMinionsMontage, 1.0f);
+
+			if (SummonSpawnPointEffect)
+			{
+				ActiveSummonSpawnPointEffect = UGameplayStatics::SpawnEmitterAtLocation(
+					GetWorld(), SummonSpawnPointEffect, CachedSpawnLocation, FRotator::ZeroRotator, FVector(1.f), true);
+			}
+
+			if (SummonBossEffect)
+			{
+				ActiveSummonBossEffect = UGameplayStatics::SpawnEmitterAttached(
+					SummonBossEffect, GetMesh(), FName("root"), FVector::ZeroVector, FRotator::ZeroRotator,
+					FVector(1.f), EAttachLocation::KeepRelativeOffset, false);
+			}
+
+			AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AEnemyBoss::OnMontageNotifyBegin);
 
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AEnemyBoss::OnAttackMontageEnd);
@@ -201,9 +200,74 @@ void AEnemyBoss::SpawnMinions(const FVector& SpawnLocation)
 	DamageSystem->isInterruptible = false;
 }
 
+void AEnemyBoss::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
+{
+
+	if (NotifyName == FName("Spawn"))
+	{
+		if (!CanSummonMinion()) return;
+
+		if (!MinionClasses.IsEmpty())
+		{
+			const TSubclassOf<AEnemyBase> MinionClass = MinionClasses[FMath::RandRange(0, MinionClasses.Num() - 1)];
+
+			if (MinionClass)
+			{
+				const float HalfHeight = MinionClass.GetDefaultObject()->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+				const FVector FinalLocation = CachedSpawnLocation + FVector(0.f, 0.f, HalfHeight);
+				const FTransform SpawnTransform(GetActorRotation(), FinalLocation);
+
+				AEnemyBase* Minion = GetWorld()->SpawnActorDeferred<AEnemyBase>(
+					MinionClass, SpawnTransform, this, GetInstigator(),
+					ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+
+				if (Minion)
+				{
+					Minion->AutoPossessAI = EAutoPossessAI::Disabled;
+					Minion->FinishSpawning(SpawnTransform);
+					Minion->RiseFromGround(FinalLocation, 2.0f);
+
+					ActiveMinions.Add(Minion);
+				}
+
+			}
+		}
+	}
+}
+
+bool AEnemyBoss::CanSummonMinion()
+{
+	for (int32 i = ActiveMinions.Num() - 1; i >= 0; --i)
+	{
+		if (!ActiveMinions[i].IsValid())
+		{
+			ActiveMinions.RemoveAt(i);
+		}
+	}
+
+	if (ActiveMinions.Num() < MaxMinions)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void AEnemyBoss::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 	DamageSystem->isInterruptible = true;
+
+	if (IsValid(ActiveSummonSpawnPointEffect))
+	{
+		ActiveSummonSpawnPointEffect->DestroyComponent();
+		ActiveSummonSpawnPointEffect = nullptr;
+	}
+
+	if (IsValid(ActiveSummonBossEffect))
+	{
+		ActiveSummonBossEffect->DestroyComponent();
+		ActiveSummonBossEffect = nullptr;
+	}
 }
 
 void AEnemyBoss::Teleport(FVector Location, AActor* AttackTarget)

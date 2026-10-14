@@ -75,8 +75,34 @@ public:
 	void SpawnMinions(const FVector& SpawnLocation);
 	void OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted);
 
+	UFUNCTION()
+	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
+
+	FVector CachedSpawnLocation;
+
 	UPROPERTY(EditDefaultsOnly)
 	TArray<TSubclassOf<AEnemyBase>> MinionClasses;
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UParticleSystem> SummonSpawnPointEffect;   
+
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<UParticleSystem> SummonBossEffect;
+
+	UPROPERTY()
+	TObjectPtr<UParticleSystemComponent> ActiveSummonSpawnPointEffect;  
+
+	UPROPERTY()
+	TObjectPtr<UParticleSystemComponent> ActiveSummonBossEffect;
+
+	UPROPERTY(EditDefaultsOnly)
+	int32 MaxMinions = 2;
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AEnemyBase>> ActiveMinions;
+
+	bool CanSummonMinion();
+
 
 
 	UFUNCTION()

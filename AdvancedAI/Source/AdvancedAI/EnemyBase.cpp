@@ -55,6 +55,13 @@ void AEnemyBase::BeginPlay()
 	DamageSystem->OnBlocked.AddDynamic(this, &AEnemyBase::OnBlocked);
 }
 
+void AEnemyBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	AICEnemyBase = Cast<AAIC_Enemy_Base>(NewController);
+}
+
 void AEnemyBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -317,4 +324,42 @@ void AEnemyBase::ReturnAttackToken_Implementation(int32 Amount)
 void AEnemyBase::SetIsInterruptable_Implementation(bool Value)
 {
 	DamageSystem->isInterruptible = Value;
+}
+
+void AEnemyBase::RiseFromGround(const FVector& TargetLocation, float Duration)
+{
+	const float Depth = GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 2.f;
+
+	RiseEnd = TargetLocation;
+	RiseStart = TargetLocation - FVector(0.f, 0.f, Depth);
+	RiseDuration = FMath::Max(Duration, 0.05f);
+	RiseElapsed = 0.f;
+
+	SetActorEnableCollision(false);
+	GetCharacterMovement()->DisableMovement();
+	SetActorLocation(RiseStart, false, nullptr, ETeleportType::TeleportPhysics);
+
+	GetWorldTimerManager().SetTimer(RiseTimerHandle, this, &AEnemyBase::UpdateRise, 0.016f, true);
+}
+
+void AEnemyBase::UpdateRise()
+{
+	RiseElapsed += GetWorld()->GetDeltaSeconds();
+	const float Alpha = FMath::Clamp(RiseElapsed / RiseDuration, 0.f, 1.f);
+	const float Eased = FMath::InterpEaseOut(0.f, 1.f, Alpha, 2.f);
+
+	SetActorLocation(FMath::Lerp(RiseStart, RiseEnd, Eased), false, nullptr, ETeleportType::TeleportPhysics);
+
+	if (Alpha >= 1.f)
+	{
+		GetWorldTimerManager().ClearTimer(RiseTimerHandle);
+
+		SetActorEnableCollision(true);
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+		if (!GetController())
+		{
+			SpawnDefaultController();
+		}
+	}
 }

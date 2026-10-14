@@ -108,7 +108,16 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TObjectPtr<AActor> WeaponActor;
 
+	void RiseFromGround(const FVector& TargetLocation, float Duration);
 protected:
+	void UpdateRise();
+
+	FTimerHandle RiseTimerHandle;
+	FVector RiseStart;
+	FVector RiseEnd;
+	float RiseDuration = 1.f;
+	float RiseElapsed = 0.f;
+
 	//----------------------------------------------------------------------
 	// Protected — Lifecycle
 	//----------------------------------------------------------------------
@@ -157,7 +166,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<AAIC_Enemy_Base> AICEnemyBase;
 
-	
+	virtual void PossessedBy(AController* NewController) override;
 
 	UPROPERTY()
 	TObjectPtr<AActor> CachedDamageCauser;

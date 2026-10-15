@@ -360,6 +360,8 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 			FDamageInfo DamageInfo;
 			DamageInfo.Amount = 10.f;
 			DamageInfo.bCanBeBlocked = true;
+
+			AttackSystem->DamageAllNonTeamMembers(DamageInfo, OutHits);
 		}
 	}
 

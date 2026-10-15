@@ -432,6 +432,7 @@ void AAdvancedAICharacter::OnMontageEnded(UAnimMontage* Montage, bool bInterrupt
 
 void AAdvancedAICharacter::OnHitResponse_Event(AActor* DamageCauser)
 {
+	if (bAttacking) return;
 	if (!bShouldReactToHit) return;
 	if (!HitReactionMontage) return;
 	

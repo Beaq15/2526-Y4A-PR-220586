@@ -205,7 +205,7 @@ void AEnemyBoss::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNot
 
 	if (NotifyName == FName("Spawn"))
 	{
-		if (!CanSummonMinion()) return;
+		if (bIsDead || !CanSummonMinion()) return;
 
 		if (!MinionClasses.IsEmpty())
 		{
@@ -251,6 +251,22 @@ bool AEnemyBoss::CanSummonMinion()
 	}
 
 	return false;
+}
+
+void AEnemyBoss::OnDeath_Event()
+{
+	bIsDead = true;
+
+	for (const TWeakObjectPtr<AEnemyBase>& Minion : ActiveMinions)
+	{
+		if (Minion.IsValid())
+		{
+			Minion->OnDeath_Event();
+		}
+	}
+	ActiveMinions.Empty();
+
+	Super::OnDeath_Event();
 }
 
 void AEnemyBoss::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)

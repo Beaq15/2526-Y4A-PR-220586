@@ -369,6 +369,7 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 	{
 		FDamageInfo DamageInfo;
 		DamageInfo.Amount = 30.f;
+		DamageInfo.bCanBeBlocked = false;
 		AttackSystem->AOEDamage(200.0f, DamageInfo);
 	}
 

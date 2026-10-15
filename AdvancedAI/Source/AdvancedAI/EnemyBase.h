@@ -109,6 +109,9 @@ public:
 	TObjectPtr<AActor> WeaponActor;
 
 	void RiseFromGround(const FVector& TargetLocation, float Duration);
+
+	UFUNCTION()
+	virtual void OnDeath_Event();
 protected:
 	void UpdateRise();
 
@@ -192,8 +195,7 @@ protected:
 	UFUNCTION()
 	void OnFactReceived(FSharedFact Fact);
 
-	UFUNCTION()
-	void OnDeath_Event();
+	
 
 	UFUNCTION()
 	void CleanupAfterDeath();

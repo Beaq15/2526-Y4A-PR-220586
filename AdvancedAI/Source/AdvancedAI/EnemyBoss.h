@@ -103,7 +103,9 @@ public:
 
 	bool CanSummonMinion();
 
+	virtual void OnDeath_Event() override;
 
+	bool bIsDead = false;
 
 	UFUNCTION()
 	void Teleport(FVector Location, AActor* AttackTarget);

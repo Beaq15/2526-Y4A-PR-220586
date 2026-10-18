@@ -472,6 +472,8 @@ void AAdvancedAICharacter::OnDeath_Event()
 
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		DisableInput(PC);
+
+	GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AAdvancedAICharacter::ShowDeathScreen, DeathDelay, false);
 }
 
 void AAdvancedAICharacter::EquipWeapon()
@@ -732,4 +734,20 @@ void AAdvancedAICharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	GetWorldTimerManager().ClearTimer(TeleportMoveTimerHandle);
 	GetWorldTimerManager().ClearTimer(TeleportCooldownHandle);
 	Super::EndPlay(EndPlayReason);
+}
+
+void AAdvancedAICharacter::ShowDeathScreen()
+{
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (!PC || !DeathWidgetClass) return;
+
+	UUserWidget* Widget = CreateWidget<UUserWidget>(PC, DeathWidgetClass);
+	if (!Widget) return;
+
+	Widget->AddToViewport();
+
+	FInputModeUIOnly InputMode;
+	InputMode.SetWidgetToFocus(Widget->TakeWidget());
+	PC->SetInputMode(InputMode);
+	PC->SetShowMouseCursor(true);
 }

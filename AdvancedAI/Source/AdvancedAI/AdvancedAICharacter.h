@@ -331,7 +331,16 @@ protected:
 	FTimerHandle TeleportMoveTimerHandle;
 	FTimerHandle TeleportCooldownHandle;
 
-	
+	void ShowDeathScreen();
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> DeathWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	float DeathDelay = 1.5f;
+
+	FTimerHandle DeathTimerHandle;
+
 	//----------------------------------------------------------------------
 	// Protected — IDamageableInterface
 	//----------------------------------------------------------------------

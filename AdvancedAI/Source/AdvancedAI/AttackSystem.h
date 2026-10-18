@@ -51,6 +51,7 @@ public:
 
 	FVector CalculateFutureActorLocation(AActor* Actor, float Time);
 
+	UFUNCTION()
 	void OnLand(const FHitResult& Hit);
 
 	UPROPERTY()

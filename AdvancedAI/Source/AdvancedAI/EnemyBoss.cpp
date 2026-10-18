@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Blueprint/UserWidget.h"
 
 AEnemyBoss::AEnemyBoss()
 {
@@ -109,6 +110,27 @@ void AEnemyBoss::QuickAttack(AActor* AttackTarget)
 	AttackInfo.Montage = QuickAttackMontage;
 	AttackInfo.DamageInfo = DamageInfo;
 	AttackSystem->RangeAttack(AttackInfo, 40.0f, 220.f);
+}
+
+void AEnemyBoss::ShowVictoryScreen()
+{
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->RemoveFromParent();
+	}
+
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (!PC || !VictoryWidgetClass) return;
+
+	UUserWidget* Widget = CreateWidget<UUserWidget>(PC, VictoryWidgetClass);
+	if (!Widget) return;
+
+	Widget->AddToViewport();
+
+	FInputModeUIOnly InputMode;
+	InputMode.SetWidgetToFocus(Widget->TakeWidget());
+	PC->SetInputMode(InputMode);
+	PC->SetShowMouseCursor(true);
 }
 
 void AEnemyBoss::AttackCombo1(AActor* AttackTarget)
@@ -267,6 +289,8 @@ void AEnemyBoss::OnDeath_Event()
 	ActiveMinions.Empty();
 
 	Super::OnDeath_Event();
+
+	GetWorldTimerManager().SetTimer(VictoryTimerHandle, this, &AEnemyBoss::ShowVictoryScreen, VictoryDelay, false);
 }
 
 void AEnemyBoss::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)

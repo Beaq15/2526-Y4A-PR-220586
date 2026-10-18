@@ -66,6 +66,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> SpawnMinionsMontage;
 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> VictoryWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	float VictoryDelay = 1.5f;
+
+	FTimerHandle VictoryTimerHandle;
+
+	void ShowVictoryScreen();
+
 
 	void AttackCombo1(AActor* AttackTarget);
 	void AttackCombo2(AActor* AttackTarget);

@@ -28,8 +28,7 @@ void UWidgetVictoryScreen::OnRestartClicked()
 		PC->SetShowMouseCursor(false);
 	}
 
-	const FName LevelName(*UGameplayStatics::GetCurrentLevelName(this, true));
-	UGameplayStatics::OpenLevel(this, LevelName);
+	UGameplayStatics::OpenLevel(this, "Map_Airbase_Demo");
 }
 
 void UWidgetVictoryScreen::OnExitClicked()

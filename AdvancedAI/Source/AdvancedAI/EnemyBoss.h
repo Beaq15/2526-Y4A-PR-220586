@@ -66,6 +66,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> SpawnMinionsMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> PhaseTransitionMontage;
+
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> VictoryWidgetClass;
 
@@ -168,4 +171,16 @@ public:
 
 	UPROPERTY()
 	TObjectPtr<AAOE_Heal> HealAOE;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Phase")
+	float Phase2Threshold = 0.66f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Phase")
+	float Phase3Threshold = 0.33f;
+
+	int32 CurrentPhase = 1;
+
+	void UpdatePhase();
+
+	void OnPhaseTransitionEnd(UAnimMontage* Montage, bool bInterrupted);
 };

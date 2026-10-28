@@ -7,6 +7,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 AEnemyBoss::AEnemyBoss()
 {
@@ -45,6 +47,8 @@ bool AEnemyBoss::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor
 	bool ActualDamage = Super::TakeDamage_Implementation(DamageInfo, DamageCauser);
 
 	HealthBarWidget->UpdateHealthPercentage(DamageSystem->MaxHealth, DamageSystem->Health);
+
+	UpdatePhase();
 
 	return ActualDamage;
 }
@@ -217,9 +221,11 @@ void AEnemyBoss::SpawnMinions(const FVector& SpawnLocation)
 			FOnMontageEnded EndDelegate;
 			EndDelegate.BindUObject(this, &AEnemyBoss::OnAttackMontageEnd);
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, SpawnMinionsMontage);
+
+			DamageSystem->isInterruptible = false;
+			DamageSystem->isInvincible = true;
 		}
 	}
-	DamageSystem->isInterruptible = false;
 }
 
 void AEnemyBoss::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
@@ -296,6 +302,7 @@ void AEnemyBoss::OnDeath_Event()
 void AEnemyBoss::OnAttackMontageEnd(UAnimMontage* Montage, bool bInterrupted)
 {
 	DamageSystem->isInterruptible = true;
+	DamageSystem->isInvincible = false;
 
 	if (IsValid(ActiveSummonSpawnPointEffect))
 	{
@@ -382,7 +389,9 @@ void AEnemyBoss::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void AEnemyBoss::HealEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	UE_LOG(LogTemp, Warning, TEXT("HealEnded - interrupted: %d"), bInterrupted);
+	DamageSystem->isInterruptible = true;
+	DamageSystem->isInvincible = false;
+
 	if (HealAOE)
 	{
 		HealAOE->Destroy();
@@ -421,6 +430,8 @@ void AEnemyBoss::HealOverTime()
 			EndDelegate.BindUObject(this, &AEnemyBoss::HealEnded);
 			AnimInstance->Montage_SetEndDelegate(EndDelegate, HealMontage);
 
+			DamageSystem->isInterruptible = false;
+			DamageSystem->isInvincible = true;
 
 			FHitResult HitResult;
 			TArray<AActor*>ActorsToIgnore;
@@ -461,3 +472,56 @@ void AEnemyBoss::HealOverTime()
 	}
 }
 
+void AEnemyBoss::UpdatePhase()
+{
+	const float Percent = DamageSystem->Health / DamageSystem->MaxHealth;
+
+	int32 NewPhase = 1;
+	if (Percent <= Phase3Threshold)      NewPhase = 3;
+	else if (Percent <= Phase2Threshold) NewPhase = 2;
+
+	if (NewPhase <= CurrentPhase) return;
+	CurrentPhase = NewPhase;
+
+	if (AAIController* AI = Cast<AAIController>(GetController()))
+	{
+		AI->GetBlackboardComponent()->SetValueAsInt(TEXT("Phase"), CurrentPhase);
+	}
+
+	if (CurrentPhase == 2 && PhaseTransitionMontage && !bIsDead)
+	{
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			AnimInstance->Montage_Play(PhaseTransitionMontage, 1.0f);
+
+			FOnMontageEnded EndDelegate;
+			EndDelegate.BindUObject(this, &AEnemyBoss::OnPhaseTransitionEnd);
+			AnimInstance->Montage_SetEndDelegate(EndDelegate, PhaseTransitionMontage);
+
+			DamageSystem->isInterruptible = false;
+			DamageSystem->isInvincible = true;
+
+			if (AAIController* AI = Cast<AAIController>(GetController()))
+			{
+				AI->GetBlackboardComponent()->SetValueAsBool(TEXT("IsTransitioning"), true);
+			}
+		}
+	}
+
+	if (CurrentPhase == 3)
+	{
+		CustomTimeDilation = 1.3f;
+		MaxMinions = 3;
+	}
+}
+
+void AEnemyBoss::OnPhaseTransitionEnd(UAnimMontage* Montage, bool bInterrupted)
+{
+	DamageSystem->isInterruptible = true;
+	DamageSystem->isInvincible = false;
+
+	if (AAIController* AI = Cast<AAIController>(GetController()))
+	{
+		AI->GetBlackboardComponent()->SetValueAsBool(TEXT("IsTransitioning"), false);
+	}
+}

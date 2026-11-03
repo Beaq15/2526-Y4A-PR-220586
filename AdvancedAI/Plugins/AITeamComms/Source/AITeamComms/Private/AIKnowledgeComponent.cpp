@@ -96,6 +96,22 @@ void UAIKnowledgeComponent::ClaimArea(const FVector& Location, float Duration, i
     }*/
 }
 
+void UAIKnowledgeComponent::SendRequest(FGameplayTag RequestType, float Duration, int32 Channel)
+{
+    FSharedFact Fact;
+    Fact.FactType = RequestType;
+    Fact.Subject.Actor = GetOwner();
+    Fact.Subject.Location = GetOwner()->GetActorLocation();
+    Fact.Confidence = 1.f;
+    Fact.TTL = Duration;
+    Fact.Channel = Channel;
+    Fact.Source = EFactSource::Manual;
+    Fact.MaxHops = 1;
+    Fact.ConfidenceDecayRate = 0.f;
+
+    AddOrUpdateFact(Fact, true);
+}
+
 void UAIKnowledgeComponent::TickComponent(float Dt, ELevelTick, FActorComponentTickFunction*)
 {
     CullExpired();

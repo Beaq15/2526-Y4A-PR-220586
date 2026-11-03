@@ -51,8 +51,6 @@ void AAOE_Base::Trigger()
 
 void AAOE_Base::SpawnAOESphere()
 {
-	UE_LOG(LogTemp, Warning, TEXT("SpawnAOESphere called at time %f"), GetWorld()->GetTimeSeconds());
-
 	if (DrawDebugSphere)
 	{
 		UKismetSystemLibrary::DrawDebugSphere(GetWorld(), GetActorLocation(), Radius, 12, FLinearColor::Blue, 1.0f, 1.0f);

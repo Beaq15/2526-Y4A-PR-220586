@@ -69,6 +69,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Knowledge")
     void ClaimArea(const FVector& Location, float Duration = 30.f, int32 Channel = 0);
 
+    UFUNCTION(BlueprintCallable, Category = "Knowledge")
+    void SendRequest(FGameplayTag RequestType, float Duration = 5.f, int32 Channel = 4);
+
 private:
     TWeakObjectPtr<UAICommsSubsystem> Comms;
 

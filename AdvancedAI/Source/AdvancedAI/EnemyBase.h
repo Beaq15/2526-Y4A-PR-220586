@@ -115,6 +115,27 @@ public:
 
 	void Stagger(AActor* Parrier);
 
+	UPROPERTY(EditAnywhere, Category = "Heal")
+	float HealRequestThreshold = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Heal")
+	float HealRequestCooldown = 6.f;
+
+	float GetHealthPct() const
+	{
+		if (!DamageSystem || DamageSystem->MaxHealth <= 0.f)
+		{
+			return 0.f;
+		}
+
+		return FMath::Clamp(DamageSystem->Health / DamageSystem->MaxHealth, 0.f, 1.f);
+	}
+	bool NeedsHealing() const { return GetHealthPct() > 0.f && GetHealthPct() < HealRequestThreshold; }
+
+	float LastHealRequestTime = -1000.f;
+
+	void TryRequestHeal();
+
 protected:
 	void UpdateRise();
 
@@ -140,7 +161,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UAttackSystem> AttackSystem;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(EditAnywhere, Category = "Components")
 	TObjectPtr<UAIKnowledgeComponent> KnowledgeComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")

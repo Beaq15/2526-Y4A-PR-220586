@@ -333,6 +333,8 @@ bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor
 	if (DamageInfo.bCanBeBlocked && SwordBlockHitMontage)
 		TryToBlock();
 
+	TryRequestHeal();
+
 	const bool bDamaged = DamageSystem->TakeDamage(DamageInfo, DamageCauser);
 
 	if (bDamaged)
@@ -342,6 +344,19 @@ bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor
 	}
 
 	return bDamaged;
+}
+
+void AEnemyBase::TryRequestHeal()
+{
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (!NeedsHealing() || Now - LastHealRequestTime < HealRequestCooldown) return;
+
+	LastHealRequestTime = Now;
+
+	if (UAIKnowledgeComponent* Knowledge = FindComponentByClass<UAIKnowledgeComponent>())
+	{
+		Knowledge->SendRequest(FGameplayTag::RequestGameplayTag(FName("Fact.NeedsHeal")), 5.f, 4);
+	}
 }
 
 bool AEnemyBase::ReserveAttackToken_Implementation(int32 Amount)

@@ -200,10 +200,13 @@ void AEnemyMage::HealEnded(UAnimMontage* Montage, bool bInterrupted)
 
 void AEnemyMage::OnHealTick(AActor* Actor)
 {
-	if (Actor == this)
-	{
-		Heal_Implementation(DamageSystem->MaxHealth * 0.075);
-	}
+	AEnemyBase* Ally = Cast<AEnemyBase>(Actor);
+	if (!Ally) return;
+
+	if (IDamageableInterface::Execute_IsDead(Ally)) return;
+
+	const float MaxHP = IDamageableInterface::Execute_GetMaxHealth(Ally);
+	IDamageableInterface::Execute_Heal(Ally, MaxHP * 0.075f);
 }
 
 void AEnemyMage::BeginPlay()

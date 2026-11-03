@@ -20,5 +20,5 @@ void AAOE_Heal::Trigger()
 	Super::Trigger();
 
 	UGameplayStatics::SpawnEmitterAttached(
-		P_HealAura, RootComponent, FName("None"), FVector::ZeroVector, FRotator::ZeroRotator, FVector::OneVector);
+		P_HealAura, RootComponent, FName("None"), FVector::ZeroVector, FRotator::ZeroRotator, FVector(2.f));
 }

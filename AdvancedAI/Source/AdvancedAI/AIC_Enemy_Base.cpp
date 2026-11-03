@@ -256,9 +256,6 @@ void AAIC_Enemy_Base::HandleSensedDamage(AActor* Actor)
 {
     if (OnSameTeam(Actor)) return;
 
-    UE_LOG(LogTemp, Warning, TEXT("HandleSensedDamage from: %s"), *Actor->GetName());
-
-
     switch (GetCurrentState())
     {
     case EAIState::Passive:

@@ -12,14 +12,13 @@ ALevelTransition::ALevelTransition()
 	SetRootComponent(Trigger);
 	Trigger->SetCollisionResponseToAllChannels(ECR_Ignore);
 	Trigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ALevelTransition::OnOverlap);
 }
 
 // Called when the game starts or when spawned
 void ALevelTransition::BeginPlay()
 {
 	Super::BeginPlay();
-	Trigger->OnComponentBeginOverlap.AddDynamic(this, &ALevelTransition::OnOverlap);
+	Trigger->OnComponentBeginOverlap.AddUniqueDynamic(this, &ALevelTransition::OnOverlap);
 }
 
 void ALevelTransition::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

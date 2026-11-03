@@ -251,7 +251,7 @@ void AAdvancedAICharacter::PerformMeleeAttack()
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 		AnimInstance->Montage_Play(SwordSlashMontage, 1.0f);
 		AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
-		AnimInstance->OnPlayMontageNotifyEnd.AddDynamic(this, &AAdvancedAICharacter::OnNotifyEndReceived);
+		AnimInstance->OnPlayMontageNotifyEnd.AddUniqueDynamic(this, &AAdvancedAICharacter::OnNotifyEndReceived);
 
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindUObject(this, &AAdvancedAICharacter::OnMontageEnded);
@@ -373,7 +373,7 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		AttackSystem->AOEDamage(200.0f, DamageInfo);
 	}
 
-	if (NotifyName == "ResumeComboWindow")
+	if (NotifyName == FName("ResumeComboWindow"))
 	{
 		isWithingResumeComboWindow = true;
 		canResumeCombo = false;
@@ -390,6 +390,13 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		if (!WeaponActor) return;
 
 		WeaponActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("hand_r_sword_socket"));
+		
+		if (!ShieldClass) return;
+
+		ShieldActor = GetWorld()->SpawnActor<AActor>(ShieldClass, GetActorTransform(), SpawnParams);
+		if (!ShieldActor) return;
+
+		ShieldActor->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, true), FName("arm_l_shield_socket"));
 
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
 	}
@@ -405,9 +412,9 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
 	}
 
-	if (NotifyName == FName("Block"))
+	if (NotifyName == FName("ParryWindow"))
 	{
-		DamageSystem->isBlocking = true;
+		IsWithinParryWindow = true;
 	}
 }
 
@@ -419,6 +426,11 @@ void AAdvancedAICharacter::OnNotifyEndReceived(FName NotifyName, const FBranchin
 
 		if (!canResumeCombo)
 			StopAnimMontage(SwordSlashMontage);
+	}
+
+	if (NotifyName == FName("ParryWindow"))
+	{
+		IsWithinParryWindow = false;
 	}
 }
 
@@ -523,6 +535,8 @@ void AAdvancedAICharacter::StartBlock(const FInputActionValue& Value)
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
 		AnimInstance->Montage_Play(SwordBlockMontage, 1.0f);
+		AnimInstance->OnPlayMontageNotifyBegin.AddUniqueDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
+		AnimInstance->OnPlayMontageNotifyEnd.AddUniqueDynamic(this, &AAdvancedAICharacter::OnNotifyEndReceived);
 	}
 }
 
@@ -533,14 +547,34 @@ void AAdvancedAICharacter::EndBlock(const FInputActionValue& Value)
 	bCanMove = true;
 }
 
-void AAdvancedAICharacter::OnBlocked(AActor* DamageCauser)
+void AAdvancedAICharacter::OnBlocked(bool bCanBeParried, AActor* DamageCauser)
 {
-	if (SwordBlockHitMontage)
-	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (!AnimInstance) return;
 
-		AnimInstance->Montage_Play(SwordBlockHitMontage, 1.0f);
+	if (IsWithinParryWindow && bCanBeParried)
+	{
+
+		if (SwordBlockHitMoveMontage)
+			AnimInstance->Montage_Play(SwordBlockHitMontage, 1.0f);
+
+		ParryAttack(DamageCauser);
 	}
+	else	
+	{
+		if (SwordBlockHitMontage)
+			AnimInstance->Montage_Play(SwordBlockHitMoveMontage, 1.0f);
+
+	}
+	const bool bWasTurtling = IsTurtling();
+	++BlockStreak;
+
+	if (!bWasTurtling && IsTurtling())
+	{
+		GetWorldTimerManager().SetTimer(TurtleEndHandle, this, &AAdvancedAICharacter::EndTurtling, TurtleDuration, false);
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("BlockStreak: %d  Turtling: %d"), BlockStreak, IsTurtling());
 }
 
 void AAdvancedAICharacter::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)
@@ -606,6 +640,10 @@ bool AAdvancedAICharacter::TakeDamage_Implementation(const FDamageInfo& DamageIn
 {
 	if (bIsTeleporting) return false;
 
+	FDamageInfo Info = DamageInfo;
+	if (IsTurtling())
+		Info.bCanBeBlocked = false;
+
 	if (DamageSystem->isBlocking && DamageCauser)
 	{
 		FVector ToDamageCauser = (DamageCauser->GetActorLocation() - GetActorLocation()).GetSafeNormal();
@@ -614,12 +652,42 @@ bool AAdvancedAICharacter::TakeDamage_Implementation(const FDamageInfo& DamageIn
 		if (DotProduct < 0.5f)
 		{
 			DamageSystem->isBlocking = false;
-			bool bResult = DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+			bool bResult = DamageSystem->TakeDamage(Info, DamageCauser);
 			DamageSystem->isBlocking = true;
 			return bResult;
 		}
+
 	}
-	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+	return DamageSystem->TakeDamage(Info, DamageCauser);
+}
+
+void AAdvancedAICharacter::ParryAttack(AActor* AttackTarget)
+{
+	FDamageInfo DamageInfo;
+	DamageInfo.Amount = 5.0f;
+
+	if (IsValid(AttackTarget) && AttackTarget->Implements<UDamageableInterface>())
+	{
+		IDamageableInterface::Execute_TakeDamage(AttackTarget, DamageInfo, this);
+	}
+
+	AimTimeline.PlayFromStart();
+
+	GetWorldTimerManager().SetTimer(ParrySlowMoStartHandle, [this]()
+		{
+			UGameplayStatics::SetGlobalTimeDilation(this, 0.2f);
+
+			GetWorldTimerManager().SetTimer(ParrySlowMoEndHandle, [this]()
+				{
+					UGameplayStatics::SetGlobalTimeDilation(this, 1.0f);
+					AimTimeline.Reverse();
+				}, 0.1f, false);
+		}, 0.2f, false);
+
+	if (AEnemyBase* Enemy = Cast<AEnemyBase>(AttackTarget))
+	{
+		Enemy->Stagger(this);
+	}
 }
 
 bool AAdvancedAICharacter::IsAttacking_Implementation()

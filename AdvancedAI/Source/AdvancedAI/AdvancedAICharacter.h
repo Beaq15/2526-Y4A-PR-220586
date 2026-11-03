@@ -110,6 +110,12 @@ class AAdvancedAICharacter : public ACharacter, public IGenericTeamAgentInterfac
 	UPROPERTY()
 	TObjectPtr<AActor> WeaponActor;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Combat")
+	TSubclassOf<AActor> ShieldClass;
+
+	UPROPERTY()
+	TObjectPtr<AActor> ShieldActor;
+
 	//----------------------------------------------------------------------
 	// Private — Timeline
 	//----------------------------------------------------------------------
@@ -154,6 +160,25 @@ public:
 
 	UPROPERTY()
 	TObjectPtr<UWidgetPlayerHUD> PlayerHUDWidget;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Block")
+	int32 TurtleBlockThreshold = 3;
+
+	int32 BlockStreak = 0;
+
+	bool IsTurtling() const { return BlockStreak >= TurtleBlockThreshold; }
+	void ResetBlockStreak() { UE_LOG(LogTemp, Warning, TEXT("BlockStreak reset (was %d)"), BlockStreak); if (!IsTurtling()) BlockStreak = 0; }
+
+	UPROPERTY(EditDefaultsOnly, Category = "Block")
+	float TurtleDuration = 60.f;
+
+	FTimerHandle TurtleEndHandle;
+	void EndTurtling(){
+		{
+			BlockStreak = 0;
+			UE_LOG(LogTemp, Warning, TEXT("Turtling ended"));
+		}
+	}
 
 protected:
 	//----------------------------------------------------------------------
@@ -200,7 +225,7 @@ protected:
 	void EndBlock(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void OnBlocked(AActor* DamageCauser);
+	void OnBlocked(bool bCanBeParried, AActor* DamageCauser);
 
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
@@ -250,6 +275,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> SwordBlockHitMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> SwordBlockHitMoveMontage;
 
 	//----------------------------------------------------------------------
 	// Protected — Components
@@ -340,6 +368,13 @@ protected:
 	float DeathDelay = 1.5f;
 
 	FTimerHandle DeathTimerHandle;
+
+	bool IsWithinParryWindow = false;
+
+	void ParryAttack(AActor* AttackTarget);
+
+	FTimerHandle ParrySlowMoStartHandle;
+	FTimerHandle ParrySlowMoEndHandle;
 
 	//----------------------------------------------------------------------
 	// Protected — IDamageableInterface

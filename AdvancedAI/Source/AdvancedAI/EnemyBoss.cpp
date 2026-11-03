@@ -93,7 +93,7 @@ void AEnemyBoss::UnequipWeapon_Implementation()
 void AEnemyBoss::ThrowAxe(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
-	DamageInfo.Amount = 20.0f;
+	DamageInfo.Amount = 20.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = true;
 
 	FAttackInfo AttackInfo;
@@ -106,7 +106,7 @@ void AEnemyBoss::ThrowAxe(AActor* AttackTarget)
 void AEnemyBoss::QuickAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
-	DamageInfo.Amount = 20.0f;
+	DamageInfo.Amount = 20.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = true;
 
 	FAttackInfo AttackInfo;
@@ -140,7 +140,7 @@ void AEnemyBoss::ShowVictoryScreen()
 void AEnemyBoss::AttackCombo1(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
-	DamageInfo.Amount = 20.0f;
+	DamageInfo.Amount = 20.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = true;
 
 	FAttackInfo AttackInfo;
@@ -154,7 +154,7 @@ void AEnemyBoss::AttackCombo1(AActor* AttackTarget)
 void AEnemyBoss::AttackCombo2(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
-	DamageInfo.Amount = 15.0f;
+	DamageInfo.Amount = 15.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = true;
 
 	FAttackInfo AttackInfo;
@@ -168,7 +168,7 @@ void AEnemyBoss::AttackCombo2(AActor* AttackTarget)
 void AEnemyBoss::JumpAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
-	DamageInfo.Amount = 15.0f;
+	DamageInfo.Amount = 15.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = false;
 
 	FAttackInfo AttackInfo;
@@ -182,7 +182,7 @@ void AEnemyBoss::JumpAttack(AActor* AttackTarget)
 void AEnemyBoss::GroundSmashAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
-	DamageInfo.Amount = 25.0f;
+	DamageInfo.Amount = 25.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = false;
 
 	FAttackInfo AttackInfo;
@@ -293,6 +293,12 @@ void AEnemyBoss::OnDeath_Event()
 		}
 	}
 	ActiveMinions.Empty();
+
+	if (IsValid(ActivePhase3Aura))
+	{
+		ActivePhase3Aura->DestroyComponent();
+		ActivePhase3Aura = nullptr;
+	}
 
 	Super::OnDeath_Event();
 
@@ -483,6 +489,9 @@ void AEnemyBoss::UpdatePhase()
 	if (NewPhase <= CurrentPhase) return;
 	CurrentPhase = NewPhase;
 
+	if (CurrentPhase == 2)      PhaseDamageMultiplier = Phase2DamageMultiplier;
+	else if (CurrentPhase == 3) PhaseDamageMultiplier = Phase3DamageMultiplier;
+
 	if (AAIController* AI = Cast<AAIController>(GetController()))
 	{
 		AI->GetBlackboardComponent()->SetValueAsInt(TEXT("Phase"), CurrentPhase);
@@ -512,6 +521,13 @@ void AEnemyBoss::UpdatePhase()
 	{
 		CustomTimeDilation = 1.3f;
 		MaxMinions = 3;
+
+		if (Phase3AuraEffect && !ActivePhase3Aura)
+		{
+			ActivePhase3Aura = UGameplayStatics::SpawnEmitterAttached(
+				Phase3AuraEffect, GetMesh(), FName("Spine_01"), FVector::ZeroVector, FRotator::ZeroRotator,
+				FVector(1.f), EAttachLocation::KeepRelativeOffset, false);
+		}
 	}
 }
 

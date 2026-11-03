@@ -81,7 +81,7 @@ public:
 	virtual void Attack() {}
 
 	//----------------------------------------------------------------------
-	// Protected — Team
+	// Pubkic — Team
 	//----------------------------------------------------------------------
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
@@ -92,7 +92,7 @@ public:
 	void EndBlock();
 	void TryToBlock();
 	UFUNCTION()
-	void OnBlocked(AActor* DamageCauser);
+	void OnBlocked(bool bCanBeParried, AActor* DamageCauser);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> SwordBlockHitMontage;
@@ -112,6 +112,9 @@ public:
 
 	UFUNCTION()
 	virtual void OnDeath_Event();
+
+	void Stagger(AActor* Parrier);
+
 protected:
 	void UpdateRise();
 
@@ -162,6 +165,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> HitReactionMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<UAnimMontage> StaggerMontage;
+
+	
+
 	//----------------------------------------------------------------------
 	// Protected — Runtime State
 	//----------------------------------------------------------------------
@@ -194,8 +202,6 @@ protected:
 
 	UFUNCTION()
 	void OnFactReceived(FSharedFact Fact);
-
-	
 
 	UFUNCTION()
 	void CleanupAfterDeath();

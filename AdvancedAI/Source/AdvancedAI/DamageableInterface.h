@@ -16,6 +16,9 @@ struct FDamageInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanBeBlocked = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCanBeParried = false;
 };
 
 UENUM(BlueprintType)

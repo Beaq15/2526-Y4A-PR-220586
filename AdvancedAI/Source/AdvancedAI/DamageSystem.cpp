@@ -31,11 +31,30 @@ void UDamageSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 
 bool UDamageSystem::ReserveAttackToken(int32 Amount)
 {
+	const UWorld* World = GetWorld();
+	if (!World) return false;
+
+	const float Now = World->GetTimeSeconds();
+
+	if (PendingTokenAmount > 0 && Now - PendingTokenTime > PendingRequestTimeout)
+	{
+		PendingTokenAmount = 0;
+	}
+
+	if (Amount < PendingTokenAmount)
+	{
+		return false;
+	}
+
 	if (AttackTokensCount >= Amount)
 	{
 		AttackTokensCount -= Amount;
+		PendingTokenAmount = 0;
 		return true;
 	}
+
+	PendingTokenAmount = Amount;
+	PendingTokenTime = Now;
 	return false;
 }
 
@@ -57,12 +76,10 @@ float UDamageSystem::Heal(float Amount)
 
 bool UDamageSystem::TakeDamage(const FDamageInfo& DamageInfo, AActor* DamageCauser)
 {
-	UE_LOG(LogTemp, Warning, TEXT("[TakeDamage] %s Amount=%.1f Health=%.1f/%.1f isDead=%d isBlocking=%d isInterruptible=%d"),
-		*GetNameSafe(GetOwner()), DamageInfo.Amount, Health, MaxHealth, isDead, isBlocking, isInterruptible);
 	switch (CanBeDamaged(DamageInfo.bCanBeBlocked))
 	{
 	case EDamageResult::BlockDamage:
-		OnBlocked.Broadcast(DamageCauser);
+		OnBlocked.Broadcast(DamageInfo.bCanBeParried, DamageCauser);
 		return false;
 		break;
 	case EDamageResult::DoDamage:
@@ -73,7 +90,7 @@ bool UDamageSystem::TakeDamage(const FDamageInfo& DamageInfo, AActor* DamageCaus
 			OnDeath.Broadcast();
 		}
 		else if (isInterruptible)
-			OnDamageResponse.Broadcast( DamageCauser);
+			OnDamageResponse.Broadcast(DamageCauser);
 		return true;
 			break;
 	case EDamageResult::NoDamage:

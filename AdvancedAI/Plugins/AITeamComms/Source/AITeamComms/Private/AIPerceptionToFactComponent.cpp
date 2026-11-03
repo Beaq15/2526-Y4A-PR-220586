@@ -66,7 +66,6 @@ void UAIPerceptionToFactComponent::HandleSightStimulus(AActor* Actor, const FAIS
 {
     if (Stimulus.WasSuccessfullySensed()) 
     {
-
         FSharedFact Fact;
         Fact.FactType = FGameplayTag::RequestGameplayTag(FName("Fact.EnemySighted"));
         Fact.Subject.Actor = Actor;

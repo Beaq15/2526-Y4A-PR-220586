@@ -258,7 +258,7 @@ void UAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPoint
 
 		OwnerCharacter->LaunchCharacter(LaunchVelocity, true, true);
 
-		OwnerCharacter->LandedDelegate.AddDynamic(this, &UAttackSystem::OnLand);
+		OwnerCharacter->LandedDelegate.AddUniqueDynamic(this, &UAttackSystem::OnLand);
 	}
 
 	if (NotifyName == FName("AOESlash"))
@@ -400,7 +400,7 @@ void UAttackSystem::AOEDamage(float Radius, FDamageInfo DamageInfo)
 		AOE->Radius = Radius;
 		AOE->DrawDebugSphere = false;
 		AOE->IgnoreInstigator = true;
-		AOE->OnAOEOverlapActor.AddDynamic(this, &UAttackSystem::AOEDamageActor);
+		AOE->OnAOEOverlapActor.AddUniqueDynamic(this, &UAttackSystem::AOEDamageActor);
 		AOE->FinishSpawning(SpawnTransform);
 		AOE->Trigger();
 	}

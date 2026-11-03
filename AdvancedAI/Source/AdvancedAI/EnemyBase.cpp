@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "AIC_Enemy_Base.h"
 #include "Components/CapsuleComponent.h"
+#include "AdvancedAICharacter.h"
 
 //----------------------------------------------------------------------
 // Lifecycle
@@ -53,6 +54,31 @@ void AEnemyBase::BeginPlay()
 	DamageSystem->OnDamageResponse.AddUniqueDynamic(this, &AEnemyBase::OnHitResponse_Event);
 	KnowledgeComponent->OnFactAdded.AddUniqueDynamic(this, &AEnemyBase::OnFactReceived);
 	DamageSystem->OnBlocked.AddDynamic(this, &AEnemyBase::OnBlocked);
+}
+
+void AEnemyBase::Stagger(AActor* Parrier)
+{
+	if (DamageSystem->isDead || !StaggerMontage) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (!AnimInstance) return;
+
+	AnimInstance->StopAllMontages(0.1f);
+
+	DamageSystem->isInterruptible = true;
+	CachedDamageCauser = Parrier;
+
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+
+	if (AICEnemyBase)
+		AICEnemyBase->SetStateAsFrozen();
+
+	AnimInstance->Montage_Play(StaggerMontage, 1.0f);
+
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindUObject(this, &AEnemyBase::OnHitReactionMontageEnd);
+	AnimInstance->Montage_SetEndDelegate(EndDelegate, StaggerMontage);
 }
 
 void AEnemyBase::PossessedBy(AController* NewController)
@@ -188,9 +214,8 @@ void AEnemyBase::EndBlock()
 	OnBlockEnd.Broadcast();
 }
 
-void AEnemyBase::OnBlocked(AActor* DamageCauser)
+void AEnemyBase::OnBlocked(bool bCanBeParried, AActor* DamageCauser)
 {
-
 	GetWorldTimerManager().ClearTimer(HoldBlockTimer);
 	HoldBlockTimer.Invalidate();
 
@@ -308,7 +333,15 @@ bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor
 	if (DamageInfo.bCanBeBlocked && SwordBlockHitMontage)
 		TryToBlock();
 
-	return DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+	const bool bDamaged = DamageSystem->TakeDamage(DamageInfo, DamageCauser);
+
+	if (bDamaged)
+	{
+		if (AAdvancedAICharacter* Player = Cast<AAdvancedAICharacter>(DamageCauser))
+			Player->ResetBlockStreak();
+	}
+
+	return bDamaged;
 }
 
 bool AEnemyBase::ReserveAttackToken_Implementation(int32 Amount)

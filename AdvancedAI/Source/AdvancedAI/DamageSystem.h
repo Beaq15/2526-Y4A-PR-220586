@@ -7,7 +7,7 @@
 #include "DamageableInterface.h"
 #include "DamageSystem.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlocked, AActor*, DamageCauser);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBlocked, bool, bCanBeParried, AActor*, DamageCauser);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageResponse, AActor*, DamageCauser);
 
@@ -69,6 +69,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Tokens")
 	int32 AttackTokensCount = 1;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Tokens")
+	float PendingRequestTimeout = 4.0f;
+
+	int32 PendingTokenAmount = 0;
+	float PendingTokenTime = 0.f;
 
 	//----------------------------------------------------------------------
 	// Public — API

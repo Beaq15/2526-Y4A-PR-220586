@@ -40,6 +40,8 @@ void AEnemyMelee::ShortRangeAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 10.f;
+	DamageInfo.bCanBeBlocked = true;
+	DamageInfo.bCanBeParried = true;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -52,6 +54,8 @@ void AEnemyMelee::LongRangeAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 10.f;
+	DamageInfo.bCanBeBlocked = true;
+	DamageInfo.bCanBeParried = true;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;

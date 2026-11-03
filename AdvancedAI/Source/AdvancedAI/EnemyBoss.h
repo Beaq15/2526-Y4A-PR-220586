@@ -173,6 +173,12 @@ public:
 	TObjectPtr<AAOE_Heal> HealAOE;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Phase")
+	TObjectPtr<UParticleSystem> Phase3AuraEffect;
+
+	UPROPERTY()
+	TObjectPtr<UParticleSystemComponent> ActivePhase3Aura;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Phase")
 	float Phase2Threshold = 0.66f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Phase")
@@ -183,4 +189,12 @@ public:
 	void UpdatePhase();
 
 	void OnPhaseTransitionEnd(UAnimMontage* Montage, bool bInterrupted);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Phase")
+	float Phase2DamageMultiplier = 1.15f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Phase")
+	float Phase3DamageMultiplier = 1.3f;
+
+	float PhaseDamageMultiplier = 1.f;
 };

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
 #include "PatrolRoute.h"
+#include "EnemyInterface.h"
 #include "BTT_SetMovementSpeed.generated.h"
 
 /**

@@ -409,6 +409,12 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 			WeaponActor = nullptr;
 		}
 
+		if (ShieldActor)
+		{
+			ShieldActor->Destroy();
+			ShieldActor = nullptr;
+		}
+
 		GetMesh()->GetAnimInstance()->OnPlayMontageNotifyBegin.RemoveDynamic(this, &AAdvancedAICharacter::OnMontageNotifyBegin);
 	}
 

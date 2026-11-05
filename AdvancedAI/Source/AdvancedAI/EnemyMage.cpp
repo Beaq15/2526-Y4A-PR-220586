@@ -201,7 +201,7 @@ void AEnemyMage::HealEnded(UAnimMontage* Montage, bool bInterrupted)
 void AEnemyMage::OnHealTick(AActor* Actor)
 {
 	AEnemyBase* Ally = Cast<AEnemyBase>(Actor);
-	if (!Ally) return;
+	if (!Ally || !Ally->bCanBeHealedByMage) return;
 
 	if (IDamageableInterface::Execute_IsDead(Ally)) return;
 

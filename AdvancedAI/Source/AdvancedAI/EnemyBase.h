@@ -136,6 +136,9 @@ public:
 
 	void TryRequestHeal();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Heal")
+	bool bCanBeHealedByMage = true;
+
 protected:
 	void UpdateRise();
 

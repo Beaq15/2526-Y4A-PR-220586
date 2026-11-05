@@ -333,12 +333,13 @@ bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor
 	if (DamageInfo.bCanBeBlocked && SwordBlockHitMontage)
 		TryToBlock();
 
-	TryRequestHeal();
 
 	const bool bDamaged = DamageSystem->TakeDamage(DamageInfo, DamageCauser);
 
 	if (bDamaged)
 	{
+		TryRequestHeal();
+
 		if (AAdvancedAICharacter* Player = Cast<AAdvancedAICharacter>(DamageCauser))
 			Player->ResetBlockStreak();
 	}
@@ -348,6 +349,8 @@ bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor
 
 void AEnemyBase::TryRequestHeal()
 {
+	if (!bCanBeHealedByMage) return;
+
 	const float Now = GetWorld()->GetTimeSeconds();
 	if (!NeedsHealing() || Now - LastHealRequestTime < HealRequestCooldown) return;
 

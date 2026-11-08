@@ -17,6 +17,7 @@
 #include "Components/PawnNoiseEmitterComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "WidgetLoadingScreen.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -90,6 +91,34 @@ void AAdvancedAICharacter::BeginPlay()
 	AimTimeline.AddInterpFloat(LinearCurve, UpdateDelegate);
 
 	Stance = EPlayerStance::Unarmed;
+
+	if (LoadingScreenClass)
+	{
+		APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+
+		if (PC && PC->IsLocalController())
+		{
+			LoadingScreen = CreateWidget<UWidgetLoadingScreen>(PC, LoadingScreenClass);
+			LoadingScreen->AddToViewport(1000);
+			LoadingScreen->OnLoadComplete.AddUniqueDynamic(this, &AAdvancedAICharacter::HandleLoadingFinished);
+			LoadingScreen->StartFakeLoad();
+
+			PC->SetInputMode(FInputModeUIOnly());
+		}
+	}
+}
+
+void AAdvancedAICharacter::HandleLoadingFinished()
+{
+	if (LoadingScreen)
+	{
+		LoadingScreen->RemoveFromParent();
+		LoadingScreen = nullptr;
+	}
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+	{
+		PC->SetInputMode(FInputModeGameOnly());
+	}
 }
 
 void AAdvancedAICharacter::Tick(float DeltaTime)

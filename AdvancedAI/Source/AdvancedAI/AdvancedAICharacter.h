@@ -20,7 +20,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
-
+class UWidgetLoadingScreen;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -179,6 +179,15 @@ public:
 			UE_LOG(LogTemp, Warning, TEXT("Turtling ended"));
 		}
 	}
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UWidgetLoadingScreen> LoadingScreenClass;
+
+	UPROPERTY()
+	TObjectPtr<UWidgetLoadingScreen> LoadingScreen;
+
+	UFUNCTION()
+	void HandleLoadingFinished();
 
 protected:
 	//----------------------------------------------------------------------

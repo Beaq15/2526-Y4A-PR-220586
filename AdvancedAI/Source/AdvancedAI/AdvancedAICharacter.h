@@ -189,6 +189,8 @@ public:
 	UFUNCTION()
 	void HandleLoadingFinished();
 
+	TSharedPtr<FStreamableHandle> PreloadedAssetsHandle;
+
 protected:
 	//----------------------------------------------------------------------
 	// Protected — Lifecycle Overrides

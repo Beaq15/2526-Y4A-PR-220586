@@ -4,17 +4,35 @@
 #include "WidgetLoadingScreen.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Engine/AssetManager.h"
 
-void UWidgetLoadingScreen::StartFakeLoad()
+void UWidgetLoadingScreen::StartLoad()
 {
 	Elapsed = 0.f;
+	TargetProgress = 0.f;
+	DisplayedProgress = 0.f;
 	bRunning = true;
 
-	ProgressBar->SetPercent(0.f);
-	if (PercentText)
+	if (AssetsToPreload.Num() > 0)
 	{
-		PercentText->SetText(FText::FromString(TEXT("0%")));
+		TArray<FSoftObjectPath> Paths;
+		for (const TSoftObjectPtr<UObject>& Asset : AssetsToPreload)
+		{
+			Paths.Add(Asset.ToSoftObjectPath());
+		}
+		AssetHandle = UAssetManager::GetStreamableManager().RequestAsyncLoad(Paths);
 	}
+
+	ProgressBar->SetPercent(0.f);
+}
+
+float UWidgetLoadingScreen::GetAssetProgress() const
+{
+	if (!AssetHandle.IsValid() || AssetHandle->HasLoadCompleted())
+	{
+		return 1.f;
+	}
+	return AssetHandle->GetProgress();
 }
 
 void UWidgetLoadingScreen::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -27,17 +45,22 @@ void UWidgetLoadingScreen::NativeTick(const FGeometry& MyGeometry, float InDelta
 	}
 
 	Elapsed += InDeltaTime;
-	const float Progress = FMath::Clamp(Elapsed / LoadDuration, 0.f, 1.f);
 
-	ProgressBar->SetPercent(Progress);
+	TargetProgress = FMath::Max(TargetProgress, GetAssetProgress());
+
+	DisplayedProgress = FMath::FInterpTo(DisplayedProgress, TargetProgress, InDeltaTime, BarInterpSpeed);
+	ProgressBar->SetPercent(DisplayedProgress);
+
 	if (PercentText)
 	{
-		PercentText->SetText(FText::FromString(FString::Printf(TEXT("%d%%"), FMath::RoundToInt(Progress * 100.f))));
+		PercentText->SetText(FText::FromString(FString::Printf(TEXT("%d%%"), FMath::RoundToInt(DisplayedProgress * 100.f))));
 	}
 
-	if (Progress >= 1.f)
+	const bool bAllDone = TargetProgress >= 1.f && DisplayedProgress >= 0.995f;
+	if (bAllDone && Elapsed >= MinDisplayTime)
 	{
 		bRunning = false;
+		ProgressBar->SetPercent(1.f);
 		OnLoadComplete.Broadcast();
 	}
 }

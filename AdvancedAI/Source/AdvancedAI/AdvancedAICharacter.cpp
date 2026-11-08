@@ -101,7 +101,7 @@ void AAdvancedAICharacter::BeginPlay()
 			LoadingScreen = CreateWidget<UWidgetLoadingScreen>(PC, LoadingScreenClass);
 			LoadingScreen->AddToViewport(1000);
 			LoadingScreen->OnLoadComplete.AddUniqueDynamic(this, &AAdvancedAICharacter::HandleLoadingFinished);
-			LoadingScreen->StartFakeLoad();
+			LoadingScreen->StartLoad();
 
 			PC->SetInputMode(FInputModeUIOnly());
 		}
@@ -112,6 +112,7 @@ void AAdvancedAICharacter::HandleLoadingFinished()
 {
 	if (LoadingScreen)
 	{
+		PreloadedAssetsHandle = LoadingScreen->GetAssetHandle();
 		LoadingScreen->RemoveFromParent();
 		LoadingScreen = nullptr;
 	}

@@ -147,6 +147,7 @@ void AEnemyMage::BasicAttack(AActor* AttackTarget)
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 20.f;
 	DamageInfo.bCanBeBlocked = true;
+	DamageInfo.bCanBeParried = false;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -159,6 +160,8 @@ void AEnemyMage::GroundSmashAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 15.f;
+	DamageInfo.bCanBeBlocked = false;
+	DamageInfo.bCanBeParried = false;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -173,6 +176,7 @@ void AEnemyMage::BarrageAttack(AActor* AttackTarget)
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 20.f;
 	DamageInfo.bCanBeBlocked = true;
+	DamageInfo.bCanBeParried = false;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;

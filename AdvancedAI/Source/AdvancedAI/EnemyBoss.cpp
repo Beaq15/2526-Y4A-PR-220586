@@ -95,6 +95,7 @@ void AEnemyBoss::ThrowAxe(AActor* AttackTarget)
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 20.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = true;
+	DamageInfo.bCanBeParried = false;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -108,6 +109,7 @@ void AEnemyBoss::QuickAttack(AActor* AttackTarget)
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 20.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = true;
+	DamageInfo.bCanBeParried = true;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -142,6 +144,7 @@ void AEnemyBoss::AttackCombo1(AActor* AttackTarget)
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 20.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = true;
+	DamageInfo.bCanBeParried = true;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -156,6 +159,7 @@ void AEnemyBoss::AttackCombo2(AActor* AttackTarget)
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 15.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = true;
+	DamageInfo.bCanBeParried = true;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -170,6 +174,7 @@ void AEnemyBoss::JumpAttack(AActor* AttackTarget)
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 15.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = false;
+	DamageInfo.bCanBeParried = false;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -184,6 +189,7 @@ void AEnemyBoss::GroundSmashAttack(AActor* AttackTarget)
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 25.0f * PhaseDamageMultiplier;
 	DamageInfo.bCanBeBlocked = false;
+	DamageInfo.bCanBeParried = false;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -420,7 +426,6 @@ void AEnemyBoss::OnHealTick(AActor* Actor)
 		Heal_Implementation(DamageSystem->MaxHealth * 0.075);
 		HealthBarWidget->UpdateHealthPercentage(DamageSystem->MaxHealth, DamageSystem->Health);
 	}
-
 }
 
 void AEnemyBoss::HealOverTime()

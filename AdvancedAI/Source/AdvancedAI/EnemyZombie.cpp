@@ -49,6 +49,8 @@ void AEnemyZombie::ShortRangeAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 10.f;
+	DamageInfo.bCanBeBlocked = false;
+	DamageInfo.bCanBeParried = false;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;

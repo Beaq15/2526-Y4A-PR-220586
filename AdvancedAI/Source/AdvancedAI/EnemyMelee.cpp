@@ -54,8 +54,8 @@ void AEnemyMelee::LongRangeAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 10.f;
-	DamageInfo.bCanBeBlocked = true;
-	DamageInfo.bCanBeParried = true;
+	DamageInfo.bCanBeBlocked = false;
+	DamageInfo.bCanBeParried = false;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -68,6 +68,8 @@ void AEnemyMelee::SpinningAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 10.f;
+	DamageInfo.bCanBeBlocked = false;
+	DamageInfo.bCanBeParried = false;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;
@@ -205,6 +207,8 @@ void AEnemyMelee::GroundSmashAttack(AActor* AttackTarget)
 {
 	FDamageInfo DamageInfo;
 	DamageInfo.Amount = 25.f;
+	DamageInfo.bCanBeBlocked = false;
+	DamageInfo.bCanBeParried = false;
 
 	FAttackInfo AttackInfo;
 	AttackInfo.AttackTarget = AttackTarget;

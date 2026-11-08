@@ -333,7 +333,6 @@ bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor
 	if (DamageInfo.bCanBeBlocked && SwordBlockHitMontage)
 		TryToBlock();
 
-
 	const bool bDamaged = DamageSystem->TakeDamage(DamageInfo, DamageCauser);
 
 	if (bDamaged)
@@ -343,7 +342,6 @@ bool AEnemyBase::TakeDamage_Implementation(const FDamageInfo& DamageInfo, AActor
 		if (AAdvancedAICharacter* Player = Cast<AAdvancedAICharacter>(DamageCauser))
 			Player->ResetBlockStreak();
 	}
-
 	return bDamaged;
 }
 

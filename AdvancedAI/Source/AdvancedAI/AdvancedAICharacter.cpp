@@ -320,7 +320,7 @@ void AAdvancedAICharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchi
 	if (NotifyName == FName("Fire"))
 	{
 		FDamageInfo DamageInfo;
-		DamageInfo.Amount = 240.f;
+		DamageInfo.Amount = 50.f;
 		DamageInfo.bCanBeBlocked = true;
 
 		FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("hand_l"));
@@ -579,8 +579,6 @@ void AAdvancedAICharacter::OnBlocked(bool bCanBeParried, AActor* DamageCauser)
 	{
 		GetWorldTimerManager().SetTimer(TurtleEndHandle, this, &AAdvancedAICharacter::EndTurtling, TurtleDuration, false);
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("BlockStreak: %d  Turtling: %d"), BlockStreak, IsTurtling());
 }
 
 void AAdvancedAICharacter::OnEquipSwordMontageEnd(UAnimMontage* Montage, bool bInterrupted)

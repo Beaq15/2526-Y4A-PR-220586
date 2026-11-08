@@ -192,8 +192,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	TObjectPtr<UAnimMontage> StaggerMontage;
 
-	
-
 	//----------------------------------------------------------------------
 	// Protected — Runtime State
 	//----------------------------------------------------------------------
